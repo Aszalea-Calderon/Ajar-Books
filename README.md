@@ -31,7 +31,7 @@ Most reading trackers (GoodReads, StoryGraph, Fable) require an account with a t
 ## Quick Start
 
 ```bash
-git clone https://github.com/Aszalea-calderon/ajar-reads.git
+git clone https://github.com/Aszalea-Calderon/Ajar-Books
 cd ajar-reads
 docker compose up -d
 ```
