@@ -1,4 +1,4 @@
-# Ajar Reads
+# Ajar Books
 
 A self-hosted, privacy-first reading tracker. Track what you're reading, watch your reading streak build, set goals, and see real insights into your reading habits — all on your own server, with your own data.
 
