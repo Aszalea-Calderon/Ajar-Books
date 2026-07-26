@@ -13,25 +13,37 @@ REPO_DIR="$(cd -P "$(dirname "$SOURCE")/.." >/dev/null 2>&1 && pwd)"
 
 cd "$REPO_DIR"
 
-print_banner() {
+print_welcome() {
 	cat <<'BANNER'
 
-   ╭─╮  Ajar Books
-   ╰─╯  your self-hosted reading tracker
+        (◠‿◠)
+
+   Welcome to Ajar Books!
+   Spinning up your library...
+
+BANNER
+}
+
+print_goodbye() {
+	cat <<'BANNER'
+
+        (˘▾˘)~
+
+   Closing up for now — happy reading!
 
 BANNER
 }
 
 case "${1:-}" in
 	up)
-		print_banner
+		print_welcome
 		docker compose up -d
 		echo ""
-		echo "Welcome to Ajar Books — up at http://localhost:3000"
+		echo "Ajar Books is up at http://localhost:3000"
 		;;
 	down)
 		docker compose down
-		echo "Ajar Books is down."
+		print_goodbye
 		;;
 	*)
 		echo "Usage: ajar {up|down}" >&2
