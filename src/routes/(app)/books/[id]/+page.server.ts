@@ -3,7 +3,14 @@ import { desc, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
-import { getProgressTotals, logProgress } from '$lib/server/books/progress';
+import {
+	editProgress,
+	getProgressTotals,
+	logProgress,
+	resetUserBook,
+	setStatus,
+	type BookStatus
+} from '$lib/server/books/progress';
 import {
 	addTag,
 	getSuggestedTagNames,
@@ -99,6 +106,47 @@ export const actions: Actions = {
 			minutesRead,
 			note: note || undefined
 		});
+	},
+
+	editProgress: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const logId = String(data.get('logId') ?? '');
+		const pagesRaw = data.get('pagesRead');
+		const minutesRaw = data.get('minutesRead');
+		const note = String(data.get('note') ?? '').trim();
+
+		const pagesRead = pagesRaw ? Number(pagesRaw) : undefined;
+		const minutesRead = minutesRaw ? Number(minutesRaw) : undefined;
+
+		if (!logId || (!pagesRead && !minutesRead)) {
+			return fail(400, { error: 'Enter an amount read' });
+		}
+
+		await editProgress({ logId, pagesRead, minutesRead, note: note || undefined });
+	},
+
+	setStatus: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const status = String(data.get('status') ?? '');
+		const validStatuses: BookStatus[] = ['want_to_read', 'reading', 'finished', 'dnf'];
+		if (!validStatuses.includes(status as BookStatus)) {
+			return fail(400, { error: 'Invalid status' });
+		}
+
+		await setStatus(result.userBook.id, status as BookStatus);
+	},
+
+	removeBook: async ({ params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		await resetUserBook(result.userBook.id);
 	},
 
 	setRating: async ({ request, params }) => {

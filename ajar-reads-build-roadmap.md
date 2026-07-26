@@ -92,11 +92,12 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 | Done | Task                                                                                                                                                                                                                                                                                    |
 | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ☑    | Add "About the book" panel (real synopsis + page count pulled from Open Library/Google Books, never fabricated)                                                                                                                                                                         |
-| ☐    | Allow editing an existing reading-log entry (amount and note) instead of only ever being able to add new ones                                                                                                                                                                           |
-| ☐    | Reframe the Activity panel as "Chapter Notes" — a note-centric, editable journal rather than just an auto-generated log of progress timestamps                                                                                                                                          |
-| ☐    | Add a manual status control (Want to Read / Currently Reading / Finished) independent of the automatic progress-based transitions                                                                                                                                                       |
-| ☐    | Add a "Remove book" action, distinct from the existing hard Delete — resets the book to its default state (want to read, no progress/format) rather than erasing its history, as a softer alternative to full deletion                                                                  |
-| ☐    | Make the dashboard's Currently Reading chips swap which book is shown in the hero "Track Progress" card, instead of navigating to that book's own detail page — matches the original Homepage wireframe, for switching between multiple in-progress books without leaving the dashboard |
+| ☑    | Allow editing an existing reading-log entry (amount and note) instead of only ever being able to add new ones                                                                                                                                                                           |
+| ☑    | Reframe the Activity panel as "Chapter Notes" — a note-centric, editable journal rather than just an auto-generated log of progress timestamps                                                                                                                                          |
+| ☑    | Add a manual status control (Want to Read / Currently Reading / Finished / Did Not Finish) independent of the automatic progress-based transitions                                                                                                                                      |
+| ☑    | Add a "Remove book" action, distinct from the existing hard Delete — resets the book to its default state (want to read, no progress/format) rather than erasing its history, as a softer alternative to full deletion                                                                  |
+| ☑    | Make the dashboard's Currently Reading chips swap which book is shown in the hero "Track Progress" card, instead of navigating to that book's own detail page — matches the original Homepage wireframe, for switching between multiple in-progress books without leaving the dashboard |
+| ☑    | Verify: every Phase 2.6 refinement works end-to-end against the real Docker container (not just scratch dev)                                                                                                                                                                            |
 
 ---
 
@@ -190,6 +191,8 @@ _Not required for a usable v1 — pick up in whatever order suits you._
 | ☐    | Build data export (CSV/JSON)                                                                                                                                                                     |
 | ☐    | Write backup guidance (copy the SQLite file)                                                                                                                                                     |
 | ☐    | Write Cloudflare Tunnel setup docs                                                                                                                                                               |
+| ☐    | Build a first-login onboarding tutorial (walk through search → add → format → log progress → tag/rate, so the core loop is discoverable without external docs)                                   |
+| ☐    | _Much later stretch:_ explore adding Ajar Books to a Home Assistant setup (e.g. a custom integration/card surfacing current streak, currently-reading, or goal progress on a HA dashboard)       |
 
 ---
 

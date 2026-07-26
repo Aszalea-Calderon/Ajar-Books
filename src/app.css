@@ -642,13 +642,15 @@ button {
 	gap: var(--space-4);
 }
 
-.book-detail__delete-form {
+.book-detail__hero-actions {
 	position: absolute;
 	top: var(--space-4);
 	right: var(--space-4);
+	display: flex;
+	gap: var(--space-2);
 }
 
-.book-detail__delete {
+.book-detail__action {
 	padding: var(--space-2) var(--space-3);
 	background: rgb(0 0 0 / 0.15);
 	border: 1px solid rgb(255 255 255 / 0.35);
@@ -657,8 +659,14 @@ button {
 	font-size: var(--font-size-sm);
 }
 
-.book-detail__delete:hover {
+.book-detail__action:hover {
 	background: rgb(0 0 0 / 0.3);
+}
+
+.book-detail__action--danger {
+	border-color: rgb(255 255 255 / 0.2);
+	color: var(--color-primary-text);
+	opacity: 0.85;
 }
 
 .book-detail__cover {
@@ -705,13 +713,15 @@ button {
 	gap: var(--space-4);
 }
 
-.book-detail__status {
-	display: inline-block;
+.status-control {
 	padding: var(--space-1) var(--space-3);
 	background: var(--color-surface-raised);
+	border: none;
 	border-radius: 999px;
 	font-size: var(--font-size-sm);
-	color: var(--color-text-muted);
+	color: var(--color-text);
+	font-weight: 600;
+	cursor: pointer;
 }
 
 .format-toggle {
@@ -932,6 +942,22 @@ button {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	min-width: 0;
+}
+
+.activity-log__edit {
+	margin-left: auto;
+	flex-shrink: 0;
+	background: none;
+	border: none;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	text-decoration: underline;
+	padding: 0;
+}
+
+.activity-log__edit:hover {
+	color: var(--color-text);
 }
 
 /* Dashboard: currently reading */
@@ -981,10 +1007,17 @@ button {
 .currently-reading-chip {
 	padding: var(--space-2) var(--space-4);
 	background: var(--color-surface-raised);
+	border: none;
 	border-radius: var(--radius-sm);
 	color: var(--color-text);
 	text-decoration: none;
 	font-size: var(--font-size-sm);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.currently-reading-chip:hover {
+	opacity: 0.8;
 }
 
 .settings-hint {

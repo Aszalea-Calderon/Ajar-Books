@@ -5,8 +5,13 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let hero = $derived(data.currentlyReading[0]);
-	let rest = $derived(data.currentlyReading.slice(1));
+	let selectedUserBookId = $state<string | null>(null);
+
+	let hero = $derived(
+		data.currentlyReading.find((row) => row.userBook.id === selectedUserBookId) ??
+			data.currentlyReading[0]
+	);
+	let rest = $derived(data.currentlyReading.filter((row) => row.userBook.id !== hero?.userBook.id));
 </script>
 
 <svelte:head>
@@ -44,12 +49,13 @@
 			{#if rest.length > 0}
 				<div class="currently-reading-chips">
 					{#each rest as row (row.userBook.id)}
-						<a
+						<button
+							type="button"
 							class="currently-reading-chip"
-							href={resolve('/(app)/books/[id]', { id: row.book.id })}
+							onclick={() => (selectedUserBookId = row.userBook.id)}
 						>
 							{row.book.title}
-						</a>
+						</button>
 					{/each}
 				</div>
 			{/if}

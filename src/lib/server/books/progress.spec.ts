@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/server/db';
-import { books, userBooks } from '$lib/server/db/schema';
-import { getProgressTotals, logProgress } from './progress';
+import { books, readingLogs, userBooks } from '$lib/server/db/schema';
+import { editProgress, getProgressTotals, logProgress, resetUserBook, setStatus } from './progress';
 
 async function seedUserBook(overrides: Partial<typeof userBooks.$inferInsert> = {}) {
 	const [book] = await db.insert(books).values({ title: 'Test Book' }).returning();
@@ -113,5 +113,145 @@ describe('logProgress', () => {
 
 	it('throws for a userBookId that does not exist', async () => {
 		await expect(logProgress({ userBookId: 'does-not-exist', pagesRead: 1 })).rejects.toThrow();
+	});
+});
+
+describe('editProgress', () => {
+	beforeEach(async () => {
+		await db.delete(userBooks);
+		await db.delete(books);
+	});
+
+	it('updates the amount and note on an existing log entry', async () => {
+		const userBook = await seedUserBook({
+			status: 'reading',
+			format: 'physical',
+			totalPages: 500
+		});
+		await logProgress({ userBookId: userBook.id, pagesRead: 50, note: 'Slow start' });
+		const [log] = await db
+			.select()
+			.from(readingLogs)
+			.where(eq(readingLogs.userBookId, userBook.id));
+
+		await editProgress({ logId: log.id, pagesRead: 80, note: 'Actually picking up' });
+
+		const [updatedLog] = await db.select().from(readingLogs).where(eq(readingLogs.id, log.id));
+		expect(updatedLog.pagesRead).toBe(80);
+		expect(updatedLog.note).toBe('Actually picking up');
+	});
+
+	it('re-finishes a book when an edit pushes the total over the goal', async () => {
+		const userBook = await seedUserBook({
+			status: 'reading',
+			format: 'physical',
+			totalPages: 300
+		});
+		await logProgress({ userBookId: userBook.id, pagesRead: 100 });
+		const [log] = await db
+			.select()
+			.from(readingLogs)
+			.where(eq(readingLogs.userBookId, userBook.id));
+
+		await editProgress({ logId: log.id, pagesRead: 300 });
+
+		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(updated.status).toBe('finished');
+		expect(updated.finishedAt).not.toBeNull();
+	});
+
+	it('demotes a finished book back to reading when an edit drops the total below the goal', async () => {
+		const userBook = await seedUserBook({
+			status: 'reading',
+			format: 'physical',
+			totalPages: 300
+		});
+		await logProgress({ userBookId: userBook.id, pagesRead: 300 });
+		let [current] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(current.status).toBe('finished');
+
+		const [log] = await db
+			.select()
+			.from(readingLogs)
+			.where(eq(readingLogs.userBookId, userBook.id));
+		await editProgress({ logId: log.id, pagesRead: 100 });
+
+		[current] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(current.status).toBe('reading');
+		expect(current.finishedAt).toBeNull();
+	});
+
+	it('throws for a logId that does not exist', async () => {
+		await expect(editProgress({ logId: 'does-not-exist', pagesRead: 1 })).rejects.toThrow();
+	});
+});
+
+describe('setStatus', () => {
+	beforeEach(async () => {
+		await db.delete(userBooks);
+		await db.delete(books);
+	});
+
+	it('sets the status directly, independent of any logged progress', async () => {
+		const userBook = await seedUserBook({ status: 'want_to_read' });
+
+		await setStatus(userBook.id, 'finished');
+
+		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(updated.status).toBe('finished');
+		expect(updated.finishedAt).not.toBeNull();
+	});
+
+	it('fills startedAt/finishedAt only the first time each status is reached', async () => {
+		const userBook = await seedUserBook({ status: 'want_to_read' });
+
+		await setStatus(userBook.id, 'finished');
+		const [firstFinish] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		const finishedAt = firstFinish.finishedAt;
+		expect(finishedAt).not.toBeNull();
+
+		await setStatus(userBook.id, 'reading');
+		await setStatus(userBook.id, 'finished');
+
+		const [secondFinish] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(secondFinish.finishedAt).toEqual(finishedAt);
+	});
+
+	it('throws for a userBookId that does not exist', async () => {
+		await expect(setStatus('does-not-exist', 'finished')).rejects.toThrow();
+	});
+});
+
+describe('resetUserBook', () => {
+	beforeEach(async () => {
+		await db.delete(userBooks);
+		await db.delete(books);
+	});
+
+	it('clears logs and resets format/progress/rating/dates to their default state', async () => {
+		const userBook = await seedUserBook({
+			status: 'reading',
+			format: 'physical',
+			totalPages: 300,
+			rating: 4
+		});
+		await logProgress({ userBookId: userBook.id, pagesRead: 100 });
+
+		await resetUserBook(userBook.id);
+
+		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(updated.status).toBe('want_to_read');
+		expect(updated.format).toBeNull();
+		expect(updated.totalPages).toBeNull();
+		expect(updated.totalMinutes).toBeNull();
+		expect(updated.rating).toBeNull();
+		expect(updated.startedAt).toBeNull();
+		expect(updated.finishedAt).toBeNull();
+
+		const remainingLogs = await db
+			.select()
+			.from(readingLogs)
+			.where(eq(readingLogs.userBookId, userBook.id));
+		expect(remainingLogs).toHaveLength(0);
 	});
 });

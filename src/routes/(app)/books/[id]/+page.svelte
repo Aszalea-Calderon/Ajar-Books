@@ -7,12 +7,12 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const statusLabels: Record<string, string> = {
-		want_to_read: 'Want to Read',
-		reading: 'Currently Reading',
-		finished: 'Finished',
-		dnf: 'Did Not Finish'
-	};
+	const statusOptions = [
+		{ id: 'want_to_read', label: 'Want to Read' },
+		{ id: 'reading', label: 'Currently Reading' },
+		{ id: 'finished', label: 'Finished' },
+		{ id: 'dnf', label: 'Did Not Finish' }
+	] as const;
 
 	const formatLabels: Record<string, string> = {
 		physical: 'Physical',
@@ -22,10 +22,14 @@
 
 	const formats = ['physical', 'ebook', 'audiobook'] as const;
 	type Format = (typeof formats)[number];
+	type LogEntry = PageData['logs'][number];
 
 	let pendingFormat = $state<Format | null>(null);
 	let logModalOpen = $state(false);
 	let logDialogEl: HTMLDialogElement;
+
+	let editingLog = $state<LogEntry | null>(null);
+	let editDialogEl: HTMLDialogElement;
 
 	$effect(() => {
 		if (!logDialogEl) return;
@@ -36,8 +40,21 @@
 		}
 	});
 
+	$effect(() => {
+		if (!editDialogEl) return;
+		if (editingLog && !editDialogEl.open) {
+			editDialogEl.showModal();
+		} else if (!editingLog && editDialogEl.open) {
+			editDialogEl.close();
+		}
+	});
+
 	function closeLogModalOnBackdrop(event: MouseEvent) {
 		if (event.target === logDialogEl) logModalOpen = false;
+	}
+
+	function closeEditModalOnBackdrop(event: MouseEvent) {
+		if (event.target === editDialogEl) editingLog = null;
 	}
 
 	let subtitle = $derived(
@@ -62,6 +79,7 @@
 	let isAudiobook = $derived(data.userBook.format === 'audiobook');
 	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
 	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
+	let editingIsMinutes = $derived(editingLog?.minutesRead != null);
 </script>
 
 <svelte:head>
@@ -70,21 +88,42 @@
 
 <div class="book-detail">
 	<div class="book-detail__hero">
-		<form
-			class="book-detail__delete-form"
-			method="POST"
-			action="?/delete"
-			use:enhance
-			onsubmit={(event) => {
-				if (
-					!confirm(`Delete "${data.book.title}" and all its logged progress? This can't be undone.`)
-				) {
-					event.preventDefault();
-				}
-			}}
-		>
-			<button class="book-detail__delete" type="submit">Delete</button>
-		</form>
+		<div class="book-detail__hero-actions">
+			<form
+				method="POST"
+				action="?/removeBook"
+				use:enhance
+				onsubmit={(event) => {
+					if (
+						!confirm(
+							`Remove "${data.book.title}" from your library? This clears its progress, format, and rating, but keeps it as a book you can start tracking again.`
+						)
+					) {
+						event.preventDefault();
+					}
+				}}
+			>
+				<button class="book-detail__action" type="submit">Remove</button>
+			</form>
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance
+				onsubmit={(event) => {
+					if (
+						!confirm(
+							`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
+						)
+					) {
+						event.preventDefault();
+					}
+				}}
+			>
+				<button class="book-detail__action book-detail__action--danger" type="submit">
+					Delete
+				</button>
+			</form>
+		</div>
 		<div class="book-detail__hero-content">
 			{#if data.book.coverUrl}
 				<img class="book-detail__cover" src={data.book.coverUrl} alt="" />
@@ -103,7 +142,18 @@
 	<div class="book-detail__body">
 		<div class="book-detail__row">
 			<div class="book-detail__row-left">
-				<span class="book-detail__status">{statusLabels[data.userBook.status]}</span>
+				<form method="POST" action="?/setStatus" use:enhance>
+					<select
+						class="status-control"
+						name="status"
+						value={data.userBook.status}
+						onchange={(event) => event.currentTarget.form?.requestSubmit()}
+					>
+						{#each statusOptions as s (s.id)}
+							<option value={s.id}>{s.label}</option>
+						{/each}
+					</select>
+				</form>
 				<StarRating value={data.userBook.rating} />
 			</div>
 			<div class="format-toggle">
@@ -193,9 +243,9 @@
 		{/if}
 
 		<div class="book-detail__panel">
-			<h3>Activity</h3>
+			<h3>Chapter Notes</h3>
 			{#if data.logs.length === 0}
-				<p class="dashboard__empty">No progress logged yet.</p>
+				<p class="dashboard__empty">No notes yet.</p>
 			{:else}
 				<ul class="activity-log">
 					{#each data.logs as log (log.id)}
@@ -213,6 +263,9 @@
 							{#if log.note}
 								<span class="activity-log__note">{log.note}</span>
 							{/if}
+							<button type="button" class="activity-log__edit" onclick={() => (editingLog = log)}>
+								Edit
+							</button>
 						</li>
 					{/each}
 				</ul>
@@ -274,5 +327,70 @@
 			</div>
 			<button class="auth-submit" type="submit">Log</button>
 		</form>
+	</div>
+</dialog>
+
+<dialog
+	bind:this={editDialogEl}
+	class="settings-modal"
+	onclose={() => (editingLog = null)}
+	onclick={closeEditModalOnBackdrop}
+>
+	<div class="settings-modal__header">
+		<h2>Edit entry</h2>
+		<button
+			type="button"
+			class="settings-modal__close"
+			aria-label="Close"
+			onclick={() => (editingLog = null)}
+		>
+			×
+		</button>
+	</div>
+	<div class="settings-modal__content">
+		{#if editingLog}
+			<form
+				method="POST"
+				action="?/editProgress"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update();
+						editingLog = null;
+					};
+				}}
+			>
+				<input type="hidden" name="logId" value={editingLog.id} />
+				{#if editingIsMinutes}
+					<div class="auth-field">
+						<label for="editMinutesRead">Minutes listened</label>
+						<input
+							id="editMinutesRead"
+							name="minutesRead"
+							type="number"
+							min="1"
+							value={editingLog.minutesRead}
+							required
+						/>
+					</div>
+				{:else}
+					<div class="auth-field">
+						<label for="editPagesRead">Pages read</label>
+						<input
+							id="editPagesRead"
+							name="pagesRead"
+							type="number"
+							min="1"
+							value={editingLog.pagesRead}
+							required
+						/>
+					</div>
+				{/if}
+				<div class="auth-field">
+					<label for="editNote">Note (optional)</label>
+					<input id="editNote" name="note" type="text" value={editingLog.note ?? ''} />
+				</div>
+				<button class="auth-submit" type="submit">Save</button>
+			</form>
+		{/if}
 	</div>
 </dialog>
