@@ -17,9 +17,8 @@
 	<section class="dashboard__panel dashboard__panel--hero">
 		<h2>Currently Reading</h2>
 		{#if !hero}
-			<p class="dashboard__empty">
-				Nothing in progress yet. Search for a book to start tracking it.
-			</p>
+			<p class="dashboard__empty">Nothing in progress yet.</p>
+			<a class="dashboard__cta" href={resolve('/search')}>Add a Book</a>
 		{:else}
 			<a class="currently-reading" href={resolve('/(app)/books/[id]', { id: hero.book.id })}>
 				{#if hero.book.coverUrl}
