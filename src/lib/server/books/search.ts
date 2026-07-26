@@ -85,6 +85,21 @@ async function searchGoogleBooks(query: string, apiKey: string): Promise<BookSea
 }
 
 /**
+ * Fetches a work's raw subjects for genre normalization. Best-effort: a
+ * failure here shouldn't block adding the book, just skip genre suggestions.
+ */
+export async function getOpenLibrarySubjects(openLibraryId: string): Promise<string[]> {
+	try {
+		const res = await fetch(`https://openlibrary.org${openLibraryId}.json`);
+		if (!res.ok) return [];
+		const data: { subjects?: string[] } = await res.json();
+		return data.subjects ?? [];
+	} catch {
+		return [];
+	}
+}
+
+/**
  * Open Library is always searched (no key required). Google Books is only
  * queried when a Google Books API key is configured (Settings, falling back
  * to GOOGLE_BOOKS_API_KEY), and only contributes results whose ISBN isn't

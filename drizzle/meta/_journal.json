@@ -15,6 +15,13 @@
       "when": 1785027359256,
       "tag": "0001_acoustic_iron_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785029058260,
+      "tag": "0002_square_victor_mancha",
+      "breakpoints": true
     }
   ]
 }

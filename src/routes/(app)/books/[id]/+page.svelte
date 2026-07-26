@@ -2,6 +2,8 @@
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import StarRating from '$lib/components/StarRating.svelte';
+	import TagEditor from '$lib/components/TagEditor.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -35,6 +37,9 @@
 				<p class="book-detail__author">{data.book.author}</p>
 			{/if}
 			<span class="book-detail__status">{statusLabels[data.userBook.status]}</span>
+			<div class="book-detail__rating">
+				<StarRating value={data.userBook.rating} />
+			</div>
 		</div>
 		<form
 			class="book-detail__delete-form"
@@ -51,6 +56,27 @@
 		>
 			<button class="book-detail__delete" type="submit">Delete</button>
 		</form>
+	</div>
+
+	<div class="book-detail__panel">
+		<TagEditor
+			label="Genre"
+			type="genre"
+			tags={data.tagsByType.genre}
+			suggestions={data.suggestionsByType.genre}
+		/>
+		<TagEditor
+			label="Mood"
+			type="mood"
+			tags={data.tagsByType.mood}
+			suggestions={data.suggestionsByType.mood}
+		/>
+		<TagEditor
+			label="Setting"
+			type="setting"
+			tags={data.tagsByType.setting}
+			suggestions={data.suggestionsByType.setting}
+		/>
 	</div>
 
 	{#if !data.userBook.format}

@@ -54,14 +54,14 @@ _Phased build order with checklists. Estimates assume part-time, evenings/weeken
 
 | Done | Task                                                                                 |
 | ---- | ------------------------------------------------------------------------------------ |
-| ☐    | Build curated genre-normalization mapping table (raw subjects → clean genre list)    |
-| ☐    | Build reusable tag-editor component (chips, add/remove, autocomplete + custom entry) |
-| ☐    | Wire tag editor for genre tags                                                       |
-| ☐    | Wire tag editor for mood tags                                                        |
-| ☐    | Wire tag editor for setting tags                                                     |
-| ☐    | Build 5-star, half-increment rating control                                          |
-| ☐    | Add tag editors + rating to book detail screen                                       |
-| ☐    | Verify: every book can be tagged (genre/mood/setting) and rated                      |
+| ☑    | Build curated genre-normalization mapping table (raw subjects → clean genre list)    |
+| ☑    | Build reusable tag-editor component (chips, add/remove, autocomplete + custom entry) |
+| ☑    | Wire tag editor for genre tags                                                       |
+| ☑    | Wire tag editor for mood tags                                                        |
+| ☑    | Wire tag editor for setting tags                                                     |
+| ☑    | Build 5-star, half-increment rating control                                          |
+| ☑    | Add tag editors + rating to book detail screen                                       |
+| ☑    | Verify: every book can be tagged (genre/mood/setting) and rated                      |
 
 ---
 

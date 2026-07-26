@@ -4,6 +4,15 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
 import { getProgressTotals, logProgress } from '$lib/server/books/progress';
+import {
+	addTag,
+	getSuggestedTagNames,
+	getTagsForUserBook,
+	removeTag,
+	type TagType
+} from '$lib/server/books/tags';
+
+const TAG_TYPES: TagType[] = ['genre', 'mood', 'setting'];
 
 async function loadBookAndUserBook(bookId: string) {
 	const [book] = await db.select().from(books).where(eq(books.id, bookId));
@@ -29,7 +38,19 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const totals = await getProgressTotals(userBook.id);
 
-	return { book, userBook, logs, totals };
+	const tagsByType = Object.fromEntries(
+		await Promise.all(
+			TAG_TYPES.map(async (type) => [type, await getTagsForUserBook(userBook.id, type)] as const)
+		)
+	) as Record<TagType, { id: string; name: string }[]>;
+
+	const suggestionsByType = Object.fromEntries(
+		await Promise.all(
+			TAG_TYPES.map(async (type) => [type, await getSuggestedTagNames(type)] as const)
+		)
+	) as Record<TagType, string[]>;
+
+	return { book, userBook, logs, totals, tagsByType, suggestionsByType };
 };
 
 export const actions: Actions = {
@@ -78,6 +99,43 @@ export const actions: Actions = {
 			minutesRead,
 			note: note || undefined
 		});
+	},
+
+	setRating: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const rating = Number(data.get('rating'));
+
+		await db
+			.update(userBooks)
+			.set({ rating: Number.isFinite(rating) ? rating : null })
+			.where(eq(userBooks.id, result.userBook.id));
+	},
+
+	addTag: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const type = String(data.get('type') ?? '');
+		const name = String(data.get('name') ?? '');
+
+		if (!TAG_TYPES.includes(type as TagType) || !name.trim()) return;
+
+		await addTag(result.userBook.id, type as TagType, name);
+	},
+
+	removeTag: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const tagId = String(data.get('tagId') ?? '');
+		if (!tagId) return;
+
+		await removeTag(result.userBook.id, tagId);
 	},
 
 	delete: async ({ params }) => {

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, unique } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
 	id: text('id')
@@ -66,6 +66,41 @@ export const settings = sqliteTable('settings', {
 		.notNull()
 		.$defaultFn(() => new Date())
 });
+
+/**
+ * A tag's `name` is only unique within its `type` — "Historical" can exist
+ * as both a genre and a mood without colliding.
+ */
+export const tags = sqliteTable(
+	'tags',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		type: text('type', { enum: ['genre', 'mood', 'setting'] }).notNull(),
+		name: text('name').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(table) => [unique().on(table.type, table.name)]
+);
+
+export const userBookTags = sqliteTable(
+	'user_book_tags',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userBookId: text('user_book_id')
+			.notNull()
+			.references(() => userBooks.id, { onDelete: 'cascade' }),
+		tagId: text('tag_id')
+			.notNull()
+			.references(() => tags.id, { onDelete: 'cascade' })
+	},
+	(table) => [unique().on(table.userBookId, table.tagId)]
+);
 
 export const readingLogs = sqliteTable('reading_logs', {
 	id: text('id')

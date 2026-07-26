@@ -671,6 +671,58 @@ button {
 	color: var(--color-text-muted);
 }
 
+.book-detail__rating {
+	margin-top: var(--space-3);
+}
+
+/* Star rating */
+.star-rating {
+	display: inline-flex;
+	gap: var(--space-1);
+}
+
+.star-rating__star {
+	position: relative;
+	display: inline-block;
+	width: 1.5rem;
+	height: 1.5rem;
+	font-size: 1.5rem;
+	line-height: 1;
+	color: var(--color-border);
+}
+
+.star-rating__star::before {
+	content: '★';
+	position: absolute;
+	inset: 0;
+}
+
+.star-rating__star::after {
+	content: '★';
+	position: absolute;
+	inset: 0;
+	width: var(--fill);
+	overflow: hidden;
+	white-space: nowrap;
+	color: var(--color-accent-gold);
+}
+
+.star-rating__half {
+	position: absolute;
+	inset: 0;
+	width: 50%;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+	z-index: 1;
+}
+
+.star-rating__half--right {
+	left: 50%;
+}
+
 .book-detail__panel {
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
@@ -831,4 +883,67 @@ button {
 	font-weight: 600;
 	font-size: var(--font-size-sm);
 	text-decoration: none;
+}
+
+/* Tag editor */
+.tag-editor {
+	margin-bottom: var(--space-4);
+}
+
+.tag-editor__label {
+	margin: 0 0 var(--space-2);
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.tag-editor__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	align-items: center;
+}
+
+.tag-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+	background: var(--color-surface-raised);
+	border-radius: 999px;
+	font-size: var(--font-size-sm);
+}
+
+.tag-chip__remove {
+	background: none;
+	border: none;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-base);
+	line-height: 1;
+	padding: 0 var(--space-1);
+	cursor: pointer;
+}
+
+.tag-chip__remove:hover {
+	color: var(--color-danger);
+}
+
+.tag-editor__add {
+	display: inline-flex;
+}
+
+.tag-editor__input {
+	padding: var(--space-1) var(--space-3);
+	background: none;
+	border: 1px dashed var(--color-border);
+	border-radius: 999px;
+	color: var(--color-text);
+	font-size: var(--font-size-sm);
+	width: 7rem;
+}
+
+.tag-editor__input:focus {
+	outline: none;
+	border-color: var(--color-primary);
 }

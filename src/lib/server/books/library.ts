@@ -1,7 +1,9 @@
 import { db } from '$lib/server/db';
 import { books, userBooks } from '$lib/server/db/schema';
 import { eq, or } from 'drizzle-orm';
-import type { BookSearchResult } from './search';
+import { getOpenLibrarySubjects, type BookSearchResult } from './search';
+import { normalizeSubjectsToGenres } from './genreMapping';
+import { applyGenreSuggestions } from './tags';
 
 /**
  * Finds-or-creates the Book row for a search result, then finds-or-creates
@@ -45,6 +47,16 @@ export async function addBookToLibrary(result: BookSearchResult) {
 		.insert(userBooks)
 		.values({ bookId: book.id, status: 'want_to_read' })
 		.returning();
+
+	// Pre-fill genre tags from Open Library's subjects as a sensible default —
+	// only for a genuinely new book, and only best-effort (see getOpenLibrarySubjects).
+	if (!existingBook && result.openLibraryId) {
+		const subjects = await getOpenLibrarySubjects(result.openLibraryId);
+		const genres = normalizeSubjectsToGenres(subjects);
+		if (genres.length > 0) {
+			await applyGenreSuggestions(userBook.id, genres);
+		}
+	}
 
 	return { bookId: book.id, userBookId: userBook.id, alreadyInLibrary: false };
 }
