@@ -1,0 +1,9 @@
+node_modules
+.svelte-kit
+build
+.git
+Assets
+ajar-reads-build-roadmap.md
+*.db
+*.db-*
+.env

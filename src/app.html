@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		<script>
+			// Applied synchronously, before first paint, to avoid a flash of the wrong theme/font.
+			(function () {
+				try {
+					var theme = localStorage.getItem('ajar-theme');
+					if (theme === 'light' || theme === 'dark') {
+						document.documentElement.dataset.theme = theme;
+					}
+					var font = localStorage.getItem('ajar-font');
+					if (font === 'dyslexic') {
+						document.documentElement.dataset.font = font;
+					}
+				} catch (e) {}
+			})();
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

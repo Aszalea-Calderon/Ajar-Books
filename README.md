@@ -32,7 +32,8 @@ Most reading trackers (GoodReads, StoryGraph, Fable) require an account with a t
 
 ```bash
 git clone https://github.com/Aszalea-Calderon/Ajar-Books
-cd ajar-reads
+cd Ajar-Books
+cp .env.example .env  # then set SESSION_SECRET
 docker compose up -d
 ```
 
@@ -42,11 +43,13 @@ Visit `http://localhost:3000` and create your account on first run.
 
 Copy `.env.example` to `.env` and set:
 
-| Variable | Required | Description |
-|---|---|---|
-| `SESSION_SECRET` | Yes | Random string used to sign session cookies |
-| `GOOGLE_BOOKS_API_KEY` | No | Enables Google Books as a metadata source for better cover art/coverage |
-| `OLLAMA_URL` | No | Point at an existing Ollama instance to enable AI-enhanced phrasing of your reader-type summary. Falls back to a templated summary if unset. |
+| Variable               | Required | Description                                                                                                                                                                   |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SESSION_SECRET`       | Yes      | Random string used to sign session cookies                                                                                                                                    |
+| `ORIGIN`               | No       | Docker only — the origin SvelteKit should trust for form submissions. Defaults to `http://localhost:3000`; override for a different host/port, LAN address, or domain/tunnel. |
+| `GOOGLE_BOOKS_API_KEY` | No       | Enables Google Books as a metadata source for better cover art/coverage                                                                                                       |
+| `OLLAMA_URL`           | No       | Point at an existing Ollama instance to enable AI-enhanced phrasing of your reader-type summary. Falls back to a templated summary if unset.                                  |
+| `SECURE_COOKIES`       | No       | Set to `true` once serving over HTTPS (reverse proxy/Cloudflare Tunnel) to mark session cookies `Secure`. Leave unset for plain `http://` access.                             |
 
 ## Data & Privacy
 
@@ -56,7 +59,7 @@ Copy `.env.example` to `.env` and set:
 
 ## Roadmap
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the phased build plan and current progress.
+See [`ajar-reads-build-roadmap.md`](ajar-reads-build-roadmap.md) for the phased build plan and current progress.
 
 ## Contributing
 
@@ -71,4 +74,5 @@ The "Ajar Reads" name and its illustration/logo assets are not covered by the co
 ## Acknowledgments
 
 Book search and metadata powered by [Open Library](https://openlibrary.org/), an [Internet Archive](https://archive.org/) project.
+
 # Ajar-Books

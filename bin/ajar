@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Resolve this script's real location (follows the symlink on PATH) so it
+# always runs docker compose against the actual project directory.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+	DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+	SOURCE="$(readlink "$SOURCE")"
+	[[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+REPO_DIR="$(cd -P "$(dirname "$SOURCE")/.." >/dev/null 2>&1 && pwd)"
+
+cd "$REPO_DIR"
+
+case "${1:-}" in
+	up)
+		docker compose up -d
+		echo "Ajar Books is up at http://localhost:3000"
+		;;
+	down)
+		docker compose down
+		;;
+	*)
+		echo "Usage: ajar {up|down}" >&2
+		exit 1
+		;;
+esac

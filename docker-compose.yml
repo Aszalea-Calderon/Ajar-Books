@@ -1,0 +1,16 @@
+services:
+  ajar-books:
+    build: .
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./data:/app/data
+    environment:
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env — see .env.example}
+      # SvelteKit needs to know its own origin to validate same-origin form submissions.
+      # Override in .env if you're serving from a different host/port or a domain/tunnel.
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+      OLLAMA_URL: ${OLLAMA_URL:-}
+      SECURE_COOKIES: ${SECURE_COOKIES:-}
+    restart: unless-stopped
