@@ -214,71 +214,79 @@
 			</div>
 		{/if}
 
-		<div class="book-detail__panel tag-grid">
-			<TagEditor
-				label="Genre"
-				type="genre"
-				tags={data.tagsByType.genre}
-				suggestions={data.suggestionsByType.genre}
-			/>
-			<TagEditor
-				label="Mood"
-				type="mood"
-				tags={data.tagsByType.mood}
-				suggestions={data.suggestionsByType.mood}
-			/>
-			<TagEditor
-				label="Setting"
-				type="setting"
-				tags={data.tagsByType.setting}
-				suggestions={data.suggestionsByType.setting}
-			/>
-		</div>
-
-		{#if data.book.description}
-			<div class="book-detail__panel">
-				<h3>About the book</h3>
-				<p class="book-detail__description">{data.book.description}</p>
+		<div class="book-detail__columns">
+			<div class="book-detail__panel tag-grid">
+				<TagEditor
+					label="Genre"
+					type="genre"
+					tags={data.tagsByType.genre}
+					suggestions={data.suggestionsByType.genre}
+				/>
+				<TagEditor
+					label="Mood"
+					type="mood"
+					tags={data.tagsByType.mood}
+					suggestions={data.suggestionsByType.mood}
+				/>
+				<TagEditor
+					label="Setting"
+					type="setting"
+					tags={data.tagsByType.setting}
+					suggestions={data.suggestionsByType.setting}
+				/>
 			</div>
-		{/if}
 
-		<div class="book-detail__panel">
-			<h3>Chapter Notes</h3>
-			{#if data.logs.length === 0}
-				<p class="dashboard__empty">No notes yet.</p>
-			{:else}
-				<ul class="activity-log">
-					{#each data.logs as log (log.id)}
-						<li class="activity-log__entry">
-							<span class="activity-log__date">
-								{log.loggedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-							</span>
-							<span class="activity-log__amount">
-								{#if log.pagesRead}
-									+{log.pagesRead} pages
-								{:else if log.minutesRead}
-									+{log.minutesRead} min
-								{/if}
-							</span>
-							{#if log.note}
-								<span class="activity-log__note">{log.note}</span>
-							{/if}
-							<button type="button" class="activity-log__edit" onclick={() => (editingLog = log)}>
-								Edit
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-
-			{#if data.userBook.format}
-				<div class="activity-log__footer">
-					<button type="button" class="search-result__label" onclick={() => (logModalOpen = true)}>
-						{logButtonLabel}
-					</button>
+			{#if data.book.description}
+				<div class="book-detail__panel">
+					<h3>About the book</h3>
+					<p class="book-detail__description">{data.book.description}</p>
 				</div>
 			{/if}
 		</div>
+
+		{#if data.userBook.status === 'reading' || data.userBook.status === 'finished' || data.logs.length > 0}
+			<div class="book-detail__panel">
+				<h3>Chapter Notes</h3>
+				{#if data.logs.length === 0}
+					<p class="dashboard__empty">No notes yet.</p>
+				{:else}
+					<ul class="activity-log">
+						{#each data.logs as log (log.id)}
+							<li class="activity-log__entry">
+								<span class="activity-log__date">
+									{log.loggedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+								</span>
+								<span class="activity-log__amount">
+									{#if log.pagesRead}
+										+{log.pagesRead} pages
+									{:else if log.minutesRead}
+										+{log.minutesRead} min
+									{/if}
+								</span>
+								{#if log.note}
+									<span class="activity-log__note">{log.note}</span>
+								{/if}
+								<button type="button" class="activity-log__edit" onclick={() => (editingLog = log)}>
+									Edit
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+
+				{#if data.userBook.format}
+					<div class="activity-log__footer">
+						<button
+							type="button"
+							class="search-result__label"
+							onclick={() => (logModalOpen = true)}
+						>
+							{logButtonLabel}
+						</button>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>
 

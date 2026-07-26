@@ -111,7 +111,7 @@ button {
 	align-items: center;
 	justify-content: center;
 	flex-wrap: wrap;
-	gap: var(--space-12);
+	gap: 6rem;
 	padding: var(--space-4);
 }
 
@@ -512,6 +512,10 @@ button {
 	gap: var(--space-4);
 }
 
+.theme-options + h3 {
+	margin-top: var(--space-8);
+}
+
 .theme-option {
 	display: flex;
 	flex-direction: column;
@@ -538,11 +542,11 @@ button {
 }
 
 .theme-swatch--dark {
-	background: linear-gradient(135deg, #12141a 50%, #4c8edb 50%);
+	background: linear-gradient(135deg, #12141a 50%, var(--color-primary) 50%);
 }
 
 .theme-swatch--light {
-	background: linear-gradient(135deg, #f7f8fa 50%, #1d5fa8 50%);
+	background: linear-gradient(135deg, #f7f8fa 50%, var(--color-primary) 50%);
 }
 
 .font-preview {
@@ -838,6 +842,21 @@ button {
 .progress-bar__actions {
 	display: flex;
 	justify-content: flex-end;
+}
+
+.book-detail__columns {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-6);
+	align-items: flex-start;
+}
+
+.book-detail__columns > .tag-grid {
+	flex: 3 1 24rem;
+}
+
+.book-detail__columns > .book-detail__panel:not(.tag-grid) {
+	flex: 2 1 18rem;
 }
 
 .tag-grid {
