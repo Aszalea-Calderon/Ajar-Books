@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { sanitizeDescription } from './search';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getOpenLibraryWorkDetails, sanitizeDescription } from './search';
 
 describe('sanitizeDescription', () => {
 	it('returns null for null input', () => {
@@ -30,5 +30,37 @@ describe('sanitizeDescription', () => {
 
 	it('returns null if stripping links empties the description entirely', () => {
 		expect(sanitizeDescription('[**PDF**](https://spam.example/x)')).toBeNull();
+	});
+});
+
+describe('getOpenLibraryWorkDetails', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('rejects a path-traversal id without making a network request', async () => {
+		const fetchSpy = vi.spyOn(global, 'fetch');
+		const result = await getOpenLibraryWorkDetails('/works/OL123W/../../evil');
+		expect(fetchSpy).not.toHaveBeenCalled();
+		expect(result).toEqual({ subjects: [], description: null });
+	});
+
+	it('rejects an id that is actually an absolute URL to another host', async () => {
+		const fetchSpy = vi.spyOn(global, 'fetch');
+		const result = await getOpenLibraryWorkDetails('https://evil.example/works/OL123W');
+		expect(fetchSpy).not.toHaveBeenCalled();
+		expect(result).toEqual({ subjects: [], description: null });
+	});
+
+	it('accepts a well-formed work id and fetches it', async () => {
+		const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+			ok: true,
+			json: async () => ({ subjects: ['Fantasy'], description: 'A tale.' })
+		} as Response);
+
+		const result = await getOpenLibraryWorkDetails('/works/OL123W');
+
+		expect(fetchSpy).toHaveBeenCalledWith('https://openlibrary.org/works/OL123W.json');
+		expect(result).toEqual({ subjects: ['Fantasy'], description: 'A tale.' });
 	});
 });

@@ -132,14 +132,25 @@ export function sanitizeDescription(description: string | null): string | null {
 	return cleaned || null;
 }
 
+const OPEN_LIBRARY_WORK_ID_PATTERN = /^\/works\/OL\d+W$/;
+
 /**
  * Fetches a work's raw subjects (for genre normalization) and description
  * (for the "About the book" panel). Best-effort: a failure here shouldn't
  * block adding the book, just skip the extra data.
+ *
+ * Validates the id's shape before using it in an outbound fetch URL — not
+ * exploitable today (this only ever runs against our own search results,
+ * gated behind auth + CSRF), but Import will introduce externally-sourced
+ * ids that could otherwise redirect the fetch to an arbitrary host/path.
  */
 export async function getOpenLibraryWorkDetails(
 	openLibraryId: string
 ): Promise<{ subjects: string[]; description: string | null }> {
+	if (!OPEN_LIBRARY_WORK_ID_PATTERN.test(openLibraryId)) {
+		return { subjects: [], description: null };
+	}
+
 	try {
 		const res = await fetch(`https://openlibrary.org${openLibraryId}.json`);
 		if (!res.ok) return { subjects: [], description: null };
