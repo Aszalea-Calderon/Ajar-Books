@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { clickOutside } from '$lib/clickOutside';
 	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
@@ -21,7 +20,6 @@
 	type LogEntry = PageData['logs'][number];
 
 	let formatModalMode = $state<'start' | 'change' | null>(null);
-	let resetMenuOpen = $state(false);
 	let logModalOpen = $state(false);
 	let logDialogEl: HTMLDialogElement;
 
@@ -197,13 +195,25 @@
 							})}
 						</span>
 					{/if}
-					<div class="book-detail__reset" use:clickOutside={() => (resetMenuOpen = false)}>
+					<form
+						method="POST"
+						action="?/removeBook"
+						use:enhance
+						onsubmit={(event) => {
+							if (
+								!confirm(
+									`Reset "${data.book.title}"? This clears its progress, format, and rating, but keeps it in your library as a book you can start tracking again.`
+								)
+							) {
+								event.preventDefault();
+							}
+						}}
+					>
 						<button
-							type="button"
+							type="submit"
 							class="book-detail__reset-trigger"
-							aria-label="Reset or delete this book"
-							title="Reset or delete this book"
-							onclick={() => (resetMenuOpen = !resetMenuOpen)}
+							aria-label="Reset this book's progress"
+							title="Reset this book's progress"
 						>
 							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 								<path
@@ -212,53 +222,7 @@
 								/>
 							</svg>
 						</button>
-						{#if resetMenuOpen}
-							<div class="book-detail__reset-menu">
-								<form
-									method="POST"
-									action="?/removeBook"
-									use:enhance={() => {
-										return async ({ update }) => {
-											await update();
-											resetMenuOpen = false;
-										};
-									}}
-									onsubmit={(event) => {
-										if (
-											!confirm(
-												`Reset "${data.book.title}"? This clears its progress, format, and rating, but keeps it in your library as a book you can start tracking again.`
-											)
-										) {
-											event.preventDefault();
-										}
-									}}
-								>
-									<button class="book-detail__reset-option" type="submit"> Reset progress </button>
-								</form>
-								<form
-									method="POST"
-									action="?/delete"
-									use:enhance
-									onsubmit={(event) => {
-										if (
-											!confirm(
-												`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
-											)
-										) {
-											event.preventDefault();
-										}
-									}}
-								>
-									<button
-										class="book-detail__reset-option book-detail__reset-option--danger"
-										type="submit"
-									>
-										Delete permanently
-									</button>
-								</form>
-							</div>
-						{/if}
-					</div>
+					</form>
 				{/if}
 			</div>
 			<div class="format-status">
@@ -312,29 +276,35 @@
 								<span class="spinner spinner--muted"></span> Loading…
 							</p>
 						{:then preview}
-							<div class="more-by-author__list">
-								{#each preview as book (book.title)}
+							{#if preview.length === 0}
+								<p class="more-by-author__empty">
+									We couldn't find any other books by {data.book.author}.
+								</p>
+							{:else}
+								<div class="more-by-author__list">
+									{#each preview as book (book.title)}
+										<a
+											class="more-by-author__book"
+											href={book.libraryBookId
+												? resolve('/(app)/books/[id]', { id: book.libraryBookId })
+												: resolve(`/search?q=${encodeURIComponent(book.title)}`)}
+											title={book.title}
+										>
+											{#if book.coverUrl}
+												<img class="more-by-author__cover" src={book.coverUrl} alt="" />
+											{:else}
+												<div class="more-by-author__cover more-by-author__cover--placeholder"></div>
+											{/if}
+										</a>
+									{/each}
 									<a
-										class="more-by-author__book"
-										href={book.libraryBookId
-											? resolve('/(app)/books/[id]', { id: book.libraryBookId })
-											: resolve(`/search?q=${encodeURIComponent(book.title)}`)}
-										title={book.title}
+										class="more-by-author__view-more"
+										href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
 									>
-										{#if book.coverUrl}
-											<img class="more-by-author__cover" src={book.coverUrl} alt="" />
-										{:else}
-											<div class="more-by-author__cover more-by-author__cover--placeholder"></div>
-										{/if}
+										View more
 									</a>
-								{/each}
-								<a
-									class="more-by-author__view-more"
-									href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
-								>
-									View more
-								</a>
-							</div>
+								</div>
+							{/if}
 						{/await}
 					</div>
 				{/if}
