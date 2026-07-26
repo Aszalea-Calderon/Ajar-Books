@@ -8,6 +8,9 @@ if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
 const client = new Database(env.DATABASE_URL);
 client.pragma('journal_mode = WAL');
+// SQLite ignores ON DELETE CASCADE (defined in the schema/migrations) unless
+// foreign key enforcement is turned on for the connection.
+client.pragma('foreign_keys = ON');
 
 export const db = drizzle(client, { schema });
 

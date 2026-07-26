@@ -1,5 +1,8 @@
 <script lang="ts">
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let settingsOpen = $state(false);
 </script>
@@ -16,4 +19,4 @@
 	</button>
 </div>
 
-<SettingsModal bind:open={settingsOpen} />
+<SettingsModal bind:open={settingsOpen} googleBooksApiKey={data.googleBooksApiKey} />

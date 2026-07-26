@@ -31,19 +31,19 @@ _Phased build order with checklists. Estimates assume part-time, evenings/weeken
 
 | Done | Task                                                                                           |
 | ---- | ---------------------------------------------------------------------------------------------- |
-| ☐    | Integrate Open Library search API                                                              |
-| ☐    | Add optional Google Books API key config                                                       |
-| ☐    | Build book search UI                                                                           |
-| ☐    | Build "add book to library" action (creates `Book` + `UserBook`)                               |
-| ☐    | Build book detail page scaffold                                                                |
-| ☐    | Add format selection (physical / ebook / audiobook)                                            |
-| ☐    | Build progress-logging UI (pages input)                                                        |
-| ☐    | Build progress-logging UI (minutes input, for audiobooks)                                      |
-| ☐    | Wire progress logging to write `ReadingLog` rows                                               |
-| ☐    | Build "Currently Reading" dashboard section                                                    |
-| ☐    | Build live progress bar component (page-based)                                                 |
-| ☐    | Build live progress bar component (time-based)                                                 |
-| ☐    | Verify: search a real book, add it, log progress against both a page-based and time-based book |
+| ☑    | Integrate Open Library search API                                                              |
+| ☑    | Add optional Google Books API key config                                                       |
+| ☑    | Build book search UI                                                                           |
+| ☑    | Build "add book to library" action (creates `Book` + `UserBook`)                               |
+| ☑    | Build book detail page scaffold                                                                |
+| ☑    | Add format selection (physical / ebook / audiobook)                                            |
+| ☑    | Build progress-logging UI (pages input)                                                        |
+| ☑    | Build progress-logging UI (minutes input, for audiobooks)                                      |
+| ☑    | Wire progress logging to write `ReadingLog` rows                                               |
+| ☑    | Build "Currently Reading" dashboard section                                                    |
+| ☑    | Build live progress bar component (page-based)                                                 |
+| ☑    | Build live progress bar component (time-based)                                                 |
+| ☑    | Verify: search a real book, add it, log progress against both a page-based and time-based book |
 
 ---
 

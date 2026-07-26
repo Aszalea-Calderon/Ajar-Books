@@ -54,6 +54,19 @@ export const userBooks = sqliteTable('user_books', {
 		.$defaultFn(() => new Date())
 });
 
+/**
+ * Single-row app-wide config editable from Settings (e.g. API keys) —
+ * a DB-backed alternative to env vars that doesn't require a restart.
+ * Always keyed by SETTINGS_ID ('app'); see $lib/server/settings.ts.
+ */
+export const settings = sqliteTable('settings', {
+	id: text('id').primaryKey(),
+	googleBooksApiKey: text('google_books_api_key'),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
+});
+
 export const readingLogs = sqliteTable('reading_logs', {
 	id: text('id')
 		.primaryKey()

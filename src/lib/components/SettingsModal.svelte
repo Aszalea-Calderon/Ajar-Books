@@ -1,11 +1,16 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 
-	let { open = $bindable(false) }: { open?: boolean } = $props();
+	let {
+		open = $bindable(false),
+		googleBooksApiKey
+	}: { open?: boolean; googleBooksApiKey: string | null } = $props();
 
 	let dialogEl: HTMLDialogElement;
-	let section = $state<'themes' | 'fonts'>('themes');
+	let section = $state<'themes' | 'fonts' | 'integrations'>('themes');
+	let justSaved = $state(false);
 
 	$effect(() => {
 		if (!dialogEl) return;
@@ -66,6 +71,14 @@
 			>
 				Fonts
 			</button>
+			<button
+				type="button"
+				class="settings-modal__nav-item"
+				class:settings-modal__nav-item--active={section === 'integrations'}
+				onclick={() => (section = 'integrations')}
+			>
+				Integrations
+			</button>
 		</nav>
 		<div class="settings-modal__content">
 			{#if section === 'themes'}
@@ -83,7 +96,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else}
+			{:else if section === 'fonts'}
 				<h3>Font</h3>
 				<div class="theme-options">
 					{#each fonts as f (f.id)}
@@ -98,6 +111,42 @@
 						</button>
 					{/each}
 				</div>
+			{:else}
+				<h3>Google Books API Key</h3>
+				<p class="settings-hint">
+					Optional — widens search results and improves cover art. Get a free key from the <a
+						href="https://console.cloud.google.com/apis/library/books.googleapis.com"
+						target="_blank"
+						rel="noreferrer">Google Cloud Console</a
+					>. Stored in your database, only ever sent to Google's API.
+				</p>
+				<form
+					method="POST"
+					action="/profile?/saveGoogleBooksKey"
+					use:enhance={() => {
+						justSaved = false;
+						return async ({ update }) => {
+							await update();
+							justSaved = true;
+						};
+					}}
+				>
+					<div class="auth-field">
+						<label for="googleBooksApiKey">API Key</label>
+						<input
+							id="googleBooksApiKey"
+							name="googleBooksApiKey"
+							type="text"
+							value={googleBooksApiKey ?? ''}
+							placeholder="Not set"
+							oninput={() => (justSaved = false)}
+						/>
+					</div>
+					<button class="auth-submit" type="submit">Save</button>
+					{#if justSaved}
+						<p class="settings-hint settings-hint--success">Saved.</p>
+					{/if}
+				</form>
 			{/if}
 		</div>
 	</div>
