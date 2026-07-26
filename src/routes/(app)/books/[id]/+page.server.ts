@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { desc, eq, or } from 'drizzle-orm';
+import { and, desc, eq, ne, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { parseLocalDateInput } from '$lib/date';
 import { db } from '$lib/server/db';
@@ -92,6 +92,20 @@ async function getMoreByAuthor(author: string, currentBookId: string) {
 	return preview;
 }
 
+/**
+ * Books already in the user's own library by the same author — distinct
+ * from getMoreByAuthor's live external-search preview, this is a purely
+ * local lookup (no network call) of what they've actually added, so it's
+ * awaited directly rather than streamed.
+ */
+async function getOtherBooksByAuthorInLibrary(author: string, currentBookId: string) {
+	const rows = await db
+		.select({ id: books.id, title: books.title, coverUrl: books.coverUrl })
+		.from(books)
+		.where(and(eq(books.author, author), ne(books.id, currentBookId)));
+	return rows;
+}
+
 async function loadBookAndUserBook(bookId: string) {
 	const [book] = await db.select().from(books).where(eq(books.id, bookId));
 	if (!book) return null;
@@ -134,8 +148,20 @@ export const load: PageServerLoad = async ({ params }) => {
 	// page (logging progress, tagging, etc. all call invalidateAll(), which
 	// would otherwise re-run this live search every single time).
 	const moreByAuthor = book.author ? getMoreByAuthor(book.author, book.id) : Promise.resolve([]);
+	const otherBooksByAuthorInLibrary = book.author
+		? await getOtherBooksByAuthorInLibrary(book.author, book.id)
+		: [];
 
-	return { book, userBook, logs, totals, tagsByType, suggestionsByType, moreByAuthor };
+	return {
+		book,
+		userBook,
+		logs,
+		totals,
+		tagsByType,
+		suggestionsByType,
+		moreByAuthor,
+		otherBooksByAuthorInLibrary
+	};
 };
 
 export const actions: Actions = {
@@ -344,6 +370,7 @@ export const actions: Actions = {
 		await db
 			.update(userBooks)
 			.set({
+				status: 'finished',
 				rating: rating != null && Number.isFinite(rating) ? rating : null,
 				finishedAt
 			})

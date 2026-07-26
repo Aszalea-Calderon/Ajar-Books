@@ -140,13 +140,9 @@
 								{/if}
 							</div>
 						</button>
-						<span class="search-result__label">
-							{#if submittingKey === resultKey(result)}
-								<span class="spinner"></span> Adding…
-							{:else}
-								Add to Library
-							{/if}
-						</span>
+						{#if submittingKey === resultKey(result)}
+							<span class="search-result__label"><span class="spinner"></span></span>
+						{/if}
 					</form>
 				{/if}
 			{/each}

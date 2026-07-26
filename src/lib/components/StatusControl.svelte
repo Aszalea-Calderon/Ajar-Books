@@ -7,17 +7,29 @@
 	// shows every option as an equally-available first choice.
 	let {
 		status,
-		onReadingClick
+		resetConfirmMessage,
+		onReadingClick,
+		onFinishedClick
 	}: {
 		status: 'added' | 'want_to_read' | 'reading' | 'finished' | 'dnf';
+		resetConfirmMessage: string;
 		onReadingClick: () => void;
+		onFinishedClick: () => void;
 	} = $props();
+
+	// Clicking an already-active Currently Reading/Finished/DNF pill again
+	// resets progress (same confirm-gated action as the dedicated reset
+	// button) rather than doing nothing — Want to Read has its own lighter
+	// untoggle instead, since there's no progress/format/rating to lose yet.
+	function confirmReset(event: SubmitEvent) {
+		if (!confirm(resetConfirmMessage)) {
+			event.preventDefault();
+		}
+	}
 </script>
 
 <div class="status-control">
 	{#if status === 'want_to_read'}
-		<!-- Already active: clicking again untoggles back to the neutral
-		     'added' state rather than doing nothing (see untoggleWantToRead). -->
 		<form method="POST" action="?/untoggleWantToRead" use:enhance>
 			<button type="submit" class="status-control__pill status-control__pill--active">
 				Want to Read
@@ -29,35 +41,39 @@
 			<button type="submit" class="status-control__pill">Want to Read</button>
 		</form>
 	{/if}
-	<button
-		type="button"
-		class="status-control__pill"
-		class:status-control__pill--active={status === 'reading'}
-		disabled={status === 'reading'}
-		onclick={onReadingClick}
-	>
-		Currently Reading
-	</button>
-	<form method="POST" action="?/setStatus" use:enhance>
-		<input type="hidden" name="status" value="finished" />
-		<button
-			type="submit"
-			class="status-control__pill"
-			class:status-control__pill--active={status === 'finished'}
-			disabled={status === 'finished'}
-		>
-			Finished
+
+	{#if status === 'reading'}
+		<form method="POST" action="?/removeBook" use:enhance onsubmit={confirmReset}>
+			<button type="submit" class="status-control__pill status-control__pill--active">
+				Currently Reading
+			</button>
+		</form>
+	{:else}
+		<button type="button" class="status-control__pill" onclick={onReadingClick}>
+			Currently Reading
 		</button>
-	</form>
-	<form method="POST" action="?/setStatus" use:enhance>
-		<input type="hidden" name="status" value="dnf" />
-		<button
-			type="submit"
-			class="status-control__pill"
-			class:status-control__pill--active={status === 'dnf'}
-			disabled={status === 'dnf'}
-		>
-			Did Not Finish
-		</button>
-	</form>
+	{/if}
+
+	{#if status === 'finished'}
+		<form method="POST" action="?/removeBook" use:enhance onsubmit={confirmReset}>
+			<button type="submit" class="status-control__pill status-control__pill--active">
+				Finished
+			</button>
+		</form>
+	{:else}
+		<button type="button" class="status-control__pill" onclick={onFinishedClick}>Finished</button>
+	{/if}
+
+	{#if status === 'dnf'}
+		<form method="POST" action="?/removeBook" use:enhance onsubmit={confirmReset}>
+			<button type="submit" class="status-control__pill status-control__pill--active">
+				Did Not Finish
+			</button>
+		</form>
+	{:else}
+		<form method="POST" action="?/setStatus" use:enhance>
+			<input type="hidden" name="status" value="dnf" />
+			<button type="submit" class="status-control__pill">Did Not Finish</button>
+		</form>
+	{/if}
 </div>

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { userBooks, readingLogs } from '$lib/server/db/schema';
-import { eq, sum } from 'drizzle-orm';
+import { and, eq, isNull, sum } from 'drizzle-orm';
 
 export async function getProgressTotals(userBookId: string) {
 	const [row] = await db
@@ -159,14 +159,19 @@ export async function untoggleWantToRead(userBookId: string) {
 }
 
 /**
- * "Reset to Want to Read" (soft alternative to hard Delete): wipes this
- * book's reading history and lands it back on the neutral 'added' state,
- * not 'want_to_read' — choosing "Want to Read" is meant to be a deliberate
- * action (the bookmark), not something a reset performs on your behalf.
- * Keeps the Book row and its tags — only the reading-progress side resets.
+ * Soft reset (alternative to hard Delete): clears this book's progress and
+ * lands it back on the neutral 'added' state, not 'want_to_read' — choosing
+ * "Want to Read" is meant to be a deliberate action, not something a reset
+ * performs on your behalf. Keeps the Book row and its tags — only the
+ * reading-progress side resets. Only drops amount-only log entries (plain
+ * page/minute counts, meaningless once the goal they counted toward is
+ * gone); entries with a note are kept, since those are the reader's own
+ * words and a hard Delete is the only action meant to erase those.
  */
 export async function resetUserBook(userBookId: string) {
-	await db.delete(readingLogs).where(eq(readingLogs.userBookId, userBookId));
+	await db
+		.delete(readingLogs)
+		.where(and(eq(readingLogs.userBookId, userBookId), isNull(readingLogs.note)));
 	await db
 		.update(userBooks)
 		.set({

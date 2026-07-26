@@ -109,6 +109,10 @@
 			.join(' · ')
 	);
 
+	let resetConfirmMessage = $derived(
+		`Reset "${data.book.title}"? This clears its progress, format, and rating. Any notes you've added will be kept.`
+	);
+
 	let isUntouched = $derived(data.userBook.status === 'added');
 	// finishedAt is never cleared by a later manual status change (see
 	// setStatus), so its presence alongside 'reading' means this is a
@@ -126,6 +130,12 @@
 	let isAudiobook = $derived(data.userBook.format === 'audiobook');
 	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
 	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
+	// The entry that actually drives the progress bar's current total — lets
+	// "edit reading progress" jump straight to correcting it, without
+	// scrolling down to find the right Chapter Notes entry by hand.
+	let latestProgressLog = $derived(
+		data.logs.find((log) => log.pagesRead != null || log.minutesRead != null) ?? null
+	);
 	let editingIsMinutes = $derived(editingLog?.minutesRead != null);
 </script>
 
@@ -164,25 +174,17 @@
 	<div class="book-detail__body">
 		<div class="book-detail__row">
 			<div class="book-detail__row-left">
-				{#if isUntouched}
-					<form method="POST" action="?/setStatus" use:enhance>
-						<input type="hidden" name="status" value="want_to_read" />
-						<button
-							type="submit"
-							class="book-detail__bookmark"
-							aria-label="Want to read later"
-							title="Want to read later"
-						>
-							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-								<path fill="currentColor" d="M6 2a2 2 0 0 0-2 2v18l8-5 8 5V4a2 2 0 0 0-2-2H6Z" />
-							</svg>
-							Want to read later
-						</button>
-					</form>
-				{/if}
 				<StatusControl
 					status={data.userBook.status}
+					{resetConfirmMessage}
 					onReadingClick={() => (formatModalMode = 'start')}
+					onFinishedClick={() => {
+						finishedRating = data.userBook.rating ?? 0;
+						finishedDate = data.userBook.finishedAt
+							? toLocalDateInputValue(data.userBook.finishedAt)
+							: todayLocalDateString();
+						finishedModalOpen = true;
+					}}
 				/>
 				{#if !isUntouched}
 					<StarRating value={data.userBook.rating} />
@@ -200,11 +202,7 @@
 						action="?/removeBook"
 						use:enhance
 						onsubmit={(event) => {
-							if (
-								!confirm(
-									`Reset "${data.book.title}"? This clears its progress, format, and rating, but keeps it in your library as a book you can start tracking again.`
-								)
-							) {
+							if (!confirm(resetConfirmMessage)) {
 								event.preventDefault();
 							}
 						}}
@@ -249,6 +247,22 @@
 					variant="segments"
 				/>
 				<div class="progress-bar__actions">
+					{#if latestProgressLog}
+						<button
+							type="button"
+							class="book-detail__reset-trigger"
+							aria-label="Edit reading progress"
+							title="Edit reading progress"
+							onclick={() => (editingLog = latestProgressLog)}
+						>
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+								<path
+									fill="currentColor"
+									d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"
+								/>
+							</svg>
+						</button>
+					{/if}
 					<button type="button" class="search-result__label" onclick={() => (logModalOpen = true)}>
 						{logButtonLabel}
 					</button>
@@ -330,6 +344,26 @@
 					tags={data.tagsByType.genre}
 					suggestions={data.suggestionsByType.genre}
 				/>
+				{#if data.otherBooksByAuthorInLibrary.length > 0}
+					<div class="also-by-author">
+						<h4 class="also-by-author__label">Also by {data.book.author} in your library</h4>
+						<div class="also-by-author__list">
+							{#each data.otherBooksByAuthorInLibrary as book (book.id)}
+								<a
+									class="also-by-author__book"
+									href={resolve('/(app)/books/[id]', { id: book.id })}
+									title={book.title}
+								>
+									{#if book.coverUrl}
+										<img class="also-by-author__cover" src={book.coverUrl} alt="" />
+									{:else}
+										<div class="also-by-author__cover also-by-author__cover--placeholder"></div>
+									{/if}
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
 				<TagEditor
 					label="Mood"
 					type="mood"
@@ -367,8 +401,19 @@
 								{#if log.note}
 									<span class="activity-log__note">{log.note}</span>
 								{/if}
-								<button type="button" class="activity-log__edit" onclick={() => (editingLog = log)}>
-									Edit
+								<button
+									type="button"
+									class="activity-log__icon-button"
+									aria-label="Edit entry"
+									title="Edit entry"
+									onclick={() => (editingLog = log)}
+								>
+									<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+										<path
+											fill="currentColor"
+											d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"
+										/>
+									</svg>
 								</button>
 								<form
 									method="POST"
@@ -381,8 +426,18 @@
 									}}
 								>
 									<input type="hidden" name="logId" value={log.id} />
-									<button type="submit" class="activity-log__delete" aria-label="Delete entry">
-										Delete
+									<button
+										type="submit"
+										class="activity-log__icon-button activity-log__icon-button--danger"
+										aria-label="Delete entry"
+										title="Delete entry"
+									>
+										<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+											<path
+												fill="currentColor"
+												d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+											/>
+										</svg>
 									</button>
 								</form>
 							</li>
