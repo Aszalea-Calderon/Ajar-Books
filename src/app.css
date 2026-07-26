@@ -864,16 +864,16 @@ button {
 }
 
 .book-detail__columns > .tag-grid {
-	flex: 3 1 24rem;
+	flex: 1 1 16rem;
 }
 
 .book-detail__columns > .book-detail__panel:not(.tag-grid) {
-	flex: 2 1 18rem;
+	flex: 2 1 20rem;
 }
 
 .tag-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	display: flex;
+	flex-direction: column;
 	gap: var(--space-6);
 }
 
