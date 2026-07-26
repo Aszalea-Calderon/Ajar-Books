@@ -53,9 +53,10 @@ Copy `.env.example` to `.env` and set:
 
 ## Data & Privacy
 
-- No analytics, no telemetry, no third-party calls unless you explicitly configure one (Google Books, Ollama)
+- No analytics, no telemetry
+- Book search/metadata is pulled from [Open Library](https://openlibrary.org/), a third-party service, by default — no account or API key needed. Optional additional sources (Google Books, Ollama) only get called if you configure a key/URL yourself
 - All data lives in a single SQLite file — back it up by copying it
-- Export your data anytime (Settings → Export)
+- Data export (CSV/JSON) is planned but not yet built — see the roadmap
 
 ## Roadmap
 
