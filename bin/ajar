@@ -13,25 +13,31 @@ REPO_DIR="$(cd -P "$(dirname "$SOURCE")/.." >/dev/null 2>&1 && pwd)"
 
 cd "$REPO_DIR"
 
+WELCOME_FACES=("(◠‿◠)" "(づ｡◕‿‿◕｡)づ" "⊂(￣▽￣)⊃" "(｡•̀ᴗ-)✧" "ヽ(°〇°)ﾉ")
+WELCOME_LINE1=("Welcome to Ajar Books!" "Hey there, reader!" "Ajar Books is opening up!" "Welcome back!" "Ajar Books incoming!")
+WELCOME_LINE2=("Spinning up your library..." "Dusting off your bookshelf..." "Let's get reading..." "Warming up your library..." "Setting the bookmarks...")
+
+GOODBYE_FACES=("(˘▾˘)~" "(-_-) zzZ" "(๑•̀ㅂ•́)و" "(ノ˘▽˘)ノ" "(￣ω￣)")
+GOODBYE_LINE1=("Closing up for now" "Ajar Books is taking a nap" "Shelved for now" "Locking up the library" "Ajar Books is closed")
+GOODBYE_LINE2=("happy reading!" "see you soon!" "come back anytime!" "bye for now!" "rest well!")
+
 print_welcome() {
-	cat <<'BANNER'
-
-        (◠‿◠)
-
-   Welcome to Ajar Books!
-   Spinning up your library...
-
-BANNER
+	local i=$((RANDOM % ${#WELCOME_FACES[@]}))
+	echo ""
+	echo "        ${WELCOME_FACES[$i]}"
+	echo ""
+	echo "   ${WELCOME_LINE1[$i]}"
+	echo "   ${WELCOME_LINE2[$i]}"
+	echo ""
 }
 
 print_goodbye() {
-	cat <<'BANNER'
-
-        (˘▾˘)~
-
-   Closing up for now — happy reading!
-
-BANNER
+	local i=$((RANDOM % ${#GOODBYE_FACES[@]}))
+	echo ""
+	echo "        ${GOODBYE_FACES[$i]}"
+	echo ""
+	echo "   ${GOODBYE_LINE1[$i]} — ${GOODBYE_LINE2[$i]}"
+	echo ""
 }
 
 case "${1:-}" in
