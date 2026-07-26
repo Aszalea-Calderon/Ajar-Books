@@ -89,13 +89,14 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 **Why this order:** these make the core tracking experience correctable before Import brings in your whole reading history at once — a wrong page count, a status that should've been "finished," or a book that shouldn't have been added are all far more likely to show up at Import scale than one book at a time, so the tools to fix them are worth having first.
 **Estimate:** 3-5 days
 
-| Done | Task                                                                                                                                                                                                                   |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ☑    | Add "About the book" panel (real synopsis + page count pulled from Open Library/Google Books, never fabricated)                                                                                                        |
-| ☐    | Allow editing an existing reading-log entry (amount and note) instead of only ever being able to add new ones                                                                                                          |
-| ☐    | Reframe the Activity panel as "Chapter Notes" — a note-centric, editable journal rather than just an auto-generated log of progress timestamps                                                                         |
-| ☐    | Add a manual status control (Want to Read / Currently Reading / Finished) independent of the automatic progress-based transitions                                                                                      |
-| ☐    | Add a "Remove book" action, distinct from the existing hard Delete — resets the book to its default state (want to read, no progress/format) rather than erasing its history, as a softer alternative to full deletion |
+| Done | Task                                                                                                                                                                                                                                                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ☑    | Add "About the book" panel (real synopsis + page count pulled from Open Library/Google Books, never fabricated)                                                                                                                                                                         |
+| ☐    | Allow editing an existing reading-log entry (amount and note) instead of only ever being able to add new ones                                                                                                                                                                           |
+| ☐    | Reframe the Activity panel as "Chapter Notes" — a note-centric, editable journal rather than just an auto-generated log of progress timestamps                                                                                                                                          |
+| ☐    | Add a manual status control (Want to Read / Currently Reading / Finished) independent of the automatic progress-based transitions                                                                                                                                                       |
+| ☐    | Add a "Remove book" action, distinct from the existing hard Delete — resets the book to its default state (want to read, no progress/format) rather than erasing its history, as a softer alternative to full deletion                                                                  |
+| ☐    | Make the dashboard's Currently Reading chips swap which book is shown in the hero "Track Progress" card, instead of navigating to that book's own detail page — matches the original Homepage wireframe, for switching between multiple in-progress books without leaving the dashboard |
 
 ---
 
@@ -164,13 +165,14 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 **Why this order:** by now every screen exists, so presets get designed/tested against the full real app — easier to catch a preset that looks bad on a screen you hadn't built yet.
 **Estimate:** 2-4 days
 
-| Done | Task                                                          |
-| ---- | ------------------------------------------------------------- |
-| ☐    | Design additional color presets beyond the Phase 0 default    |
-| ☐    | Implement preset switching (token overrides)                  |
-| ☐    | Build theme picker UI in Settings                             |
-| ☐    | QA all presets across every screen                            |
-| ☐    | QA illustrations across all presets (light + dark especially) |
+| Done | Task                                                                                                                     |
+| ---- | ------------------------------------------------------------------------------------------------------------------------ |
+| ☑    | Design additional color presets beyond the Phase 0 default (currently just Light; more can follow)                       |
+| ☑    | Implement preset switching (token overrides)                                                                             |
+| ☑    | Build theme picker UI in Settings                                                                                        |
+| ☑    | Add a custom accent-color picker (goes beyond fixed presets — freeform color choice with auto-computed contrasting text) |
+| ☐    | QA all presets across every screen                                                                                       |
+| ☐    | QA illustrations across all presets (light + dark especially)                                                            |
 
 ---
 
