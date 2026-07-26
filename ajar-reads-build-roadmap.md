@@ -65,6 +65,25 @@ _Phased build order with checklists. Estimates assume part-time, evenings/weeken
 
 ---
 
+## Phase 2.5 — Hardening & Security
+
+**Why this order:** surfaced by a dedicated security-review pass partway through Phase 2. Sequenced here — before Import adds a new untrusted-input surface (parsing other people's Goodreads/StoryGraph export files) — rather than after, since Import is exactly the kind of feature that turns a defense-in-depth gap into a real one.
+**Estimate:** half a day for the remaining open items
+
+| Done | Priority | Task                                                                                                                                                                                                                                           |
+| ---- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ☑    | High     | Rate-limit failed login attempts (per-IP, lockout after 5 attempts/15 min) — previously nothing stopped brute-forcing the one account                                                                                                          |
+| ☑    | High     | Run the Docker container as a non-root user (starts as root only long enough to fix bind-mount ownership, then drops via `gosu`)                                                                                                               |
+| ☑    | Medium   | Patch known `cookie` package vulnerability (GHSA-pxg6-pf52-xh8x) via a pnpm override, pinned to the same major version to avoid an API break                                                                                                   |
+| ☐    | Low      | Validate `openLibraryId`'s shape (e.g. `/works/OL\d+W`) before using it in outbound fetch URLs in `search.ts` — not exploitable today (gated behind auth + CSRF), but Import will introduce untrusted data that could reach the same code path |
+| ☐    | Medium   | Add minimal automated tests for the trickiest logic: status transitions, genre normalization, and Import's parsers once Phase 3 lands                                                                                                          |
+| ☐    | Medium   | Turn Phase 7's backup "guidance" into an actual one-click export feature, rather than just docs telling you to copy the SQLite file                                                                                                            |
+| ☐    | Low      | Add pagination to Search/Library views once your library grows past ~100+ books — everything currently loads unpaginated                                                                                                                       |
+
+_Not included:_ a theoretical TOCTOU race in first-run account creation was investigated and ruled not worth fixing — this app has no per-user data isolation at all, so a second account would confer no additional access, and the realistic precondition (an untrusted party reaching an unconfigured instance before you complete first-run setup) is an operational concern, not a code one.
+
+---
+
 ## Phase 3 — Import
 
 **Why this order:** importing your real history here means Phases 4 and 5 get built and tested against actual books, dates, and genre spread — a much better test than synthetic data.

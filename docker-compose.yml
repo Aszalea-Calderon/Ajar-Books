@@ -14,3 +14,13 @@ services:
       OLLAMA_URL: ${OLLAMA_URL:-}
       SECURE_COOKIES: ${SECURE_COOKIES:-}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      # Only what the entrypoint needs to chown the data volume and drop
+      # from root to the unprivileged `node` user before running the app.
+      - CHOWN
+      - SETUID
+      - SETGID
