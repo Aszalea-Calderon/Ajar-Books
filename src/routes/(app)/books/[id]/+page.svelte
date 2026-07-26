@@ -210,7 +210,10 @@
 		<div class="book-detail__row">
 			<div class="book-detail__row-left">
 				{#if !isUntouched}
-					<StatusControl status={data.userBook.status} />
+					<StatusControl
+						status={data.userBook.status}
+						onReadingClick={() => (formatModalMode = 'start')}
+					/>
 					<StarRating value={data.userBook.rating} />
 				{/if}
 			</div>

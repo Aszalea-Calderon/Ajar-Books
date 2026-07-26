@@ -106,19 +106,28 @@
 						bind:value={startDate}
 					/>
 				</div>
-			{/if}
-			<div class="auth-field">
-				<label for="formatModalTotal">
-					{selectedFormat === 'audiobook' ? 'Total length (minutes)' : 'Total pages'}
-				</label>
+				<!-- No editable total here — the pulled-in page count (if any) is
+				     submitted as-is. Adjusting the goal later happens via "Change
+				     format", which does show an editable field. -->
 				<input
-					id="formatModalTotal"
+					type="hidden"
 					name={selectedFormat === 'audiobook' ? 'totalMinutes' : 'totalPages'}
-					type="number"
-					min="1"
 					value={totalDefault}
 				/>
-			</div>
+			{:else}
+				<div class="auth-field">
+					<label for="formatModalTotal">
+						{selectedFormat === 'audiobook' ? 'Total length (minutes)' : 'Total pages'}
+					</label>
+					<input
+						id="formatModalTotal"
+						name={selectedFormat === 'audiobook' ? 'totalMinutes' : 'totalPages'}
+						type="number"
+						min="1"
+						value={totalDefault}
+					/>
+				</div>
+			{/if}
 			<button class="auth-submit" type="submit">{submitLabel}</button>
 		</form>
 	</div>
