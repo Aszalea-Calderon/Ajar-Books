@@ -1,18 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FormatModal from '$lib/components/FormatModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StarRating from '$lib/components/StarRating.svelte';
+	import StatusControl from '$lib/components/StatusControl.svelte';
 	import TagEditor from '$lib/components/TagEditor.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-
-	const statusOptions = [
-		{ id: 'want_to_read', label: 'Want to Read' },
-		{ id: 'reading', label: 'Currently Reading' },
-		{ id: 'finished', label: 'Finished' },
-		{ id: 'dnf', label: 'Did Not Finish' }
-	] as const;
 
 	const formatLabels: Record<string, string> = {
 		physical: 'Physical',
@@ -20,11 +15,9 @@
 		audiobook: 'Audiobook'
 	};
 
-	const formats = ['physical', 'ebook', 'audiobook'] as const;
-	type Format = (typeof formats)[number];
 	type LogEntry = PageData['logs'][number];
 
-	let pendingFormat = $state<Format | null>(null);
+	let formatModalMode = $state<'start' | 'change' | null>(null);
 	let logModalOpen = $state(false);
 	let logDialogEl: HTMLDialogElement;
 
@@ -62,19 +55,6 @@
 			.filter(Boolean)
 			.join(' · ')
 	);
-
-	let pendingTotalDefault = $derived.by(() => {
-		if (pendingFormat === data.userBook.format) {
-			return pendingFormat === 'audiobook' ? data.userBook.totalMinutes : data.userBook.totalPages;
-		}
-		// Picking a fresh (not previously saved) physical/ebook format: suggest
-		// the page count pulled from Open Library/Google Books, if we have one.
-		// No equivalent source exists for audiobook runtime, so that stays blank.
-		if (pendingFormat && pendingFormat !== 'audiobook') {
-			return data.book.pageCount;
-		}
-		return null;
-	});
 
 	let isAudiobook = $derived(data.userBook.format === 'audiobook');
 	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
@@ -142,62 +122,32 @@
 	<div class="book-detail__body">
 		<div class="book-detail__row">
 			<div class="book-detail__row-left">
-				<form method="POST" action="?/setStatus" use:enhance>
-					<select
-						class="status-control"
-						name="status"
-						value={data.userBook.status}
-						onchange={(event) => event.currentTarget.form?.requestSubmit()}
-					>
-						{#each statusOptions as s (s.id)}
-							<option value={s.id}>{s.label}</option>
-						{/each}
-					</select>
-				</form>
+				<StatusControl status={data.userBook.status} />
 				<StarRating value={data.userBook.rating} />
 			</div>
-			<div class="format-toggle">
-				{#each formats as f (f)}
+			<div class="format-status">
+				{#if data.userBook.format}
+					<span class="format-status__label">{formatLabels[data.userBook.format]}</span>
 					<button
 						type="button"
-						class="format-toggle__pill"
-						class:format-toggle__pill--active={data.userBook.format === f}
-						onclick={() => (pendingFormat = pendingFormat === f ? null : f)}
+						class="format-status__change"
+						onclick={() => (formatModalMode = 'change')}
 					>
-						{formatLabels[f]}
+						Change format
 					</button>
-				{/each}
+				{:else}
+					<button
+						type="button"
+						class="search-result__label"
+						onclick={() => (formatModalMode = 'start')}
+					>
+						Start Reading
+					</button>
+				{/if}
 			</div>
 		</div>
 
-		{#if pendingFormat}
-			<form
-				method="POST"
-				action="?/setFormat"
-				class="format-total-form"
-				use:enhance={() => {
-					return async ({ update }) => {
-						await update();
-						pendingFormat = null;
-					};
-				}}
-			>
-				<input type="hidden" name="format" value={pendingFormat} />
-				<label for="totalAmount">
-					{pendingFormat === 'audiobook' ? 'Total length (minutes)' : 'Total pages'}
-				</label>
-				<input
-					id="totalAmount"
-					name={pendingFormat === 'audiobook' ? 'totalMinutes' : 'totalPages'}
-					type="number"
-					min="1"
-					value={pendingTotalDefault}
-				/>
-				<button class="auth-submit" type="submit">Save</button>
-			</form>
-		{/if}
-
-		{#if data.userBook.format && !pendingFormat}
+		{#if data.userBook.format}
 			<div class="book-detail__panel">
 				<ProgressBar
 					label={progressLabel}
@@ -289,6 +239,18 @@
 		{/if}
 	</div>
 </div>
+
+<FormatModal
+	open={formatModalMode !== null}
+	action={formatModalMode === 'start' ? '?/startReading' : '?/setFormat'}
+	heading={formatModalMode === 'start' ? 'Start Reading' : 'Change Format'}
+	submitLabel={formatModalMode === 'start' ? 'Start Reading' : 'Save'}
+	currentFormat={data.userBook.format}
+	currentTotalPages={data.userBook.totalPages}
+	currentTotalMinutes={data.userBook.totalMinutes}
+	suggestedPageCount={data.book.pageCount}
+	onClose={() => (formatModalMode = null)}
+/>
 
 <dialog
 	bind:this={logDialogEl}

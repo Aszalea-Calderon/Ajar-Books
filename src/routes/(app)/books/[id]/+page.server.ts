@@ -84,6 +84,34 @@ export const actions: Actions = {
 			.where(eq(userBooks.id, result.userBook.id));
 	},
 
+	// "Start Reading": the one action that begins tracking. Unlike setFormat
+	// above (used later to change format on an already-reading book), this
+	// always jumps status straight to 'reading', even from 'want_to_read'.
+	startReading: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const format = String(data.get('format') ?? '');
+		if (!['physical', 'ebook', 'audiobook'].includes(format)) {
+			return fail(400, { error: 'Invalid format' });
+		}
+
+		const totalPagesRaw = data.get('totalPages');
+		const totalMinutesRaw = data.get('totalMinutes');
+
+		await db
+			.update(userBooks)
+			.set({
+				format: format as 'physical' | 'ebook' | 'audiobook',
+				totalPages: totalPagesRaw ? Number(totalPagesRaw) : null,
+				totalMinutes: totalMinutesRaw ? Number(totalMinutesRaw) : null
+			})
+			.where(eq(userBooks.id, result.userBook.id));
+
+		await setStatus(result.userBook.id, 'reading');
+	},
+
 	logProgress: async ({ request, params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');
