@@ -95,10 +95,13 @@
 	);
 
 	let isUntouched = $derived(data.userBook.status === 'added');
-	// Once finished, the tracker's done its job — hide it rather than show a
-	// permanently-full bar. It reappears automatically if status moves away
-	// from 'finished' again (e.g. a manual "Currently Reading" for a reread).
-	let showTracker = $derived(!!data.userBook.format && data.userBook.status !== 'finished');
+	// Once finished (or given up on), the tracker's done its job — hide it
+	// rather than show a stale bar. It reappears automatically if status
+	// moves away from these again (e.g. a manual "Currently Reading" for a
+	// reread).
+	let showTracker = $derived(
+		!!data.userBook.format && data.userBook.status !== 'finished' && data.userBook.status !== 'dnf'
+	);
 	let isAudiobook = $derived(data.userBook.format === 'audiobook');
 	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
 	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
@@ -154,16 +157,14 @@
 								onsubmit={(event) => {
 									if (
 										!confirm(
-											`Remove "${data.book.title}" from your library? This clears its progress, format, and rating, but keeps it as a book you can start tracking again.`
+											`Reset "${data.book.title}"? This clears its progress, format, and rating, but keeps it in your library as a book you can start tracking again.`
 										)
 									) {
 										event.preventDefault();
 									}
 								}}
 							>
-								<button class="book-detail__reset-option" type="submit">
-									Reset to Want to Read
-								</button>
+								<button class="book-detail__reset-option" type="submit"> Reset progress </button>
 							</form>
 							<form
 								method="POST"

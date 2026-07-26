@@ -242,7 +242,7 @@ describe('resetUserBook', () => {
 		await db.delete(books);
 	});
 
-	it('clears logs and resets format/progress/rating/dates to their default state', async () => {
+	it('clears logs and resets format/progress/rating/dates to the neutral added state', async () => {
 		const userBook = await seedUserBook({
 			status: 'reading',
 			format: 'physical',
@@ -254,7 +254,9 @@ describe('resetUserBook', () => {
 		await resetUserBook(userBook.id);
 
 		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
-		expect(updated.status).toBe('want_to_read');
+		// Not 'want_to_read' — that's meant to be a deliberate choice (the
+		// bookmark), not something a reset performs on your behalf.
+		expect(updated.status).toBe('added');
 		expect(updated.format).toBeNull();
 		expect(updated.totalPages).toBeNull();
 		expect(updated.totalMinutes).toBeNull();

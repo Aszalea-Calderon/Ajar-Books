@@ -130,16 +130,18 @@ export async function setStatus(userBookId: string, status: BookStatus) {
 }
 
 /**
- * "Remove book": a soft alternative to hard Delete. Wipes this book's
- * reading history and resets it to a fresh, never-tracked state, but keeps
- * the Book row and its tags — only the reading-progress side is reset.
+ * "Reset to Want to Read" (soft alternative to hard Delete): wipes this
+ * book's reading history and lands it back on the neutral 'added' state,
+ * not 'want_to_read' — choosing "Want to Read" is meant to be a deliberate
+ * action (the bookmark), not something a reset performs on your behalf.
+ * Keeps the Book row and its tags — only the reading-progress side resets.
  */
 export async function resetUserBook(userBookId: string) {
 	await db.delete(readingLogs).where(eq(readingLogs.userBookId, userBookId));
 	await db
 		.update(userBooks)
 		.set({
-			status: 'want_to_read',
+			status: 'added',
 			format: null,
 			totalPages: null,
 			totalMinutes: null,
