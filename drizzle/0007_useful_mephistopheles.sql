@@ -1,0 +1,1 @@
+ALTER TABLE `settings` ADD `language_priority` text DEFAULT 'en' NOT NULL;

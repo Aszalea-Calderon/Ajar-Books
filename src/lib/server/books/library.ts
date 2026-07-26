@@ -1,9 +1,9 @@
 import { db } from '$lib/server/db';
-import { books, userBooks } from '$lib/server/db/schema';
-import { eq, or } from 'drizzle-orm';
+import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
+import { eq, inArray, ne, or } from 'drizzle-orm';
 import { getOpenLibraryWorkDetails, sanitizeDescription, type BookSearchResult } from './search';
 import { normalizeSubjectsToGenres } from './genreMapping';
-import { applyGenreSuggestions } from './tags';
+import { applyGenreSuggestions, type TagType } from './tags';
 
 /**
  * Finds-or-creates the Book row for a search result, then finds-or-creates
@@ -65,4 +65,58 @@ export async function addBookToLibrary(result: BookSearchResult) {
 	}
 
 	return { bookId: book.id, userBookId: userBook.id, alreadyInLibrary: false };
+}
+
+export type LibraryBook = {
+	book: typeof books.$inferSelect;
+	userBook: typeof userBooks.$inferSelect;
+	tags: Record<TagType, string[]>;
+};
+
+/**
+ * Every book that's had a status deliberately chosen — excludes 'added',
+ * the transient just-added-nothing-decided-yet marker (see the schema
+ * comment on userBooks.status), since it isn't a real shelf to browse.
+ */
+export async function getLibraryBooks(): Promise<LibraryBook[]> {
+	const rows = await db
+		.select({ book: books, userBook: userBooks })
+		.from(userBooks)
+		.innerJoin(books, eq(userBooks.bookId, books.id))
+		.where(ne(userBooks.status, 'added'));
+
+	if (rows.length === 0) return [];
+
+	const userBookIds = rows.map((r) => r.userBook.id);
+	const tagRows = await db
+		.select({ userBookId: userBookTags.userBookId, type: tags.type, name: tags.name })
+		.from(userBookTags)
+		.innerJoin(tags, eq(userBookTags.tagId, tags.id))
+		.where(inArray(userBookTags.userBookId, userBookIds));
+
+	const tagsByUserBook = new Map<string, Record<TagType, string[]>>();
+	for (const row of tagRows) {
+		const entry = tagsByUserBook.get(row.userBookId) ?? { genre: [], mood: [], setting: [] };
+		entry[row.type].push(row.name);
+		tagsByUserBook.set(row.userBookId, entry);
+	}
+
+	return rows.map((row) => ({
+		...row,
+		tags: tagsByUserBook.get(row.userBook.id) ?? { genre: [], mood: [], setting: [] }
+	}));
+}
+
+/**
+ * Every distinct tag name in use, per type — powers the Profile library
+ * filter dropdowns without needing the full curated genre list mixed in
+ * (unlike getSuggestedTagNames, which is for autocomplete when adding one).
+ */
+export async function getUsedTagNames(type: TagType): Promise<string[]> {
+	const rows = await db
+		.selectDistinct({ name: tags.name })
+		.from(tags)
+		.innerJoin(userBookTags, eq(userBookTags.tagId, tags.id))
+		.where(eq(tags.type, type));
+	return rows.map((r) => r.name).sort();
 }

@@ -6,10 +6,13 @@ const SETTINGS_ID = 'app';
 
 export async function getSettings() {
 	const [row] = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID));
-	return row ?? { id: SETTINGS_ID, googleBooksApiKey: null };
+	return row ?? { id: SETTINGS_ID, googleBooksApiKey: null, languagePriority: 'en' };
 }
 
-export async function updateSettings(patch: { googleBooksApiKey?: string | null }) {
+export async function updateSettings(patch: {
+	googleBooksApiKey?: string | null;
+	languagePriority?: string;
+}) {
 	await db
 		.insert(settings)
 		.values({ id: SETTINGS_ID, ...patch })

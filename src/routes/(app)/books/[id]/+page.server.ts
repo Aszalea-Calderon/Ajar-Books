@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { parseLocalDateInput } from '$lib/date';
 import { db } from '$lib/server/db';
@@ -12,6 +12,7 @@ import {
 	setStatus,
 	type BookStatus
 } from '$lib/server/books/progress';
+import { searchBooks } from '$lib/server/books/search';
 import {
 	addTag,
 	getSuggestedTagNames,
@@ -21,6 +22,73 @@ import {
 } from '$lib/server/books/tags';
 
 const TAG_TYPES: TagType[] = ['genre', 'mood', 'setting'];
+const MORE_BY_AUTHOR_LIMIT = 4;
+
+/**
+ * A handful of other books by the same author for the "More by [author]"
+ * inline preview — best-effort like the rest of the search integration: a
+ * failure here shouldn't block the book detail page from rendering.
+ */
+async function getMoreByAuthor(author: string, currentBookId: string) {
+	let results;
+	try {
+		results = await searchBooks(author);
+	} catch {
+		return [];
+	}
+
+	const others = results
+		.filter((r) => r.author?.toLowerCase() === author.toLowerCase())
+		.slice(0, 20);
+
+	if (others.length === 0) return [];
+
+	const matchConditions = others
+		.flatMap((r) => [
+			r.openLibraryId ? eq(books.openLibraryId, r.openLibraryId) : undefined,
+			r.isbn ? eq(books.isbn, r.isbn) : undefined
+		])
+		.filter((c) => c !== undefined);
+
+	const existing = matchConditions.length
+		? await db
+				.select()
+				.from(books)
+				.where(or(...matchConditions))
+		: [];
+
+	const seenTitles = new Set<string>();
+	const preview: {
+		title: string;
+		coverUrl: string | null;
+		libraryBookId: string | null;
+	}[] = [];
+
+	for (const result of others) {
+		const normalizedTitle = result.title.trim().toLowerCase();
+		if (!normalizedTitle || seenTitles.has(normalizedTitle)) continue;
+
+		const match = existing.find(
+			(b) =>
+				(result.openLibraryId && b.openLibraryId === result.openLibraryId) ||
+				(result.isbn && b.isbn === result.isbn)
+		);
+
+		// Excludes the book whose detail page this preview appears on.
+		if (match?.id === currentBookId) continue;
+
+		seenTitles.add(normalizedTitle);
+		preview.push({
+			title: result.title,
+			coverUrl: result.coverUrl,
+			libraryBookId: match?.id ?? null
+		});
+
+		if (preview.length >= MORE_BY_AUTHOR_LIMIT) break;
+	}
+
+	return preview;
+}
 
 async function loadBookAndUserBook(bookId: string) {
 	const [book] = await db.select().from(books).where(eq(books.id, bookId));
@@ -58,7 +126,14 @@ export const load: PageServerLoad = async ({ params }) => {
 		)
 	) as Record<TagType, string[]>;
 
-	return { book, userBook, logs, totals, tagsByType, suggestionsByType };
+	// Not awaited — streamed in separately (see the {#await} in +page.svelte)
+	// so this best-effort, live-network-call preview never blocks the rest of
+	// the page, including the re-render after every other action on this
+	// page (logging progress, tagging, etc. all call invalidateAll(), which
+	// would otherwise re-run this live search every single time).
+	const moreByAuthor = book.author ? getMoreByAuthor(book.author, book.id) : Promise.resolve([]);
+
+	return { book, userBook, logs, totals, tagsByType, suggestionsByType, moreByAuthor };
 };
 
 export const actions: Actions = {

@@ -50,6 +50,13 @@
       "when": 1785094873615,
       "tag": "0006_far_talon",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1785096989096,
+      "tag": "0007_useful_mephistopheles",
+      "breakpoints": true
     }
   ]
 }

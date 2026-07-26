@@ -285,12 +285,33 @@
 					</p>
 				{/if}
 				{#if data.book.author}
-					<a
-						class="book-detail__more-by-author"
-						href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
-					>
-						More by {data.book.author}
-					</a>
+					<div class="more-by-author">
+						<div class="more-by-author__header">
+							<h4>More by {data.book.author}</h4>
+							<a href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}>View more</a>
+						</div>
+						{#await data.moreByAuthor then preview}
+							{#if preview.length > 0}
+								<div class="more-by-author__list">
+									{#each preview as book (book.title)}
+										<a
+											class="more-by-author__book"
+											href={book.libraryBookId
+												? resolve('/(app)/books/[id]', { id: book.libraryBookId })
+												: resolve(`/search?q=${encodeURIComponent(book.title)}`)}
+											title={book.title}
+										>
+											{#if book.coverUrl}
+												<img class="more-by-author__cover" src={book.coverUrl} alt="" />
+											{:else}
+												<div class="more-by-author__cover more-by-author__cover--placeholder"></div>
+											{/if}
+										</a>
+									{/each}
+								</div>
+							{/if}
+						{/await}
+					</div>
 				{/if}
 			</div>
 
@@ -299,6 +320,9 @@
 					<p class="book-detail__facts">
 						{#if data.book.pageCount}
 							<span>{data.book.pageCount} pages</span>
+						{/if}
+						{#if data.book.pageCount && data.book.publicationYear}
+							<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
 						{/if}
 						{#if data.book.publicationYear}
 							<span>Published {data.book.publicationYear}</span>

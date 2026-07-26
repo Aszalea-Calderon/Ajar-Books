@@ -20,14 +20,31 @@ function contrastingTextColor(hex: string): string {
 	return contrastWithWhite >= contrastWithBlack ? '#ffffff' : '#000000';
 }
 
+// Mirrors static/favicon.svg's bracket mark — recolored to match the custom
+// accent so the browser tab reflects it too, not just in-app UI.
+const DEFAULT_FAVICON_HREF = '/favicon.svg';
+
+function faviconDataUri(hex: string): string {
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M 21 5 L 11 5 Q 5 5 5 11 L 5 21 Q 5 27 11 27 L 21 27" fill="none" stroke="${hex}" stroke-width="5" stroke-linecap="round"/></svg>`;
+	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function updateFavicon(hex: string | null) {
+	const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+	if (!link) return;
+	link.href = hex ? faviconDataUri(hex) : DEFAULT_FAVICON_HREF;
+}
+
 function apply(hex: string) {
 	document.documentElement.style.setProperty('--color-primary', hex);
 	document.documentElement.style.setProperty('--color-primary-text', contrastingTextColor(hex));
+	updateFavicon(hex);
 }
 
 function clear() {
 	document.documentElement.style.removeProperty('--color-primary');
 	document.documentElement.style.removeProperty('--color-primary-text');
+	updateFavicon(null);
 }
 
 export function setAccent(hex: string) {

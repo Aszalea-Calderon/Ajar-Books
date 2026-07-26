@@ -68,6 +68,10 @@ export const userBooks = sqliteTable('user_books', {
 export const settings = sqliteTable('settings', {
 	id: text('id').primaryKey(),
 	googleBooksApiKey: text('google_books_api_key'),
+	// ISO 639-1 code (e.g. 'en'). Search results whose edition/work matches
+	// this language are ranked above ones that don't — see
+	// $lib/server/books/search.ts's LANGUAGE_PRIORITY_OPTIONS.
+	languagePriority: text('language_priority').notNull().default('en'),
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())
