@@ -993,6 +993,21 @@ button {
 	display: flex;
 	align-items: center;
 	gap: var(--space-4);
+	flex-wrap: wrap;
+}
+
+.reread-badge {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.log-progress__time-fields {
+	display: flex;
+	gap: var(--space-4);
+}
+
+.log-progress__time-fields .auth-field {
+	flex: 1;
 }
 
 .status-control {
@@ -1383,6 +1398,21 @@ button {
 	color: var(--color-text);
 }
 
+.activity-log__delete {
+	flex-shrink: 0;
+	background: none;
+	border: none;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	text-decoration: underline;
+	padding: 0;
+	cursor: pointer;
+}
+
+.activity-log__delete:hover {
+	color: var(--color-danger);
+}
+
 /* Dashboard: currently reading */
 .currently-reading {
 	display: flex;
@@ -1625,12 +1655,16 @@ button {
 
 .tag-editor__input {
 	padding: var(--space-1) var(--space-3);
-	background: none;
-	border: 1px dashed var(--color-border);
+	background: var(--color-surface-raised);
+	border: 1px solid transparent;
 	border-radius: 999px;
 	color: var(--color-text);
 	font-size: var(--font-size-sm);
 	width: 7rem;
+}
+
+.tag-editor__input::placeholder {
+	color: var(--color-text-muted);
 }
 
 .tag-editor__input:focus {

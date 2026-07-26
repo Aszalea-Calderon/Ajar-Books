@@ -105,6 +105,21 @@ export async function editProgress(params: {
 	return recomputeStatus(log.userBookId);
 }
 
+/**
+ * Removes a reading-log entry entirely (as opposed to editProgress, which
+ * corrects one in place), then re-derives status from what's left — deleting
+ * the log that pushed a book over its goal un-finishes it, same as editing
+ * its amount down would.
+ */
+export async function deleteLog(logId: string) {
+	const [log] = await db.select().from(readingLogs).where(eq(readingLogs.id, logId));
+	if (!log) throw new Error('ReadingLog not found');
+
+	await db.delete(readingLogs).where(eq(readingLogs.id, logId));
+
+	return recomputeStatus(log.userBookId);
+}
+
 export type BookStatus = 'added' | 'want_to_read' | 'reading' | 'finished' | 'dnf';
 
 /**
@@ -127,6 +142,20 @@ export async function setStatus(userBookId: string, status: BookStatus) {
 	}
 
 	await db.update(userBooks).set(updates).where(eq(userBooks.id, userBookId));
+}
+
+/**
+ * Untoggles "Want to Read" back to the neutral 'added' state — the one
+ * exception to 'added' otherwise being a one-way-exit-only marker (see
+ * setStatus). Only takes effect if the book is still actually in
+ * 'want_to_read' (defensive against a stale client re-submitting after the
+ * status already moved on).
+ */
+export async function untoggleWantToRead(userBookId: string) {
+	const [userBook] = await db.select().from(userBooks).where(eq(userBooks.id, userBookId));
+	if (!userBook || userBook.status !== 'want_to_read') return;
+
+	await db.update(userBooks).set({ status: 'added' }).where(eq(userBooks.id, userBookId));
 }
 
 /**

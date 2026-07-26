@@ -2,7 +2,14 @@ import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
-import { editProgress, getProgressTotals, logProgress, resetUserBook, setStatus } from './progress';
+import {
+	editProgress,
+	getProgressTotals,
+	logProgress,
+	resetUserBook,
+	setStatus,
+	untoggleWantToRead
+} from './progress';
 
 async function seedUserBook(overrides: Partial<typeof userBooks.$inferInsert> = {}) {
 	const [book] = await db.insert(books).values({ title: 'Test Book' }).returning();
@@ -269,5 +276,30 @@ describe('resetUserBook', () => {
 			.from(readingLogs)
 			.where(eq(readingLogs.userBookId, userBook.id));
 		expect(remainingLogs).toHaveLength(0);
+	});
+});
+
+describe('untoggleWantToRead', () => {
+	beforeEach(async () => {
+		await db.delete(userBooks);
+		await db.delete(books);
+	});
+
+	it('flips a want_to_read book back to the neutral added state', async () => {
+		const userBook = await seedUserBook({ status: 'want_to_read' });
+
+		await untoggleWantToRead(userBook.id);
+
+		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(updated.status).toBe('added');
+	});
+
+	it('does nothing if the book has moved past want_to_read since the click', async () => {
+		const userBook = await seedUserBook({ status: 'reading' });
+
+		await untoggleWantToRead(userBook.id);
+
+		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(updated.status).toBe('reading');
 	});
 });

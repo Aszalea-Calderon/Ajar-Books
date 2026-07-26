@@ -15,17 +15,17 @@
 </script>
 
 <div class="status-control">
-	<form method="POST" action="?/setStatus" use:enhance>
-		<input type="hidden" name="status" value="want_to_read" />
-		<button
-			type="submit"
-			class="status-control__pill"
-			class:status-control__pill--active={status === 'want_to_read'}
-			disabled={status === 'want_to_read'}
-		>
-			Want to Read
-		</button>
-	</form>
+	{#if status === 'want_to_read'}
+		<form method="POST" action="?/untoggleWantToRead" use:enhance>
+			<button
+				type="submit"
+				class="status-control__pill status-control__pill--active"
+				title="Click to remove from Want to Read"
+			>
+				Want to Read
+			</button>
+		</form>
+	{/if}
 	<button
 		type="button"
 		class="status-control__pill"

@@ -112,6 +112,12 @@
 	);
 
 	let isUntouched = $derived(data.userBook.status === 'added');
+	// finishedAt is never cleared by a later manual status change (see
+	// setStatus), so its presence alongside 'reading' means this is a
+	// reread, not a first read — the automatic pages/minutes-based
+	// recomputeStatus path is the one exception, which does null it out
+	// when a correction drops a book back under its goal (not a real reread).
+	let isRereading = $derived(data.userBook.status === 'reading' && !!data.userBook.finishedAt);
 	// Once finished (or given up on), the tracker's done its job — hide it
 	// rather than show a stale bar. It reappears automatically if status
 	// moves away from these again (e.g. a manual "Currently Reading" for a
@@ -157,7 +163,10 @@
 						onclick={() => (resetMenuOpen = !resetMenuOpen)}
 					>
 						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-							<path fill="currentColor" d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" />
+							<path
+								fill="currentColor"
+								d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+							/>
 						</svg>
 					</button>
 					{#if resetMenuOpen}
@@ -233,6 +242,15 @@
 						onReadingClick={() => (formatModalMode = 'start')}
 					/>
 					<StarRating value={data.userBook.rating} />
+					{#if isRereading}
+						<span class="reread-badge">
+							Re-reading · Last finished {data.userBook.finishedAt?.toLocaleDateString(undefined, {
+								month: 'short',
+								day: 'numeric',
+								year: 'numeric'
+							})}
+						</span>
+					{/if}
 				{/if}
 			</div>
 			<div class="format-status">
@@ -375,6 +393,21 @@
 								<button type="button" class="activity-log__edit" onclick={() => (editingLog = log)}>
 									Edit
 								</button>
+								<form
+									method="POST"
+									action="?/deleteLog"
+									use:enhance
+									onsubmit={(event) => {
+										if (!confirm('Delete this entry? This cannot be undone.')) {
+											event.preventDefault();
+										}
+									}}
+								>
+									<input type="hidden" name="logId" value={log.id} />
+									<button type="submit" class="activity-log__delete" aria-label="Delete entry">
+										Delete
+									</button>
+								</form>
 							</li>
 						{/each}
 					</ul>
@@ -445,14 +478,46 @@
 			}}
 		>
 			{#if isAudiobook}
-				<div class="auth-field">
-					<label for="minutesRead">Minutes listened</label>
-					<input id="minutesRead" name="minutesRead" type="number" min="1" required />
+				<p class="settings-hint">
+					You left off at {Math.floor(data.totals.minutes / 60)}h {data.totals.minutes % 60}m.
+				</p>
+				<div class="log-progress__time-fields">
+					<div class="auth-field">
+						<label for="hoursListened">Hours</label>
+						<input
+							id="hoursListened"
+							name="hours"
+							type="number"
+							min="0"
+							value={Math.floor(data.totals.minutes / 60)}
+							required
+						/>
+					</div>
+					<div class="auth-field">
+						<label for="minutesListened">Minutes</label>
+						<input
+							id="minutesListened"
+							name="minutes"
+							type="number"
+							min="0"
+							max="59"
+							value={data.totals.minutes % 60}
+							required
+						/>
+					</div>
 				</div>
 			{:else}
+				<p class="settings-hint">You left off on page {data.totals.pages}.</p>
 				<div class="auth-field">
-					<label for="pagesRead">Pages read</label>
-					<input id="pagesRead" name="pagesRead" type="number" min="1" required />
+					<label for="currentPage">What page are you on?</label>
+					<input
+						id="currentPage"
+						name="currentPage"
+						type="number"
+						min="1"
+						value={data.totals.pages || ''}
+						required
+					/>
 				</div>
 			{/if}
 			<div class="auth-field">

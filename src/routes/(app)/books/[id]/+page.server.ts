@@ -5,11 +5,13 @@ import { parseLocalDateInput } from '$lib/date';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
 import {
+	deleteLog,
 	editProgress,
 	getProgressTotals,
 	logProgress,
 	resetUserBook,
 	setStatus,
+	untoggleWantToRead,
 	type BookStatus
 } from '$lib/server/books/progress';
 import { searchBooks } from '$lib/server/books/search';
@@ -193,20 +195,38 @@ export const actions: Actions = {
 			.where(eq(userBooks.id, result.userBook.id));
 	},
 
+	// Takes the reader's actual current position (page number, or hours/minutes
+	// elapsed) rather than an amount-since-last-time delta — readers know
+	// where they left off far more readily than how much they read this
+	// session. The delta the underlying ReadingLog schema/history/edit flow
+	// still expects is computed here from the running total.
 	logProgress: async ({ request, params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');
 
 		const data = await request.formData();
-		const pagesRaw = data.get('pagesRead');
-		const minutesRaw = data.get('minutesRead');
+		const currentPageRaw = data.get('currentPage');
+		const hoursRaw = data.get('hours');
+		const minutesRaw = data.get('minutes');
 		const note = String(data.get('note') ?? '').trim();
 
-		const pagesRead = pagesRaw ? Number(pagesRaw) : undefined;
-		const minutesRead = minutesRaw ? Number(minutesRaw) : undefined;
+		const totals = await getProgressTotals(result.userBook.id);
+
+		let pagesRead: number | undefined;
+		let minutesRead: number | undefined;
+
+		if (currentPageRaw) {
+			pagesRead = Number(currentPageRaw) - totals.pages;
+		} else if (hoursRaw != null && minutesRaw != null) {
+			const currentTotalMinutes = Number(hoursRaw) * 60 + Number(minutesRaw);
+			minutesRead = currentTotalMinutes - totals.minutes;
+		}
 
 		if (!pagesRead && !minutesRead) {
 			return fail(400, { error: 'Enter an amount read' });
+		}
+		if ((pagesRead != null && pagesRead <= 0) || (minutesRead != null && minutesRead <= 0)) {
+			return fail(400, { error: "That's not further than where you left off" });
 		}
 
 		await logProgress({
@@ -253,6 +273,17 @@ export const actions: Actions = {
 		await editProgress({ logId, pagesRead, minutesRead, note: note || undefined });
 	},
 
+	deleteLog: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const logId = String(data.get('logId') ?? '');
+		if (!logId) return fail(400, { error: 'Missing log id' });
+
+		await deleteLog(logId);
+	},
+
 	setStatus: async ({ request, params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');
@@ -265,6 +296,13 @@ export const actions: Actions = {
 		}
 
 		await setStatus(result.userBook.id, status as BookStatus);
+	},
+
+	untoggleWantToRead: async ({ params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		await untoggleWantToRead(result.userBook.id);
 	},
 
 	removeBook: async ({ params }) => {
