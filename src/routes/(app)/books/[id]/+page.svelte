@@ -181,11 +181,12 @@
 							Want to read later
 						</button>
 					</form>
-				{:else}
-					<StatusControl
-						status={data.userBook.status}
-						onReadingClick={() => (formatModalMode = 'start')}
-					/>
+				{/if}
+				<StatusControl
+					status={data.userBook.status}
+					onReadingClick={() => (formatModalMode = 'start')}
+				/>
+				{#if !isUntouched}
 					<StarRating value={data.userBook.rating} />
 					{#if isRereading}
 						<span class="reread-badge">
@@ -305,28 +306,35 @@
 					<div class="more-by-author">
 						<div class="more-by-author__header">
 							<h4>More by {data.book.author}</h4>
-							<a href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}>View more</a>
 						</div>
-						{#await data.moreByAuthor then preview}
-							{#if preview.length > 0}
-								<div class="more-by-author__list">
-									{#each preview as book (book.title)}
-										<a
-											class="more-by-author__book"
-											href={book.libraryBookId
-												? resolve('/(app)/books/[id]', { id: book.libraryBookId })
-												: resolve(`/search?q=${encodeURIComponent(book.title)}`)}
-											title={book.title}
-										>
-											{#if book.coverUrl}
-												<img class="more-by-author__cover" src={book.coverUrl} alt="" />
-											{:else}
-												<div class="more-by-author__cover more-by-author__cover--placeholder"></div>
-											{/if}
-										</a>
-									{/each}
-								</div>
-							{/if}
+						{#await data.moreByAuthor}
+							<p class="more-by-author__loading">
+								<span class="spinner spinner--muted"></span> Loading…
+							</p>
+						{:then preview}
+							<div class="more-by-author__list">
+								{#each preview as book (book.title)}
+									<a
+										class="more-by-author__book"
+										href={book.libraryBookId
+											? resolve('/(app)/books/[id]', { id: book.libraryBookId })
+											: resolve(`/search?q=${encodeURIComponent(book.title)}`)}
+										title={book.title}
+									>
+										{#if book.coverUrl}
+											<img class="more-by-author__cover" src={book.coverUrl} alt="" />
+										{:else}
+											<div class="more-by-author__cover more-by-author__cover--placeholder"></div>
+										{/if}
+									</a>
+								{/each}
+								<a
+									class="more-by-author__view-more"
+									href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
+								>
+									View more
+								</a>
+							</div>
 						{/await}
 					</div>
 				{/if}

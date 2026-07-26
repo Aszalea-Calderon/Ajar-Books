@@ -2,9 +2,9 @@
 	import { enhance } from '$app/forms';
 
 	// Accepts the full BookStatus union (including 'added') even though only
-	// the 4 options below are ever selectable — the caller is expected not to
-	// render this at all while status is 'added' (see isUntouched on the book
-	// detail page), so 'added' never actually matches a pill here.
+	// the 4 pills below are ever selectable — 'added' never actually matches
+	// any of them, which is deliberate: a freshly-added, never-touched book
+	// shows every option as an equally-available first choice.
 	let {
 		status,
 		onReadingClick
