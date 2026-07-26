@@ -30,6 +30,7 @@ export const books = sqliteTable('books', {
 	isbn: text('isbn'),
 	description: text('description'),
 	pageCount: integer('page_count'),
+	publicationYear: integer('publication_year'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

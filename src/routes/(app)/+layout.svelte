@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { clickOutside } from '$lib/clickOutside';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import type { LayoutData } from './$types';
 
@@ -36,7 +37,7 @@
 			{/each}
 		</nav>
 
-		<div class="app-nav__account">
+		<div class="app-nav__account" use:clickOutside={() => (accountMenuOpen = false)}>
 			<button
 				type="button"
 				class="app-nav__avatar"

@@ -89,6 +89,7 @@
 					<input type="hidden" name="isbn" value={result.isbn ?? ''} />
 					<input type="hidden" name="description" value={result.description ?? ''} />
 					<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
+					<input type="hidden" name="publicationYear" value={result.publicationYear ?? ''} />
 					<button
 						type="submit"
 						class="search-result__preview"

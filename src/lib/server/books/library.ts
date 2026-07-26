@@ -46,7 +46,8 @@ export async function addBookToLibrary(result: BookSearchResult) {
 					openLibraryId: result.openLibraryId,
 					isbn: result.isbn,
 					description: sanitizeDescription(description),
-					pageCount: result.pageCount
+					pageCount: result.pageCount,
+					publicationYear: result.publicationYear
 				})
 				.returning()
 		)[0];

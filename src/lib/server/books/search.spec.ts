@@ -1,5 +1,25 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getOpenLibraryWorkDetails, sanitizeDescription } from './search';
+import { getOpenLibraryWorkDetails, parsePublicationYear, sanitizeDescription } from './search';
+
+describe('parsePublicationYear', () => {
+	it('extracts the year from a full YYYY-MM-DD date', () => {
+		expect(parsePublicationYear('1954-07-29')).toBe(1954);
+	});
+
+	it('extracts the year from a YYYY-MM date', () => {
+		expect(parsePublicationYear('1954-07')).toBe(1954);
+	});
+
+	it('accepts a bare year', () => {
+		expect(parsePublicationYear('1954')).toBe(1954);
+	});
+
+	it('returns null for undefined or malformed input', () => {
+		expect(parsePublicationYear(undefined)).toBeNull();
+		expect(parsePublicationYear('')).toBeNull();
+		expect(parsePublicationYear('unknown')).toBeNull();
+	});
+});
 
 describe('sanitizeDescription', () => {
 	it('returns null for null input', () => {

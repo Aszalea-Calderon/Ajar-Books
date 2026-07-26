@@ -142,6 +142,22 @@ export const actions: Actions = {
 		});
 	},
 
+	// A Chapter Notes entry with no amount attached — for jotting a thought
+	// down anytime, not just while logging progress read/listened.
+	addNote: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const note = String(data.get('note') ?? '').trim();
+
+		if (!note) {
+			return fail(400, { error: 'Enter a note' });
+		}
+
+		await db.insert(readingLogs).values({ userBookId: result.userBook.id, note });
+	},
+
 	editProgress: async ({ request, params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');

@@ -9,6 +9,7 @@ export type BookSearchResult = {
 	isbn: string | null;
 	description: string | null;
 	pageCount: number | null;
+	publicationYear: number | null;
 };
 
 type OpenLibraryDoc = {
@@ -18,6 +19,7 @@ type OpenLibraryDoc = {
 	cover_i?: number;
 	isbn?: string[];
 	number_of_pages_median?: number;
+	first_publish_year?: number;
 };
 
 type OpenLibraryResponse = {
@@ -28,7 +30,10 @@ async function searchOpenLibrary(query: string): Promise<BookSearchResult[]> {
 	const url = new URL('https://openlibrary.org/search.json');
 	url.searchParams.set('q', query);
 	url.searchParams.set('limit', '20');
-	url.searchParams.set('fields', 'key,title,author_name,cover_i,isbn,number_of_pages_median');
+	url.searchParams.set(
+		'fields',
+		'key,title,author_name,cover_i,isbn,number_of_pages_median,first_publish_year'
+	);
 
 	const res = await fetch(url);
 	if (!res.ok) return [];
@@ -44,7 +49,8 @@ async function searchOpenLibrary(query: string): Promise<BookSearchResult[]> {
 		// Open Library's search endpoint doesn't include descriptions — fetched
 		// separately per-work at add time, see getOpenLibraryWorkDetails.
 		description: null,
-		pageCount: doc.number_of_pages_median ?? null
+		pageCount: doc.number_of_pages_median ?? null,
+		publicationYear: doc.first_publish_year ?? null
 	}));
 }
 
@@ -56,12 +62,20 @@ type GoogleBooksItem = {
 		industryIdentifiers?: { type: string; identifier: string }[];
 		description?: string;
 		pageCount?: number;
+		publishedDate?: string;
 	};
 };
 
 type GoogleBooksResponse = {
 	items?: GoogleBooksItem[];
 };
+
+// Google's publishedDate is "YYYY", "YYYY-MM", or "YYYY-MM-DD" — only the
+// leading year is ever needed here.
+export function parsePublicationYear(publishedDate?: string): number | null {
+	const match = publishedDate?.match(/^\d{4}/);
+	return match ? Number(match[0]) : null;
+}
 
 async function searchGoogleBooks(query: string, apiKey: string): Promise<BookSearchResult[]> {
 	const url = new URL('https://www.googleapis.com/books/v1/volumes');
@@ -90,7 +104,8 @@ async function searchGoogleBooks(query: string, apiKey: string): Promise<BookSea
 				openLibraryId: null,
 				isbn,
 				description: info.description ?? null,
-				pageCount: info.pageCount ?? null
+				pageCount: info.pageCount ?? null,
+				publicationYear: parsePublicationYear(info.publishedDate)
 			};
 		});
 }

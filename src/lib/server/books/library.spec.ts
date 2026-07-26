@@ -28,6 +28,7 @@ function result(overrides: Partial<BookSearchResult> = {}): BookSearchResult {
 		isbn: null,
 		description: null,
 		pageCount: null,
+		publicationYear: null,
 		...overrides
 	};
 }

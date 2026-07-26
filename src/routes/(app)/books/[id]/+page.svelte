@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { clickOutside } from '$lib/clickOutside';
 	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
@@ -23,6 +24,9 @@
 	let resetMenuOpen = $state(false);
 	let logModalOpen = $state(false);
 	let logDialogEl: HTMLDialogElement;
+
+	let noteModalOpen = $state(false);
+	let noteDialogEl: HTMLDialogElement;
 
 	let editingLog = $state<LogEntry | null>(null);
 	let editDialogEl: HTMLDialogElement;
@@ -76,6 +80,15 @@
 		}
 	});
 
+	$effect(() => {
+		if (!noteDialogEl) return;
+		if (noteModalOpen && !noteDialogEl.open) {
+			noteDialogEl.showModal();
+		} else if (!noteModalOpen && noteDialogEl.open) {
+			noteDialogEl.close();
+		}
+	});
+
 	function closeLogModalOnBackdrop(event: MouseEvent) {
 		if (event.target === logDialogEl) logModalOpen = false;
 	}
@@ -86,6 +99,10 @@
 
 	function closeFinishedModalOnBackdrop(event: MouseEvent) {
 		if (event.target === finishedDialogEl) finishedModalOpen = false;
+	}
+
+	function closeNoteModalOnBackdrop(event: MouseEvent) {
+		if (event.target === noteDialogEl) noteModalOpen = false;
 	}
 
 	let subtitle = $derived(
@@ -131,7 +148,7 @@
 					</button>
 				</form>
 			{:else}
-				<div class="book-detail__reset">
+				<div class="book-detail__reset" use:clickOutside={() => (resetMenuOpen = false)}>
 					<button
 						type="button"
 						class="book-detail__reset-trigger"
@@ -258,24 +275,36 @@
 		{/if}
 
 		<div class="book-detail__columns">
-			{#if data.book.description || data.book.author}
-				<div class="book-detail__panel">
-					<h3>About the book</h3>
-					{#if data.book.description}
-						<p class="book-detail__description">{data.book.description}</p>
-					{/if}
-					{#if data.book.author}
-						<a
-							class="book-detail__more-by-author"
-							href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
-						>
-							More by {data.book.author}
-						</a>
-					{/if}
-				</div>
-			{/if}
+			<div class="book-detail__panel">
+				<h3>About the book</h3>
+				{#if data.book.description}
+					<p class="book-detail__description">{data.book.description}</p>
+				{:else}
+					<p class="book-detail__description book-detail__description--empty">
+						We're not sure — no description found for this book yet.
+					</p>
+				{/if}
+				{#if data.book.author}
+					<a
+						class="book-detail__more-by-author"
+						href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
+					>
+						More by {data.book.author}
+					</a>
+				{/if}
+			</div>
 
 			<div class="book-detail__panel tag-grid">
+				{#if data.book.pageCount || data.book.publicationYear}
+					<p class="book-detail__facts">
+						{#if data.book.pageCount}
+							<span>{data.book.pageCount} pages</span>
+						{/if}
+						{#if data.book.publicationYear}
+							<span>Published {data.book.publicationYear}</span>
+						{/if}
+					</p>
+				{/if}
 				<TagEditor
 					label="Genre"
 					type="genre"
@@ -297,7 +326,7 @@
 			</div>
 		</div>
 
-		{#if data.userBook.status === 'reading' || data.userBook.status === 'finished' || data.logs.length > 0}
+		{#if data.userBook.status === 'reading' || data.userBook.status === 'finished' || data.userBook.status === 'dnf' || data.logs.length > 0}
 			<div class="book-detail__panel">
 				<h3>Chapter Notes</h3>
 				{#if data.logs.length === 0}
@@ -327,8 +356,8 @@
 					</ul>
 				{/if}
 
-				{#if showTracker}
-					<div class="activity-log__footer">
+				<div class="activity-log__footer">
+					{#if showTracker}
 						<button
 							type="button"
 							class="search-result__label"
@@ -336,8 +365,15 @@
 						>
 							{logButtonLabel}
 						</button>
-					</div>
-				{/if}
+					{/if}
+					<button
+						type="button"
+						class="activity-log__add-note"
+						onclick={() => (noteModalOpen = true)}
+					>
+						+ Add note
+					</button>
+				</div>
 			</div>
 		{/if}
 	</div>
@@ -535,6 +571,43 @@
 			<div class="auth-field">
 				<label for="finishedNoteInput">Any closing thoughts? (optional)</label>
 				<input id="finishedNoteInput" name="note" type="text" />
+			</div>
+			<button class="auth-submit" type="submit">Save</button>
+		</form>
+	</div>
+</dialog>
+
+<dialog
+	bind:this={noteDialogEl}
+	class="settings-modal"
+	onclose={() => (noteModalOpen = false)}
+	onclick={closeNoteModalOnBackdrop}
+>
+	<div class="settings-modal__header">
+		<h2>Add a note</h2>
+		<button
+			type="button"
+			class="settings-modal__close"
+			aria-label="Close"
+			onclick={() => (noteModalOpen = false)}
+		>
+			×
+		</button>
+	</div>
+	<div class="settings-modal__content">
+		<form
+			method="POST"
+			action="?/addNote"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await update();
+					noteModalOpen = false;
+				};
+			}}
+		>
+			<div class="auth-field">
+				<label for="noteInput">Note</label>
+				<input id="noteInput" name="note" type="text" required />
 			</div>
 			<button class="auth-submit" type="submit">Save</button>
 		</form>

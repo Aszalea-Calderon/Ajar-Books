@@ -43,6 +43,13 @@
       "when": 1785086484588,
       "tag": "0005_massive_tenebrous",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1785094873615,
+      "tag": "0006_far_talon",
+      "breakpoints": true
     }
   ]
 }
