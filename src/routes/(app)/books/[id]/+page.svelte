@@ -137,87 +137,6 @@
 
 <div class="book-detail">
 	<div class="book-detail__hero">
-		<div class="book-detail__hero-actions">
-			{#if isUntouched}
-				<form method="POST" action="?/setStatus" use:enhance>
-					<input type="hidden" name="status" value="want_to_read" />
-					<button
-						type="submit"
-						class="book-detail__bookmark"
-						aria-label="Want to read later"
-						title="Want to read later"
-					>
-						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-							<path fill="currentColor" d="M6 2a2 2 0 0 0-2 2v18l8-5 8 5V4a2 2 0 0 0-2-2H6Z" />
-						</svg>
-						Want to read later
-					</button>
-				</form>
-			{:else}
-				<div class="book-detail__reset" use:clickOutside={() => (resetMenuOpen = false)}>
-					<button
-						type="button"
-						class="book-detail__reset-trigger"
-						aria-label="Reset or delete this book"
-						title="Reset or delete this book"
-						onclick={() => (resetMenuOpen = !resetMenuOpen)}
-					>
-						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-							<path
-								fill="currentColor"
-								d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-							/>
-						</svg>
-					</button>
-					{#if resetMenuOpen}
-						<div class="book-detail__reset-menu">
-							<form
-								method="POST"
-								action="?/removeBook"
-								use:enhance={() => {
-									return async ({ update }) => {
-										await update();
-										resetMenuOpen = false;
-									};
-								}}
-								onsubmit={(event) => {
-									if (
-										!confirm(
-											`Reset "${data.book.title}"? This clears its progress, format, and rating, but keeps it in your library as a book you can start tracking again.`
-										)
-									) {
-										event.preventDefault();
-									}
-								}}
-							>
-								<button class="book-detail__reset-option" type="submit"> Reset progress </button>
-							</form>
-							<form
-								method="POST"
-								action="?/delete"
-								use:enhance
-								onsubmit={(event) => {
-									if (
-										!confirm(
-											`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
-										)
-									) {
-										event.preventDefault();
-									}
-								}}
-							>
-								<button
-									class="book-detail__reset-option book-detail__reset-option--danger"
-									type="submit"
-								>
-									Delete permanently
-								</button>
-							</form>
-						</div>
-					{/if}
-				</div>
-			{/if}
-		</div>
 		<div class="book-detail__hero-content">
 			{#if data.book.coverUrl}
 				<img class="book-detail__cover" src={data.book.coverUrl} alt="" />
@@ -231,12 +150,38 @@
 				{/if}
 			</div>
 		</div>
+		{#if !data.userBook.format}
+			<div class="book-detail__hero-cta">
+				<button
+					type="button"
+					class="search-result__label"
+					onclick={() => (formatModalMode = 'start')}
+				>
+					Start Reading
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<div class="book-detail__body">
 		<div class="book-detail__row">
 			<div class="book-detail__row-left">
-				{#if !isUntouched}
+				{#if isUntouched}
+					<form method="POST" action="?/setStatus" use:enhance>
+						<input type="hidden" name="status" value="want_to_read" />
+						<button
+							type="submit"
+							class="book-detail__bookmark"
+							aria-label="Want to read later"
+							title="Want to read later"
+						>
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+								<path fill="currentColor" d="M6 2a2 2 0 0 0-2 2v18l8-5 8 5V4a2 2 0 0 0-2-2H6Z" />
+							</svg>
+							Want to read later
+						</button>
+					</form>
+				{:else}
 					<StatusControl
 						status={data.userBook.status}
 						onReadingClick={() => (formatModalMode = 'start')}
@@ -251,6 +196,68 @@
 							})}
 						</span>
 					{/if}
+					<div class="book-detail__reset" use:clickOutside={() => (resetMenuOpen = false)}>
+						<button
+							type="button"
+							class="book-detail__reset-trigger"
+							aria-label="Reset or delete this book"
+							title="Reset or delete this book"
+							onclick={() => (resetMenuOpen = !resetMenuOpen)}
+						>
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+								<path
+									fill="currentColor"
+									d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+								/>
+							</svg>
+						</button>
+						{#if resetMenuOpen}
+							<div class="book-detail__reset-menu">
+								<form
+									method="POST"
+									action="?/removeBook"
+									use:enhance={() => {
+										return async ({ update }) => {
+											await update();
+											resetMenuOpen = false;
+										};
+									}}
+									onsubmit={(event) => {
+										if (
+											!confirm(
+												`Reset "${data.book.title}"? This clears its progress, format, and rating, but keeps it in your library as a book you can start tracking again.`
+											)
+										) {
+											event.preventDefault();
+										}
+									}}
+								>
+									<button class="book-detail__reset-option" type="submit"> Reset progress </button>
+								</form>
+								<form
+									method="POST"
+									action="?/delete"
+									use:enhance
+									onsubmit={(event) => {
+										if (
+											!confirm(
+												`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
+											)
+										) {
+											event.preventDefault();
+										}
+									}}
+								>
+									<button
+										class="book-detail__reset-option book-detail__reset-option--danger"
+										type="submit"
+									>
+										Delete permanently
+									</button>
+								</form>
+							</div>
+						{/if}
+					</div>
 				{/if}
 			</div>
 			<div class="format-status">
@@ -262,14 +269,6 @@
 						onclick={() => (formatModalMode = 'change')}
 					>
 						Change format
-					</button>
-				{:else}
-					<button
-						type="button"
-						class="search-result__label"
-						onclick={() => (formatModalMode = 'start')}
-					>
-						Start Reading
 					</button>
 				{/if}
 			</div>

@@ -869,12 +869,10 @@ button {
 	gap: var(--space-4);
 }
 
-.book-detail__hero-actions {
+.book-detail__hero-cta {
 	position: absolute;
-	top: var(--space-4);
+	bottom: var(--space-4);
 	right: var(--space-4);
-	display: flex;
-	gap: var(--space-2);
 }
 
 .book-detail__bookmark {
@@ -1271,6 +1269,7 @@ button {
 
 .more-by-author__list {
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--space-3);
 	margin-top: var(--space-3);
 }

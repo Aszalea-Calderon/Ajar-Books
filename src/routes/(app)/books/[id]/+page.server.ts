@@ -24,7 +24,7 @@ import {
 } from '$lib/server/books/tags';
 
 const TAG_TYPES: TagType[] = ['genre', 'mood', 'setting'];
-const MORE_BY_AUTHOR_LIMIT = 4;
+const MORE_BY_AUTHOR_LIMIT = 8;
 
 /**
  * A handful of other books by the same author for the "More by [author]"
