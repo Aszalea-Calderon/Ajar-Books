@@ -108,6 +108,30 @@ function normalizeOpenLibraryDescription(description?: OpenLibraryWorkDescriptio
 	return description.value ?? null;
 }
 
+const MARKDOWN_LINK_PATTERN = /\[[^\]]*\]\(https?:\/\/[^\s)]+\)/g;
+const BARE_URL_PATTERN = /https?:\/\/\S+/g;
+
+/**
+ * Open Library/Google Books descriptions are real, but user-contributed and
+ * occasionally carry spam (e.g. a "[**PDF**](spam-site.com)" link tacked onto
+ * an otherwise-legitimate synopsis). Strips link-shaped junk rather than
+ * inventing or hiding the underlying description. Always displayed as plain
+ * text (never Markdown/HTML) — an embedded link here should never become
+ * clickable.
+ */
+export function sanitizeDescription(description: string | null): string | null {
+	if (!description) return null;
+
+	const cleaned = description
+		.replace(MARKDOWN_LINK_PATTERN, '')
+		.replace(BARE_URL_PATTERN, '')
+		.replace(/[ \t]+\n/g, '\n')
+		.replace(/\n{3,}/g, '\n\n')
+		.trim();
+
+	return cleaned || null;
+}
+
 /**
  * Fetches a work's raw subjects (for genre normalization) and description
  * (for the "About the book" panel). Best-effort: a failure here shouldn't

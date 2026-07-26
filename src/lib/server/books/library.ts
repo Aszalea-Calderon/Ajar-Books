@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import { books, userBooks } from '$lib/server/db/schema';
 import { eq, or } from 'drizzle-orm';
-import { getOpenLibraryWorkDetails, type BookSearchResult } from './search';
+import { getOpenLibraryWorkDetails, sanitizeDescription, type BookSearchResult } from './search';
 import { normalizeSubjectsToGenres } from './genreMapping';
 import { applyGenreSuggestions } from './tags';
 
@@ -45,7 +45,7 @@ export async function addBookToLibrary(result: BookSearchResult) {
 					coverUrl: result.coverUrl,
 					openLibraryId: result.openLibraryId,
 					isbn: result.isbn,
-					description,
+					description: sanitizeDescription(description),
 					pageCount: result.pageCount
 				})
 				.returning()
