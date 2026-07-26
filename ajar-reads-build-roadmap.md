@@ -76,7 +76,7 @@ _Phased build order with checklists. Estimates assume part-time, evenings/weeken
 | ☑    | High     | Run the Docker container as a non-root user (starts as root only long enough to fix bind-mount ownership, then drops via `gosu`)                                                                                                               |
 | ☑    | Medium   | Patch known `cookie` package vulnerability (GHSA-pxg6-pf52-xh8x) via a pnpm override, pinned to the same major version to avoid an API break                                                                                                   |
 | ☐    | Low      | Validate `openLibraryId`'s shape (e.g. `/works/OL\d+W`) before using it in outbound fetch URLs in `search.ts` — not exploitable today (gated behind auth + CSRF), but Import will introduce untrusted data that could reach the same code path |
-| ☐    | Medium   | Add minimal automated tests for the trickiest logic: status transitions, genre normalization, and Import's parsers once Phase 3 lands                                                                                                          |
+| ☑    | Medium   | Add minimal automated tests for the trickiest logic: status transitions, genre normalization, and tag/library dedup (`vitest`, 48 tests) — extend to Import's parsers once Phase 3 lands                                                       |
 | ☐    | Medium   | Turn Phase 7's backup "guidance" into an actual one-click export feature, rather than just docs telling you to copy the SQLite file                                                                                                            |
 | ☐    | Low      | Add pagination to Search/Library views once your library grows past ~100+ books — everything currently loads unpaginated                                                                                                                       |
 
@@ -163,15 +163,16 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 
 _Not required for a usable v1 — pick up in whatever order suits you._
 
-| Done | Task                                                                                    |
-| ---- | --------------------------------------------------------------------------------------- |
-| ☐    | Add `OLLAMA_URL` config option                                                          |
-| ☐    | Build reader-type AI rephrasing prompt (grounded in computed stats, not free-generated) |
-| ☐    | Fallback to Phase 5 template when `OLLAMA_URL` is unset                                 |
-| ☐    | Add PWA manifest + icons                                                                |
-| ☐    | Build data export (CSV/JSON)                                                            |
-| ☐    | Write backup guidance (copy the SQLite file)                                            |
-| ☐    | Write Cloudflare Tunnel setup docs                                                      |
+| Done | Task                                                                                                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ☐    | Add `OLLAMA_URL` config option                                                                                                                                                                   |
+| ☐    | Build reader-type AI rephrasing prompt (grounded in computed stats, not free-generated)                                                                                                          |
+| ☐    | Fallback to Phase 5 template when `OLLAMA_URL` is unset                                                                                                                                          |
+| ☐    | Add PWA manifest + icons                                                                                                                                                                         |
+| ☐    | Cache cover images locally at add-time instead of hot-linking (book metadata is already stored locally — this closes the one remaining offline gap, and pairs naturally with the PWA work above) |
+| ☐    | Build data export (CSV/JSON)                                                                                                                                                                     |
+| ☐    | Write backup guidance (copy the SQLite file)                                                                                                                                                     |
+| ☐    | Write Cloudflare Tunnel setup docs                                                                                                                                                               |
 
 ---
 

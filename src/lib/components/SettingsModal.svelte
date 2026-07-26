@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
+	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
 
 	let {
 		open = $bindable(false),
@@ -9,7 +10,7 @@
 	}: { open?: boolean; googleBooksApiKey: string | null } = $props();
 
 	let dialogEl: HTMLDialogElement;
-	let section = $state<'themes' | 'fonts' | 'integrations'>('themes');
+	let section = $state<'themes' | 'fonts' | 'accent' | 'integrations'>('themes');
 	let justSaved = $state(false);
 
 	$effect(() => {
@@ -30,6 +31,8 @@
 		{ id: 'default', label: 'Default' },
 		{ id: 'dyslexic', label: 'Dyslexia-friendly' }
 	];
+
+	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
 
 	function closeOnBackdropClick(event: MouseEvent) {
 		if (event.target === dialogEl) open = false;
@@ -74,6 +77,14 @@
 			<button
 				type="button"
 				class="settings-modal__nav-item"
+				class:settings-modal__nav-item--active={section === 'accent'}
+				onclick={() => (section = 'accent')}
+			>
+				Accent Color
+			</button>
+			<button
+				type="button"
+				class="settings-modal__nav-item"
 				class:settings-modal__nav-item--active={section === 'integrations'}
 				onclick={() => (section = 'integrations')}
 			>
@@ -110,6 +121,23 @@
 							{f.label}
 						</button>
 					{/each}
+				</div>
+			{:else if section === 'accent'}
+				<h3>Accent Color</h3>
+				<p class="settings-hint">
+					Pick a custom accent color — it replaces the theme's default blue for buttons, links, and
+					highlights everywhere in the app.
+				</p>
+				<div class="accent-picker">
+					<input
+						class="accent-picker__input"
+						type="color"
+						value={accentState.custom ?? defaultAccent}
+						oninput={(event) => setAccent((event.currentTarget as HTMLInputElement).value)}
+					/>
+					<button type="button" class="settings-trigger" onclick={resetAccent}>
+						Reset to default
+					</button>
 				</div>
 			{:else}
 				<h3>Google Books API Key</h3>

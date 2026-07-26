@@ -28,9 +28,12 @@ const SPECIFIC_GENRE_RULES: GenreRule[] = [
 	{ genre: 'Classics', keywords: ['classics'] }
 ];
 
+// Nonfiction must be checked before Fiction: "nonfiction" contains "fiction"
+// as a substring, so checking Fiction first would tag every nonfiction book
+// as fiction too. Order here matters (see the `break` below).
 const FALLBACK_GENRE_RULES: GenreRule[] = [
-	{ genre: 'Fiction', keywords: ['fiction'] },
-	{ genre: 'Nonfiction', keywords: ['nonfiction', 'non-fiction'] }
+	{ genre: 'Nonfiction', keywords: ['nonfiction', 'non-fiction'] },
+	{ genre: 'Fiction', keywords: ['fiction'] }
 ];
 
 export const CANONICAL_GENRES = [
@@ -56,6 +59,7 @@ export function normalizeSubjectsToGenres(subjects: string[]): string[] {
 		for (const rule of FALLBACK_GENRE_RULES) {
 			if (lowerSubjects.some((s) => rule.keywords.some((kw) => s.includes(kw)))) {
 				matched.add(rule.genre);
+				break; // Fiction/Nonfiction are mutually exclusive — stop at the first match
 			}
 		}
 	}

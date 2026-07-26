@@ -28,6 +28,8 @@ export const books = sqliteTable('books', {
 	coverUrl: text('cover_url'),
 	openLibraryId: text('open_library_id').unique(),
 	isbn: text('isbn'),
+	description: text('description'),
+	pageCount: integer('page_count'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

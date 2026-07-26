@@ -6,12 +6,14 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { initTheme } from '$lib/client/theme.svelte';
 	import { initFont } from '$lib/client/font.svelte';
+	import { initAccent } from '$lib/client/accent.svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
 		initTheme();
 		initFont();
+		initAccent();
 	});
 </script>
 

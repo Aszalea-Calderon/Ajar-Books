@@ -1,6 +1,6 @@
+import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
@@ -17,5 +17,28 @@ export default defineConfig({
 				}
 			}
 		})
-	]
+	],
+	test: {
+		expect: { requireAssertions: true },
+		projects: [
+			{
+				extends: './vite.config.ts',
+				test: {
+					name: 'server',
+					environment: 'node',
+					include: ['src/**/*.{test,spec}.{js,ts}'],
+					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					env: {
+						DATABASE_URL: ':memory:',
+						SESSION_SECRET: 'vitest-only-secret-never-used-outside-tests'
+					},
+					// Every test file imports the same $lib/server/db singleton, so
+					// they all end up sharing one in-memory database connection —
+					// running files in parallel lets one file's cleanup wipe another
+					// file's in-flight rows. Sequential keeps each file's data stable.
+					fileParallelism: false
+				}
+			}
+		]
+	}
 });

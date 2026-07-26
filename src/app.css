@@ -520,12 +520,20 @@ button {
 }
 
 .search-bar__submit {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
 	padding: var(--space-3) var(--space-6);
 	background: var(--color-primary);
 	color: var(--color-primary-text);
 	border: none;
 	border-radius: var(--radius-sm);
 	font-weight: 600;
+}
+
+.search-bar__submit:disabled {
+	opacity: 0.7;
+	cursor: default;
 }
 
 .search-results {
@@ -566,6 +574,11 @@ button {
 	cursor: pointer;
 }
 
+.search-result__preview:disabled {
+	cursor: default;
+	opacity: 0.7;
+}
+
 .search-result__cover {
 	width: 3rem;
 	height: 4.5rem;
@@ -595,6 +608,9 @@ button {
 }
 
 .search-result__label {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
 	flex-shrink: 0;
 	padding: var(--space-2) var(--space-4);
 	background: var(--color-primary);
@@ -613,31 +629,36 @@ button {
 	max-width: 40rem;
 }
 
-.book-detail__header {
+.book-detail__hero {
+	position: relative;
+	background: linear-gradient(135deg, var(--color-primary), var(--color-accent-purple));
+	border-radius: var(--radius-lg);
+	padding: var(--space-6);
+}
+
+.book-detail__hero-content {
 	display: flex;
-	align-items: flex-start;
+	align-items: flex-end;
 	gap: var(--space-4);
 }
 
-.book-detail__header > div {
-	flex: 1;
-}
-
 .book-detail__delete-form {
-	flex-shrink: 0;
+	position: absolute;
+	top: var(--space-4);
+	right: var(--space-4);
 }
 
 .book-detail__delete {
 	padding: var(--space-2) var(--space-3);
-	background: none;
-	border: 1px solid var(--color-border);
+	background: rgb(0 0 0 / 0.15);
+	border: 1px solid rgb(255 255 255 / 0.35);
 	border-radius: var(--radius-sm);
-	color: var(--color-danger);
+	color: var(--color-primary-text);
 	font-size: var(--font-size-sm);
 }
 
 .book-detail__delete:hover {
-	border-color: var(--color-danger);
+	background: rgb(0 0 0 / 0.3);
 }
 
 .book-detail__cover {
@@ -646,20 +667,42 @@ button {
 	object-fit: cover;
 	border-radius: var(--radius-sm);
 	flex-shrink: 0;
+	border: 2px solid rgb(255 255 255 / 0.4);
 }
 
 .book-detail__cover--placeholder {
-	background: var(--color-surface-raised);
-	border: 1px solid var(--color-border);
+	background: rgb(255 255 255 / 0.2);
 }
 
-.book-detail__header h2 {
+.book-detail__hero-content h2 {
 	margin: 0 0 var(--space-1);
+	color: var(--color-primary-text);
 }
 
-.book-detail__author {
-	margin: 0 0 var(--space-2);
-	color: var(--color-text-muted);
+.book-detail__subtitle {
+	margin: 0;
+	color: var(--color-primary-text);
+	opacity: 0.85;
+}
+
+.book-detail__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+}
+
+.book-detail__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--space-4);
+}
+
+.book-detail__row-left {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
 }
 
 .book-detail__status {
@@ -671,8 +714,66 @@ button {
 	color: var(--color-text-muted);
 }
 
-.book-detail__rating {
-	margin-top: var(--space-3);
+.format-toggle {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.format-toggle__pill {
+	padding: var(--space-2) var(--space-4);
+	background: var(--color-surface-raised);
+	border: none;
+	border-radius: 999px;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+}
+
+.format-toggle__pill--active {
+	background: var(--color-primary);
+	color: var(--color-primary-text);
+}
+
+.format-total-form {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+}
+
+.format-total-form label {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+	white-space: nowrap;
+}
+
+.format-total-form input {
+	width: 6rem;
+	padding: var(--space-2);
+	background: var(--color-bg);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text);
+}
+
+.progress-bar__actions {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.tag-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: var(--space-6);
+}
+
+.activity-log__footer {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: var(--space-4);
 }
 
 /* Star rating */
@@ -735,22 +836,30 @@ button {
 	font-size: var(--font-size-base);
 }
 
-.format-picker {
-	display: flex;
-	gap: var(--space-4);
-	margin-bottom: var(--space-4);
-}
-
-.format-picker__option {
-	display: flex;
-	align-items: center;
-	gap: var(--space-2);
-	font-size: var(--font-size-sm);
+.book-detail__description {
+	margin: 0;
+	color: var(--color-text-muted);
+	white-space: pre-wrap;
+	line-height: 1.6;
 }
 
 /* Progress bar */
 .progress-bar {
 	margin-bottom: var(--space-4);
+}
+
+.progress-bar__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	margin-bottom: var(--space-3);
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+}
+
+.progress-bar__header span:last-child {
+	color: var(--color-text);
+	font-weight: 600;
 }
 
 .progress-bar__track {
@@ -765,6 +874,22 @@ button {
 	height: 100%;
 	background: var(--color-primary);
 	border-radius: 999px;
+}
+
+.progress-bar__segments {
+	display: flex;
+	gap: var(--space-1);
+}
+
+.progress-bar__segment {
+	flex: 1;
+	height: 1.5rem;
+	border-radius: var(--radius-sm);
+	background: var(--color-surface-raised);
+}
+
+.progress-bar__segment--filled {
+	background: var(--color-primary);
 }
 
 .progress-bar__label {
@@ -873,6 +998,31 @@ button {
 	color: var(--color-accent-green);
 }
 
+.accent-picker {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+}
+
+.accent-picker__input {
+	width: 3.5rem;
+	height: 2.5rem;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: none;
+	cursor: pointer;
+}
+
+.accent-picker__input::-webkit-color-swatch-wrapper {
+	padding: var(--space-1);
+}
+
+.accent-picker__input::-webkit-color-swatch {
+	border: none;
+	border-radius: var(--radius-sm);
+}
+
 .dashboard__cta {
 	display: inline-block;
 	margin-top: var(--space-3);
@@ -946,4 +1096,27 @@ button {
 .tag-editor__input:focus {
 	outline: none;
 	border-color: var(--color-primary);
+}
+
+/* Loading spinner */
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.spinner {
+	display: inline-block;
+	width: 1rem;
+	height: 1rem;
+	border: 2px solid rgb(255 255 255 / 0.35);
+	border-top-color: currentcolor;
+	border-radius: 50%;
+	animation: spin 0.6s linear infinite;
+	flex-shrink: 0;
+}
+
+.spinner--muted {
+	border-color: var(--color-border);
+	border-top-color: var(--color-text-muted);
 }

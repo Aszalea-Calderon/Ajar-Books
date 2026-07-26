@@ -7,6 +7,8 @@ export type BookSearchResult = {
 	coverUrl: string | null;
 	openLibraryId: string | null;
 	isbn: string | null;
+	description: string | null;
+	pageCount: number | null;
 };
 
 type OpenLibraryDoc = {
@@ -15,6 +17,7 @@ type OpenLibraryDoc = {
 	author_name?: string[];
 	cover_i?: number;
 	isbn?: string[];
+	number_of_pages_median?: number;
 };
 
 type OpenLibraryResponse = {
@@ -25,7 +28,7 @@ async function searchOpenLibrary(query: string): Promise<BookSearchResult[]> {
 	const url = new URL('https://openlibrary.org/search.json');
 	url.searchParams.set('q', query);
 	url.searchParams.set('limit', '20');
-	url.searchParams.set('fields', 'key,title,author_name,cover_i,isbn');
+	url.searchParams.set('fields', 'key,title,author_name,cover_i,isbn,number_of_pages_median');
 
 	const res = await fetch(url);
 	if (!res.ok) return [];
@@ -37,7 +40,11 @@ async function searchOpenLibrary(query: string): Promise<BookSearchResult[]> {
 		author: doc.author_name?.[0] ?? null,
 		coverUrl: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null,
 		openLibraryId: doc.key,
-		isbn: doc.isbn?.[0] ?? null
+		isbn: doc.isbn?.[0] ?? null,
+		// Open Library's search endpoint doesn't include descriptions — fetched
+		// separately per-work at add time, see getOpenLibraryWorkDetails.
+		description: null,
+		pageCount: doc.number_of_pages_median ?? null
 	}));
 }
 
@@ -47,6 +54,8 @@ type GoogleBooksItem = {
 		authors?: string[];
 		imageLinks?: { thumbnail?: string };
 		industryIdentifiers?: { type: string; identifier: string }[];
+		description?: string;
+		pageCount?: number;
 	};
 };
 
@@ -79,23 +88,44 @@ async function searchGoogleBooks(query: string, apiKey: string): Promise<BookSea
 				author: info.authors?.[0] ?? null,
 				coverUrl: info.imageLinks?.thumbnail?.replace(/^http:/, 'https:') ?? null,
 				openLibraryId: null,
-				isbn
+				isbn,
+				description: info.description ?? null,
+				pageCount: info.pageCount ?? null
 			};
 		});
 }
 
+type OpenLibraryWorkDescription = string | { type: string; value: string };
+
+type OpenLibraryWork = {
+	subjects?: string[];
+	description?: OpenLibraryWorkDescription;
+};
+
+function normalizeOpenLibraryDescription(description?: OpenLibraryWorkDescription): string | null {
+	if (!description) return null;
+	if (typeof description === 'string') return description;
+	return description.value ?? null;
+}
+
 /**
- * Fetches a work's raw subjects for genre normalization. Best-effort: a
- * failure here shouldn't block adding the book, just skip genre suggestions.
+ * Fetches a work's raw subjects (for genre normalization) and description
+ * (for the "About the book" panel). Best-effort: a failure here shouldn't
+ * block adding the book, just skip the extra data.
  */
-export async function getOpenLibrarySubjects(openLibraryId: string): Promise<string[]> {
+export async function getOpenLibraryWorkDetails(
+	openLibraryId: string
+): Promise<{ subjects: string[]; description: string | null }> {
 	try {
 		const res = await fetch(`https://openlibrary.org${openLibraryId}.json`);
-		if (!res.ok) return [];
-		const data: { subjects?: string[] } = await res.json();
-		return data.subjects ?? [];
+		if (!res.ok) return { subjects: [], description: null };
+		const data: OpenLibraryWork = await res.json();
+		return {
+			subjects: data.subjects ?? [],
+			description: normalizeOpenLibraryDescription(data.description)
+		};
 	} catch {
-		return [];
+		return { subjects: [], description: null };
 	}
 }
 

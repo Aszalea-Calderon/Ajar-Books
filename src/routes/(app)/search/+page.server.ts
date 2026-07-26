@@ -44,12 +44,16 @@ export const actions: Actions = {
 
 		if (!title) return fail(400, { error: 'Missing title' });
 
+		const pageCountRaw = data.get('pageCount');
+
 		const { bookId } = await addBookToLibrary({
 			title,
 			author: String(data.get('author') ?? '') || null,
 			coverUrl: String(data.get('coverUrl') ?? '') || null,
 			openLibraryId: String(data.get('openLibraryId') ?? '') || null,
-			isbn: String(data.get('isbn') ?? '') || null
+			isbn: String(data.get('isbn') ?? '') || null,
+			description: String(data.get('description') ?? '') || null,
+			pageCount: pageCountRaw ? Number(pageCountRaw) : null
 		});
 
 		throw redirect(303, `/books/${bookId}`);

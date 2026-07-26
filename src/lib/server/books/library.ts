@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import { books, userBooks } from '$lib/server/db/schema';
 import { eq, or } from 'drizzle-orm';
-import { getOpenLibrarySubjects, type BookSearchResult } from './search';
+import { getOpenLibraryWorkDetails, type BookSearchResult } from './search';
 import { normalizeSubjectsToGenres } from './genreMapping';
 import { applyGenreSuggestions } from './tags';
 
@@ -22,6 +22,18 @@ export async function addBookToLibrary(result: BookSearchResult) {
 				.where(or(...matchConditions))
 		: [];
 
+	// Fetched once, before creating the book, so the description can be part
+	// of the initial insert. Only for a genuinely new book — best-effort, see
+	// getOpenLibraryWorkDetails.
+	let description = result.description;
+	let genresToApply: string[] = [];
+
+	if (!existingBook && result.openLibraryId) {
+		const details = await getOpenLibraryWorkDetails(result.openLibraryId);
+		description = description ?? details.description;
+		genresToApply = normalizeSubjectsToGenres(details.subjects);
+	}
+
 	const book =
 		existingBook ??
 		(
@@ -32,7 +44,9 @@ export async function addBookToLibrary(result: BookSearchResult) {
 					author: result.author,
 					coverUrl: result.coverUrl,
 					openLibraryId: result.openLibraryId,
-					isbn: result.isbn
+					isbn: result.isbn,
+					description,
+					pageCount: result.pageCount
 				})
 				.returning()
 		)[0];
@@ -48,14 +62,8 @@ export async function addBookToLibrary(result: BookSearchResult) {
 		.values({ bookId: book.id, status: 'want_to_read' })
 		.returning();
 
-	// Pre-fill genre tags from Open Library's subjects as a sensible default —
-	// only for a genuinely new book, and only best-effort (see getOpenLibrarySubjects).
-	if (!existingBook && result.openLibraryId) {
-		const subjects = await getOpenLibrarySubjects(result.openLibraryId);
-		const genres = normalizeSubjectsToGenres(subjects);
-		if (genres.length > 0) {
-			await applyGenreSuggestions(userBook.id, genres);
-		}
+	if (genresToApply.length > 0) {
+		await applyGenreSuggestions(userBook.id, genresToApply);
 	}
 
 	return { bookId: book.id, userBookId: userBook.id, alreadyInLibrary: false };

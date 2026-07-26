@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StarRating from '$lib/components/StarRating.svelte';
@@ -15,9 +14,54 @@
 		dnf: 'Did Not Finish'
 	};
 
-	// Intentionally a one-time snapshot: this only seeds the radio group's
-	// initial selection, which the user then drives locally.
-	let formatChoice = $state(untrack(() => data.userBook.format ?? 'physical'));
+	const formatLabels: Record<string, string> = {
+		physical: 'Physical',
+		ebook: 'Ebook',
+		audiobook: 'Audiobook'
+	};
+
+	const formats = ['physical', 'ebook', 'audiobook'] as const;
+	type Format = (typeof formats)[number];
+
+	let pendingFormat = $state<Format | null>(null);
+	let logModalOpen = $state(false);
+	let logDialogEl: HTMLDialogElement;
+
+	$effect(() => {
+		if (!logDialogEl) return;
+		if (logModalOpen && !logDialogEl.open) {
+			logDialogEl.showModal();
+		} else if (!logModalOpen && logDialogEl.open) {
+			logDialogEl.close();
+		}
+	});
+
+	function closeLogModalOnBackdrop(event: MouseEvent) {
+		if (event.target === logDialogEl) logModalOpen = false;
+	}
+
+	let subtitle = $derived(
+		[data.book.author, data.userBook.format ? formatLabels[data.userBook.format] : null]
+			.filter(Boolean)
+			.join(' · ')
+	);
+
+	let pendingTotalDefault = $derived.by(() => {
+		if (pendingFormat === data.userBook.format) {
+			return pendingFormat === 'audiobook' ? data.userBook.totalMinutes : data.userBook.totalPages;
+		}
+		// Picking a fresh (not previously saved) physical/ebook format: suggest
+		// the page count pulled from Open Library/Google Books, if we have one.
+		// No equivalent source exists for audiobook runtime, so that stays blank.
+		if (pendingFormat && pendingFormat !== 'audiobook') {
+			return data.book.pageCount;
+		}
+		return null;
+	});
+
+	let isAudiobook = $derived(data.userBook.format === 'audiobook');
+	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
+	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
 </script>
 
 <svelte:head>
@@ -25,22 +69,7 @@
 </svelte:head>
 
 <div class="book-detail">
-	<div class="book-detail__header">
-		{#if data.book.coverUrl}
-			<img class="book-detail__cover" src={data.book.coverUrl} alt="" />
-		{:else}
-			<div class="book-detail__cover book-detail__cover--placeholder"></div>
-		{/if}
-		<div>
-			<h2>{data.book.title}</h2>
-			{#if data.book.author}
-				<p class="book-detail__author">{data.book.author}</p>
-			{/if}
-			<span class="book-detail__status">{statusLabels[data.userBook.status]}</span>
-			<div class="book-detail__rating">
-				<StarRating value={data.userBook.rating} />
-			</div>
-		</div>
+	<div class="book-detail__hero">
 		<form
 			class="book-detail__delete-form"
 			method="POST"
@@ -56,93 +85,112 @@
 		>
 			<button class="book-detail__delete" type="submit">Delete</button>
 		</form>
-	</div>
-
-	<div class="book-detail__panel">
-		<TagEditor
-			label="Genre"
-			type="genre"
-			tags={data.tagsByType.genre}
-			suggestions={data.suggestionsByType.genre}
-		/>
-		<TagEditor
-			label="Mood"
-			type="mood"
-			tags={data.tagsByType.mood}
-			suggestions={data.suggestionsByType.mood}
-		/>
-		<TagEditor
-			label="Setting"
-			type="setting"
-			tags={data.tagsByType.setting}
-			suggestions={data.suggestionsByType.setting}
-		/>
-	</div>
-
-	{#if !data.userBook.format}
-		<div class="book-detail__panel">
-			<h3>Set format</h3>
-			<form method="POST" action="?/setFormat" use:enhance>
-				<div class="format-picker">
-					<label class="format-picker__option">
-						<input type="radio" name="format" value="physical" bind:group={formatChoice} />
-						Physical
-					</label>
-					<label class="format-picker__option">
-						<input type="radio" name="format" value="ebook" bind:group={formatChoice} />
-						Ebook
-					</label>
-					<label class="format-picker__option">
-						<input type="radio" name="format" value="audiobook" bind:group={formatChoice} />
-						Audiobook
-					</label>
-				</div>
-
-				{#if formatChoice === 'audiobook'}
-					<div class="auth-field">
-						<label for="totalMinutes">Total length (minutes)</label>
-						<input id="totalMinutes" name="totalMinutes" type="number" min="1" />
-					</div>
-				{:else}
-					<div class="auth-field">
-						<label for="totalPages">Total pages</label>
-						<input id="totalPages" name="totalPages" type="number" min="1" />
-					</div>
+		<div class="book-detail__hero-content">
+			{#if data.book.coverUrl}
+				<img class="book-detail__cover" src={data.book.coverUrl} alt="" />
+			{:else}
+				<div class="book-detail__cover book-detail__cover--placeholder"></div>
+			{/if}
+			<div>
+				<h2>{data.book.title}</h2>
+				{#if subtitle}
+					<p class="book-detail__subtitle">{subtitle}</p>
 				{/if}
-
-				<button class="auth-submit" type="submit">Save format</button>
-			</form>
+			</div>
 		</div>
-	{:else}
-		<div class="book-detail__panel">
-			<h3>Progress</h3>
-			<ProgressBar
-				current={data.userBook.format === 'audiobook' ? data.totals.minutes : data.totals.pages}
-				total={data.userBook.format === 'audiobook'
-					? data.userBook.totalMinutes
-					: data.userBook.totalPages}
-				unit={data.userBook.format === 'audiobook' ? 'minutes' : 'pages'}
+	</div>
+
+	<div class="book-detail__body">
+		<div class="book-detail__row">
+			<div class="book-detail__row-left">
+				<span class="book-detail__status">{statusLabels[data.userBook.status]}</span>
+				<StarRating value={data.userBook.rating} />
+			</div>
+			<div class="format-toggle">
+				{#each formats as f (f)}
+					<button
+						type="button"
+						class="format-toggle__pill"
+						class:format-toggle__pill--active={data.userBook.format === f}
+						onclick={() => (pendingFormat = pendingFormat === f ? null : f)}
+					>
+						{formatLabels[f]}
+					</button>
+				{/each}
+			</div>
+		</div>
+
+		{#if pendingFormat}
+			<form
+				method="POST"
+				action="?/setFormat"
+				class="format-total-form"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update();
+						pendingFormat = null;
+					};
+				}}
+			>
+				<input type="hidden" name="format" value={pendingFormat} />
+				<label for="totalAmount">
+					{pendingFormat === 'audiobook' ? 'Total length (minutes)' : 'Total pages'}
+				</label>
+				<input
+					id="totalAmount"
+					name={pendingFormat === 'audiobook' ? 'totalMinutes' : 'totalPages'}
+					type="number"
+					min="1"
+					value={pendingTotalDefault}
+				/>
+				<button class="auth-submit" type="submit">Save</button>
+			</form>
+		{/if}
+
+		{#if data.userBook.format && !pendingFormat}
+			<div class="book-detail__panel">
+				<ProgressBar
+					label={progressLabel}
+					current={isAudiobook ? data.totals.minutes : data.totals.pages}
+					total={isAudiobook ? data.userBook.totalMinutes : data.userBook.totalPages}
+					unit={isAudiobook ? 'minutes' : 'pages'}
+					variant="segments"
+				/>
+				<div class="progress-bar__actions">
+					<button type="button" class="search-result__label" onclick={() => (logModalOpen = true)}>
+						{logButtonLabel}
+					</button>
+				</div>
+			</div>
+		{/if}
+
+		<div class="book-detail__panel tag-grid">
+			<TagEditor
+				label="Genre"
+				type="genre"
+				tags={data.tagsByType.genre}
+				suggestions={data.suggestionsByType.genre}
 			/>
-
-			<form method="POST" action="?/logProgress" use:enhance>
-				{#if data.userBook.format === 'audiobook'}
-					<div class="auth-field">
-						<label for="minutesRead">Minutes listened</label>
-						<input id="minutesRead" name="minutesRead" type="number" min="1" required />
-					</div>
-				{:else}
-					<div class="auth-field">
-						<label for="pagesRead">Pages read</label>
-						<input id="pagesRead" name="pagesRead" type="number" min="1" required />
-					</div>
-				{/if}
-				<div class="auth-field">
-					<label for="note">Note (optional)</label>
-					<input id="note" name="note" type="text" />
-				</div>
-				<button class="auth-submit" type="submit">Log progress</button>
-			</form>
+			<TagEditor
+				label="Mood"
+				type="mood"
+				tags={data.tagsByType.mood}
+				suggestions={data.suggestionsByType.mood}
+			/>
+			<TagEditor
+				label="Setting"
+				type="setting"
+				tags={data.tagsByType.setting}
+				suggestions={data.suggestionsByType.setting}
+			/>
 		</div>
+
+		{#if data.book.description}
+			<div class="book-detail__panel">
+				<h3>About the book</h3>
+				<p class="book-detail__description">{data.book.description}</p>
+			</div>
+		{/if}
 
 		<div class="book-detail__panel">
 			<h3>Activity</h3>
@@ -169,6 +217,62 @@
 					{/each}
 				</ul>
 			{/if}
+
+			{#if data.userBook.format}
+				<div class="activity-log__footer">
+					<button type="button" class="search-result__label" onclick={() => (logModalOpen = true)}>
+						{logButtonLabel}
+					</button>
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
 </div>
+
+<dialog
+	bind:this={logDialogEl}
+	class="settings-modal"
+	onclose={() => (logModalOpen = false)}
+	onclick={closeLogModalOnBackdrop}
+>
+	<div class="settings-modal__header">
+		<h2>{logButtonLabel.replace('+ ', '')}</h2>
+		<button
+			type="button"
+			class="settings-modal__close"
+			aria-label="Close"
+			onclick={() => (logModalOpen = false)}
+		>
+			×
+		</button>
+	</div>
+	<div class="settings-modal__content">
+		<form
+			method="POST"
+			action="?/logProgress"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await update();
+					logModalOpen = false;
+				};
+			}}
+		>
+			{#if isAudiobook}
+				<div class="auth-field">
+					<label for="minutesRead">Minutes listened</label>
+					<input id="minutesRead" name="minutesRead" type="number" min="1" required />
+				</div>
+			{:else}
+				<div class="auth-field">
+					<label for="pagesRead">Pages read</label>
+					<input id="pagesRead" name="pagesRead" type="number" min="1" required />
+				</div>
+			{/if}
+			<div class="auth-field">
+				<label for="note">Note (optional)</label>
+				<input id="note" name="note" type="text" />
+			</div>
+			<button class="auth-submit" type="submit">Log</button>
+		</form>
+	</div>
+</dialog>
