@@ -19,6 +19,7 @@
 	type LogEntry = PageData['logs'][number];
 
 	let formatModalMode = $state<'start' | 'change' | null>(null);
+	let resetMenuOpen = $state(false);
 	let logModalOpen = $state(false);
 	let logDialogEl: HTMLDialogElement;
 
@@ -57,6 +58,7 @@
 			.join(' · ')
 	);
 
+	let isUntouched = $derived(data.userBook.status === 'added');
 	let isAudiobook = $derived(data.userBook.format === 'audiobook');
 	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
 	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
@@ -70,40 +72,81 @@
 <div class="book-detail">
 	<div class="book-detail__hero">
 		<div class="book-detail__hero-actions">
-			<form
-				method="POST"
-				action="?/removeBook"
-				use:enhance
-				onsubmit={(event) => {
-					if (
-						!confirm(
-							`Remove "${data.book.title}" from your library? This clears its progress, format, and rating, but keeps it as a book you can start tracking again.`
-						)
-					) {
-						event.preventDefault();
-					}
-				}}
-			>
-				<button class="book-detail__action" type="submit">Remove</button>
-			</form>
-			<form
-				method="POST"
-				action="?/delete"
-				use:enhance
-				onsubmit={(event) => {
-					if (
-						!confirm(
-							`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
-						)
-					) {
-						event.preventDefault();
-					}
-				}}
-			>
-				<button class="book-detail__action book-detail__action--danger" type="submit">
-					Delete
-				</button>
-			</form>
+			{#if isUntouched}
+				<form method="POST" action="?/setStatus" use:enhance>
+					<input type="hidden" name="status" value="want_to_read" />
+					<button
+						type="submit"
+						class="book-detail__bookmark"
+						aria-label="Want to read later"
+						title="Want to read later"
+					>
+						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+							<path fill="currentColor" d="M6 2a2 2 0 0 0-2 2v18l8-5 8 5V4a2 2 0 0 0-2-2H6Z" />
+						</svg>
+						Want to read later
+					</button>
+				</form>
+			{:else}
+				<div class="book-detail__reset">
+					<button
+						type="button"
+						class="book-detail__reset-trigger"
+						aria-label="Reset or delete this book"
+						title="Reset or delete this book"
+						onclick={() => (resetMenuOpen = !resetMenuOpen)}
+					>
+						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+							<path fill="currentColor" d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" />
+						</svg>
+					</button>
+					{#if resetMenuOpen}
+						<div class="book-detail__reset-menu">
+							<form
+								method="POST"
+								action="?/removeBook"
+								use:enhance
+								onsubmit={(event) => {
+									resetMenuOpen = false;
+									if (
+										!confirm(
+											`Remove "${data.book.title}" from your library? This clears its progress, format, and rating, but keeps it as a book you can start tracking again.`
+										)
+									) {
+										event.preventDefault();
+									}
+								}}
+							>
+								<button class="book-detail__reset-option" type="submit">
+									Reset to Want to Read
+								</button>
+							</form>
+							<form
+								method="POST"
+								action="?/delete"
+								use:enhance
+								onsubmit={(event) => {
+									resetMenuOpen = false;
+									if (
+										!confirm(
+											`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
+										)
+									) {
+										event.preventDefault();
+									}
+								}}
+							>
+								<button
+									class="book-detail__reset-option book-detail__reset-option--danger"
+									type="submit"
+								>
+									Delete permanently
+								</button>
+							</form>
+						</div>
+					{/if}
+				</div>
+			{/if}
 		</div>
 		<div class="book-detail__hero-content">
 			{#if data.book.coverUrl}
@@ -123,8 +166,10 @@
 	<div class="book-detail__body">
 		<div class="book-detail__row">
 			<div class="book-detail__row-left">
-				<StatusControl status={data.userBook.status} />
-				<StarRating value={data.userBook.rating} />
+				{#if !isUntouched}
+					<StatusControl status={data.userBook.status} />
+					<StarRating value={data.userBook.rating} />
+				{/if}
 			</div>
 			<div class="format-status">
 				{#if data.userBook.format}
@@ -260,6 +305,7 @@
 	currentTotalPages={data.userBook.totalPages}
 	currentTotalMinutes={data.userBook.totalMinutes}
 	suggestedPageCount={data.book.pageCount}
+	showStartDate={formatModalMode === 'start'}
 	onClose={() => (formatModalMode = null)}
 />
 

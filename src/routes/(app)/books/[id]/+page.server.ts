@@ -86,7 +86,10 @@ export const actions: Actions = {
 
 	// "Start Reading": the one action that begins tracking. Unlike setFormat
 	// above (used later to change format on an already-reading book), this
-	// always jumps status straight to 'reading', even from 'want_to_read'.
+	// always jumps status straight to 'reading' — from 'added', 'want_to_read',
+	// or anywhere else — and takes an explicit start date rather than always
+	// stamping "now", since you might be logging a book you started a few
+	// days ago.
 	startReading: async ({ request, params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');
@@ -99,17 +102,20 @@ export const actions: Actions = {
 
 		const totalPagesRaw = data.get('totalPages');
 		const totalMinutesRaw = data.get('totalMinutes');
+		const startedAtRaw = String(data.get('startedAt') ?? '');
+		const startedAt =
+			startedAtRaw && !Number.isNaN(Date.parse(startedAtRaw)) ? new Date(startedAtRaw) : new Date();
 
 		await db
 			.update(userBooks)
 			.set({
 				format: format as 'physical' | 'ebook' | 'audiobook',
 				totalPages: totalPagesRaw ? Number(totalPagesRaw) : null,
-				totalMinutes: totalMinutesRaw ? Number(totalMinutesRaw) : null
+				totalMinutes: totalMinutesRaw ? Number(totalMinutesRaw) : null,
+				status: 'reading',
+				startedAt
 			})
 			.where(eq(userBooks.id, result.userBook.id));
-
-		await setStatus(result.userBook.id, 'reading');
 	},
 
 	logProgress: async ({ request, params }) => {

@@ -42,9 +42,12 @@ export const userBooks = sqliteTable('user_books', {
 	bookId: text('book_id')
 		.notNull()
 		.references(() => books.id, { onDelete: 'cascade' }),
-	status: text('status', { enum: ['want_to_read', 'reading', 'finished', 'dnf'] })
+	// 'added' is a transient, one-way-exit-only marker meaning "in the library,
+	// but no status has been chosen yet" — never a manually re-selectable
+	// target once left (see setStatus's validStatuses, which excludes it).
+	status: text('status', { enum: ['added', 'want_to_read', 'reading', 'finished', 'dnf'] })
 		.notNull()
-		.default('want_to_read'),
+		.default('added'),
 	format: text('format', { enum: ['physical', 'ebook', 'audiobook'] }),
 	totalPages: integer('total_pages'),
 	totalMinutes: integer('total_minutes'),

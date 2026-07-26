@@ -10,6 +10,7 @@
 		currentTotalPages,
 		currentTotalMinutes,
 		suggestedPageCount,
+		showStartDate = false,
 		onClose
 	}: {
 		open: boolean;
@@ -20,6 +21,7 @@
 		currentTotalPages: number | null;
 		currentTotalMinutes: number | null;
 		suggestedPageCount: number | null;
+		showStartDate?: boolean;
 		onClose: () => void;
 	} = $props();
 
@@ -31,13 +33,21 @@
 		audiobook: 'Audiobook'
 	};
 
+	function todayLocalDateString(): string {
+		const now = new Date();
+		const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+		return local.toISOString().slice(0, 10);
+	}
+
 	let selectedFormat = $state<Format>('physical');
+	let startDate = $state('');
 	let dialogEl: HTMLDialogElement;
 
 	$effect(() => {
 		if (!dialogEl) return;
 		if (open && !dialogEl.open) {
 			selectedFormat = currentFormat ?? 'physical';
+			startDate = todayLocalDateString();
 			dialogEl.showModal();
 		} else if (!open && dialogEl.open) {
 			dialogEl.close();
@@ -90,6 +100,18 @@
 				{/each}
 			</div>
 			<input type="hidden" name="format" value={selectedFormat} />
+			{#if showStartDate}
+				<div class="auth-field">
+					<label for="formatModalStartDate">Date started</label>
+					<input
+						id="formatModalStartDate"
+						name="startedAt"
+						type="date"
+						max={todayLocalDateString()}
+						bind:value={startDate}
+					/>
+				</div>
+			{/if}
 			<div class="auth-field">
 				<label for="formatModalTotal">
 					{selectedFormat === 'audiobook' ? 'Total length (minutes)' : 'Total pages'}

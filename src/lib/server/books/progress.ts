@@ -70,7 +70,7 @@ export async function logProgress(params: {
 		note: params.note || null
 	});
 
-	if (userBook.status === 'want_to_read') {
+	if (userBook.status === 'want_to_read' || userBook.status === 'added') {
 		await db
 			.update(userBooks)
 			.set({ status: 'reading', startedAt: new Date() })
@@ -105,7 +105,7 @@ export async function editProgress(params: {
 	return recomputeStatus(log.userBookId);
 }
 
-export type BookStatus = 'want_to_read' | 'reading' | 'finished' | 'dnf';
+export type BookStatus = 'added' | 'want_to_read' | 'reading' | 'finished' | 'dnf';
 
 /**
  * Manual status override, independent of the automatic progress-based

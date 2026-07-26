@@ -50,13 +50,13 @@ describe('addBookToLibrary', () => {
 		expect(allBooks[0].title).toBe('Dune');
 	});
 
-	it('creates the UserBook with status want_to_read by default', async () => {
+	it('creates the UserBook with status added by default (untouched, no status chosen yet)', async () => {
 		const outcome = await addBookToLibrary(result());
 		const [userBook] = await db
 			.select()
 			.from(userBooks)
 			.where(eq(userBooks.id, outcome.userBookId));
-		expect(userBook.status).toBe('want_to_read');
+		expect(userBook.status).toBe('added');
 	});
 
 	it('dedupes by openLibraryId — adding the same result twice does not create a duplicate', async () => {

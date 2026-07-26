@@ -57,10 +57,7 @@ export async function addBookToLibrary(result: BookSearchResult) {
 		return { bookId: book.id, userBookId: existingUserBook.id, alreadyInLibrary: true };
 	}
 
-	const [userBook] = await db
-		.insert(userBooks)
-		.values({ bookId: book.id, status: 'want_to_read' })
-		.returning();
+	const [userBook] = await db.insert(userBooks).values({ bookId: book.id }).returning();
 
 	if (genresToApply.length > 0) {
 		await applyGenreSuggestions(userBook.id, genresToApply);

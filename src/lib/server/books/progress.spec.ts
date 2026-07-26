@@ -72,6 +72,20 @@ describe('logProgress', () => {
 		expect(updated.startedAt).not.toBeNull();
 	});
 
+	it('promotes the untouched "added" status to reading on the first logged session', async () => {
+		const userBook = await seedUserBook({
+			status: 'added',
+			format: 'physical',
+			totalPages: 500
+		});
+
+		await logProgress({ userBookId: userBook.id, pagesRead: 10 });
+
+		const [updated] = await db.select().from(userBooks).where(eq(userBooks.id, userBook.id));
+		expect(updated.status).toBe('reading');
+		expect(updated.startedAt).not.toBeNull();
+	});
+
 	it('finishes a page-based book once the logged total meets or exceeds totalPages', async () => {
 		const userBook = await seedUserBook({
 			status: 'reading',

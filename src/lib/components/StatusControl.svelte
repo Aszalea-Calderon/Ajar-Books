@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { status }: { status: 'want_to_read' | 'reading' | 'finished' | 'dnf' } = $props();
+	// Accepts the full BookStatus union (including 'added') even though only
+	// the 4 options below are ever selectable — the caller is expected not to
+	// render this at all while status is 'added' (see isUntouched on the book
+	// detail page), so 'added' never actually matches a pill here.
+	let { status }: { status: 'added' | 'want_to_read' | 'reading' | 'finished' | 'dnf' } = $props();
 
 	const options = [
 		{ id: 'want_to_read', label: 'Want to Read' },
