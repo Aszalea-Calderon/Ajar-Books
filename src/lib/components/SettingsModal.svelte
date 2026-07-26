@@ -10,7 +10,7 @@
 	}: { open?: boolean; googleBooksApiKey: string | null } = $props();
 
 	let dialogEl: HTMLDialogElement;
-	let section = $state<'themes' | 'fonts' | 'accent' | 'integrations'>('themes');
+	let section = $state<'themes' | 'fonts' | 'integrations'>('themes');
 	let justSaved = $state(false);
 
 	$effect(() => {
@@ -77,14 +77,6 @@
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'accent'}
-				onclick={() => (section = 'accent')}
-			>
-				Accent Color
-			</button>
-			<button
-				type="button"
-				class="settings-modal__nav-item"
 				class:settings-modal__nav-item--active={section === 'integrations'}
 				onclick={() => (section = 'integrations')}
 			>
@@ -107,22 +99,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else if section === 'fonts'}
-				<h3>Font</h3>
-				<div class="theme-options">
-					{#each fonts as f (f.id)}
-						<button
-							type="button"
-							class="theme-option"
-							class:theme-option--selected={fontState.current === f.id}
-							onclick={() => setFont(f.id)}
-						>
-							<span class="font-preview font-preview--{f.id}">Aa</span>
-							{f.label}
-						</button>
-					{/each}
-				</div>
-			{:else if section === 'accent'}
+
 				<h3>Accent Color</h3>
 				<p class="settings-hint">
 					Pick a custom accent color — it replaces the theme's default blue for buttons, links, and
@@ -138,6 +115,21 @@
 					<button type="button" class="settings-trigger" onclick={resetAccent}>
 						Reset to default
 					</button>
+				</div>
+			{:else if section === 'fonts'}
+				<h3>Font</h3>
+				<div class="theme-options">
+					{#each fonts as f (f.id)}
+						<button
+							type="button"
+							class="theme-option"
+							class:theme-option--selected={fontState.current === f.id}
+							onclick={() => setFont(f.id)}
+						>
+							<span class="font-preview font-preview--{f.id}">Aa</span>
+							{f.label}
+						</button>
+					{/each}
 				</div>
 			{:else}
 				<h3>Google Books API Key</h3>

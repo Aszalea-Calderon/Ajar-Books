@@ -1,8 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PasswordField from '$lib/components/PasswordField.svelte';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
+
+	let username = $state('');
+	let password = $state('');
+
+	$effect(() => {
+		if (form?.username != null) username = form.username;
+	});
 </script>
 
 <svelte:head>
@@ -10,6 +18,10 @@
 </svelte:head>
 
 <div class="auth-page">
+	<div class="auth-page__brand">
+		<span class="auth-page__logo" aria-hidden="true"></span>
+		Ajar Books
+	</div>
 	<div class="auth-card">
 		<h1>Sign in</h1>
 
@@ -25,21 +37,19 @@
 					name="username"
 					type="text"
 					autocomplete="username"
-					value={form?.username ?? ''}
+					bind:value={username}
 					required
 				/>
 			</div>
-			<div class="auth-field">
-				<label for="password">Password</label>
-				<input
-					id="password"
-					name="password"
-					type="password"
-					autocomplete="current-password"
-					required
-				/>
-			</div>
-			<button class="auth-submit" type="submit">Sign in</button>
+			<PasswordField
+				id="password"
+				name="password"
+				label="Password"
+				autocomplete="current-password"
+				required
+				bind:value={password}
+			/>
+			<button class="auth-submit" type="submit" disabled={!username || !password}> Sign in </button>
 		</form>
 	</div>
 </div>

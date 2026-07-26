@@ -1,8 +1,17 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PasswordField from '$lib/components/PasswordField.svelte';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
+
+	let username = $state('');
+	let password = $state('');
+	let confirmPassword = $state('');
+
+	$effect(() => {
+		if (form?.username != null) username = form.username;
+	});
 </script>
 
 <svelte:head>
@@ -10,6 +19,10 @@
 </svelte:head>
 
 <div class="auth-page">
+	<div class="auth-page__brand">
+		<span class="auth-page__logo" aria-hidden="true"></span>
+		Ajar Books
+	</div>
 	<div class="auth-card">
 		<h1>Create your account</h1>
 		<p class="auth-switch" style="margin-top: 0; margin-bottom: var(--space-6); text-align: left;">
@@ -28,34 +41,36 @@
 					name="username"
 					type="text"
 					autocomplete="username"
-					value={form?.username ?? ''}
+					bind:value={username}
 					required
 					minlength="3"
 				/>
 			</div>
-			<div class="auth-field">
-				<label for="password">Password</label>
-				<input
-					id="password"
-					name="password"
-					type="password"
-					autocomplete="new-password"
-					required
-					minlength="8"
-				/>
-			</div>
-			<div class="auth-field">
-				<label for="confirmPassword">Confirm password</label>
-				<input
-					id="confirmPassword"
-					name="confirmPassword"
-					type="password"
-					autocomplete="new-password"
-					required
-					minlength="8"
-				/>
-			</div>
-			<button class="auth-submit" type="submit">Create account</button>
+			<PasswordField
+				id="password"
+				name="password"
+				label="Password"
+				autocomplete="new-password"
+				required
+				minlength={8}
+				bind:value={password}
+			/>
+			<PasswordField
+				id="confirmPassword"
+				name="confirmPassword"
+				label="Confirm password"
+				autocomplete="new-password"
+				required
+				minlength={8}
+				bind:value={confirmPassword}
+			/>
+			<button
+				class="auth-submit"
+				type="submit"
+				disabled={!username || !password || !confirmPassword}
+			>
+				Create account
+			</button>
 		</form>
 	</div>
 </div>

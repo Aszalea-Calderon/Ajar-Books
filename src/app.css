@@ -110,7 +110,26 @@ button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex-wrap: wrap;
+	gap: var(--space-12);
 	padding: var(--space-4);
+}
+
+.auth-page__brand {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	font-weight: 700;
+	font-size: var(--font-size-xl);
+}
+
+.auth-page__logo {
+	width: 2rem;
+	height: 2rem;
+	border: 5px solid var(--color-primary);
+	border-right: none;
+	border-radius: 10px 0 0 10px;
+	flex-shrink: 0;
 }
 
 .auth-card {
@@ -136,6 +155,9 @@ button {
 
 .auth-field label {
 	font-size: var(--font-size-sm);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
 	color: var(--color-text-muted);
 }
 
@@ -143,8 +165,9 @@ button {
 	padding: var(--space-3);
 	background: var(--color-bg);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	color: var(--color-text);
+	width: 100%;
 }
 
 .auth-field input:focus {
@@ -152,13 +175,49 @@ button {
 	outline-offset: 1px;
 }
 
+.password-field {
+	position: relative;
+	display: flex;
+}
+
+.password-field input {
+	padding-right: var(--space-8);
+}
+
+.password-field__toggle {
+	position: absolute;
+	top: 50%;
+	right: var(--space-2);
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-1);
+	background: none;
+	border: none;
+	color: var(--color-text-muted);
+	cursor: pointer;
+}
+
+.password-field__toggle:hover {
+	color: var(--color-text);
+}
+
 /* Browsers force a yellow background + black text on autofilled fields via a
    user-agent !important rule that plain background-color can't override.
-   An inset box-shadow painted over the field is the standard workaround. */
+   An inset box-shadow painted over the field is the standard workaround.
+   Covers Chromium/WebKit (:-webkit-autofill), Firefox (:autofill), and the
+   pre-standard :autofill selector. A yellow highlight that persists after
+   this — typically from a password-manager browser EXTENSION rather than
+   the browser's own autofill — is applied by the extension's own injected
+   styles/shadow DOM and isn't reachable from page CSS. */
 .auth-field input:-webkit-autofill,
 .auth-field input:-webkit-autofill:hover,
 .auth-field input:-webkit-autofill:focus,
-.auth-field input:autofill {
+.auth-field input:autofill,
+.auth-field input:-moz-autofill,
+.auth-field input:-moz-autofill:hover,
+.auth-field input:-moz-autofill:focus {
 	-webkit-text-fill-color: var(--color-text) !important;
 	caret-color: var(--color-text) !important;
 	box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
@@ -174,12 +233,20 @@ button {
 	background: var(--color-primary);
 	color: var(--color-primary-text);
 	border: none;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	font-weight: 600;
+	cursor: pointer;
 }
 
 .auth-submit:hover {
 	opacity: 0.9;
+}
+
+.auth-submit:disabled {
+	background: var(--color-border);
+	color: var(--color-text-muted);
+	cursor: not-allowed;
+	opacity: 1;
 }
 
 .auth-error {
@@ -626,7 +693,6 @@ button {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-6);
-	max-width: 40rem;
 }
 
 .book-detail__hero {
@@ -847,6 +913,7 @@ button {
 }
 
 .book-detail__description {
+	max-width: 65ch;
 	margin: 0;
 	color: var(--color-text-muted);
 	white-space: pre-wrap;
