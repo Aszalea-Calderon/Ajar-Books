@@ -951,6 +951,19 @@ button {
 	line-height: 1.6;
 }
 
+.book-detail__more-by-author {
+	display: inline-block;
+	margin-top: var(--space-4);
+	color: var(--color-primary);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.book-detail__more-by-author:hover {
+	text-decoration: underline;
+}
+
 /* Progress bar */
 .progress-bar {
 	margin-bottom: var(--space-4);

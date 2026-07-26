@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StarRating from '$lib/components/StarRating.svelte';
@@ -165,10 +166,20 @@
 		{/if}
 
 		<div class="book-detail__columns">
-			{#if data.book.description}
+			{#if data.book.description || data.book.author}
 				<div class="book-detail__panel">
 					<h3>About the book</h3>
-					<p class="book-detail__description">{data.book.description}</p>
+					{#if data.book.description}
+						<p class="book-detail__description">{data.book.description}</p>
+					{/if}
+					{#if data.book.author}
+						<a
+							class="book-detail__more-by-author"
+							href={resolve(`/search?q=${encodeURIComponent(data.book.author)}`)}
+						>
+							More by {data.book.author}
+						</a>
+					{/if}
 				</div>
 			{/if}
 
