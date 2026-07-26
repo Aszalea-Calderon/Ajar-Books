@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { toLocalDateInputValue, todayLocalDateString } from '$lib/client/date';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StarRating from '$lib/components/StarRating.svelte';
@@ -26,6 +27,28 @@
 	let editingLog = $state<LogEntry | null>(null);
 	let editDialogEl: HTMLDialogElement;
 
+	// Follow-up prompt: pops open the first time status transitions to
+	// 'finished' during this page's lifetime (whether via the automatic
+	// progress-crossed-the-goal path or a manual status-pill click) — not on
+	// every later visit to an already-finished book.
+	let finishedModalOpen = $state(false);
+	let finishedDialogEl: HTMLDialogElement;
+	let finishedRating = $state(0);
+	let finishedDate = $state('');
+	let lastSeenStatus = $state<typeof data.userBook.status | null>(null);
+
+	$effect(() => {
+		const current = data.userBook.status;
+		if (current === 'finished' && lastSeenStatus !== null && lastSeenStatus !== 'finished') {
+			finishedRating = data.userBook.rating ?? 0;
+			finishedDate = data.userBook.finishedAt
+				? toLocalDateInputValue(data.userBook.finishedAt)
+				: todayLocalDateString();
+			finishedModalOpen = true;
+		}
+		lastSeenStatus = current;
+	});
+
 	$effect(() => {
 		if (!logDialogEl) return;
 		if (logModalOpen && !logDialogEl.open) {
@@ -44,12 +67,25 @@
 		}
 	});
 
+	$effect(() => {
+		if (!finishedDialogEl) return;
+		if (finishedModalOpen && !finishedDialogEl.open) {
+			finishedDialogEl.showModal();
+		} else if (!finishedModalOpen && finishedDialogEl.open) {
+			finishedDialogEl.close();
+		}
+	});
+
 	function closeLogModalOnBackdrop(event: MouseEvent) {
 		if (event.target === logDialogEl) logModalOpen = false;
 	}
 
 	function closeEditModalOnBackdrop(event: MouseEvent) {
 		if (event.target === editDialogEl) editingLog = null;
+	}
+
+	function closeFinishedModalOnBackdrop(event: MouseEvent) {
+		if (event.target === finishedDialogEl) finishedModalOpen = false;
 	}
 
 	let subtitle = $derived(
@@ -419,5 +455,73 @@
 				<button class="auth-submit" type="submit">Save</button>
 			</form>
 		{/if}
+	</div>
+</dialog>
+
+<dialog
+	bind:this={finishedDialogEl}
+	class="settings-modal"
+	onclose={() => (finishedModalOpen = false)}
+	onclick={closeFinishedModalOnBackdrop}
+>
+	<div class="settings-modal__header">
+		<h2>Nice, you finished it!</h2>
+		<button
+			type="button"
+			class="settings-modal__close"
+			aria-label="Close"
+			onclick={() => (finishedModalOpen = false)}
+		>
+			×
+		</button>
+	</div>
+	<div class="settings-modal__content">
+		<form
+			method="POST"
+			action="?/confirmFinished"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await update();
+					finishedModalOpen = false;
+				};
+			}}
+		>
+			<div class="auth-field">
+				<label for="finishedRatingInput">Your rating</label>
+				<div class="star-rating">
+					{#each [1, 2, 3, 4, 5] as star (star)}
+						<span
+							class="star-rating__star"
+							style="--fill: {Math.max(0, Math.min(1, finishedRating - (star - 1))) * 100}%"
+						>
+							<button
+								type="button"
+								class="star-rating__half star-rating__half--left"
+								onclick={() => (finishedRating = star - 0.5)}
+								aria-label="Rate {star - 0.5} stars"
+							></button>
+							<button
+								type="button"
+								class="star-rating__half star-rating__half--right"
+								onclick={() => (finishedRating = star)}
+								aria-label="Rate {star} stars"
+							></button>
+						</span>
+					{/each}
+				</div>
+				<input id="finishedRatingInput" type="hidden" name="rating" value={finishedRating} />
+			</div>
+			<div class="auth-field">
+				<label for="finishedDateInput">Date finished</label>
+				<input
+					id="finishedDateInput"
+					name="finishedAt"
+					type="date"
+					max={todayLocalDateString()}
+					bind:value={finishedDate}
+				/>
+			</div>
+			<button class="auth-submit" type="submit">Save</button>
+		</form>
 	</div>
 </dialog>

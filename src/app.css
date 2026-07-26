@@ -353,6 +353,12 @@ button {
 }
 
 /* Dashboard shell */
+.dashboard__greeting {
+	margin: 0 0 var(--space-6);
+	font-size: var(--font-size-lg);
+	font-weight: 600;
+}
+
 .dashboard {
 	display: grid;
 	grid-template-columns: 2fr 1fr;
@@ -411,10 +417,17 @@ button {
 	border-radius: var(--radius-sm);
 	color: var(--color-text);
 	font-size: var(--font-size-sm);
+	text-decoration: none;
 }
 
 .settings-trigger:hover {
 	border-color: var(--color-text-muted);
+}
+
+.profile__actions {
+	display: flex;
+	justify-content: center;
+	gap: var(--space-3);
 }
 
 /* Settings modal */
@@ -1129,6 +1142,14 @@ button {
 /* Dashboard: currently reading */
 .currently-reading {
 	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+}
+
+.currently-reading__link {
+	display: flex;
+	flex: 1;
+	min-width: 0;
 	gap: var(--space-4);
 	text-decoration: none;
 	color: inherit;
@@ -1152,6 +1173,15 @@ button {
 	min-width: 0;
 }
 
+.currently-reading__eyebrow {
+	margin: 0 0 var(--space-1);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
 .currently-reading__title {
 	margin: 0;
 	font-weight: 600;
@@ -1163,6 +1193,22 @@ button {
 	color: var(--color-text-muted);
 }
 
+.currently-reading__track {
+	flex-shrink: 0;
+	padding: var(--space-3) var(--space-6);
+	background: var(--color-primary);
+	color: var(--color-primary-text);
+	border: none;
+	border-radius: 999px;
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.currently-reading__track:hover {
+	opacity: 0.9;
+}
+
 .currently-reading-chips {
 	display: flex;
 	flex-wrap: wrap;
@@ -1171,9 +1217,12 @@ button {
 }
 
 .currently-reading-chip {
-	padding: var(--space-2) var(--space-4);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
 	background: var(--color-surface-raised);
-	border: none;
+	border: 2px solid transparent;
 	border-radius: var(--radius-sm);
 	color: var(--color-text);
 	text-decoration: none;
@@ -1184,6 +1233,49 @@ button {
 
 .currently-reading-chip:hover {
 	opacity: 0.8;
+}
+
+.currently-reading-chip--active {
+	border-color: var(--color-primary);
+}
+
+.currently-reading-chip__cover {
+	width: 1.75rem;
+	height: 2.5rem;
+	object-fit: cover;
+	border-radius: 2px;
+	flex-shrink: 0;
+}
+
+.currently-reading-chip__cover--placeholder {
+	background: var(--color-border);
+}
+
+.currently-reading-chip__info {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.currently-reading-chip__title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 10rem;
+}
+
+.currently-reading-chip__done {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+.currently-reading-chip--add {
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-2) var(--space-4);
+	font-size: var(--font-size-lg);
+	font-weight: 600;
+	line-height: 1;
 }
 
 .settings-hint {

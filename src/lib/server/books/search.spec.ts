@@ -31,6 +31,17 @@ describe('sanitizeDescription', () => {
 	it('returns null if stripping links empties the description entirely', () => {
 		expect(sanitizeDescription('[**PDF**](https://spam.example/x)')).toBeNull();
 	});
+
+	it('strips a reference-style link and its separate definition line', () => {
+		const description =
+			'Circe is a triumph of storytelling. ([source][1])\n\n[1]: https://chesserresources.com/doc/circe';
+		expect(sanitizeDescription(description)).toBe('Circe is a triumph of storytelling.');
+	});
+
+	it('strips a reference-style link with no surrounding parentheses', () => {
+		const description = 'A great read [source][1] by all accounts.\n\n[1]: https://spam.example/x';
+		expect(sanitizeDescription(description)).toBe('A great read  by all accounts.');
+	});
 });
 
 describe('getOpenLibraryWorkDetails', () => {

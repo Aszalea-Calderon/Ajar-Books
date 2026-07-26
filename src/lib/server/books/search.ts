@@ -109,21 +109,28 @@ function normalizeOpenLibraryDescription(description?: OpenLibraryWorkDescriptio
 }
 
 const MARKDOWN_LINK_PATTERN = /\[[^\]]*\]\(https?:\/\/[^\s)]+\)/g;
+// Reference-style links: an inline usage like "([source][1])" or "[source][1]",
+// plus the separate "[1]: https://..." definition line it points to.
+const REFERENCE_LINK_PATTERN = /\(?\[[^\]]*\]\[[^\]]*\]\)?/g;
+const REFERENCE_DEFINITION_PATTERN = /^[ \t]*\[[^\]]+\]:\s*\S+.*$/gm;
 const BARE_URL_PATTERN = /https?:\/\/\S+/g;
 
 /**
  * Open Library/Google Books descriptions are real, but user-contributed and
  * occasionally carry spam (e.g. a "[**PDF**](spam-site.com)" link tacked onto
- * an otherwise-legitimate synopsis). Strips link-shaped junk rather than
- * inventing or hiding the underlying description. Always displayed as plain
- * text (never Markdown/HTML) — an embedded link here should never become
- * clickable.
+ * an otherwise-legitimate synopsis, or a "([source][1])" reference-style link
+ * with its "[1]: https://..." definition elsewhere in the text). Strips
+ * link-shaped junk rather than inventing or hiding the underlying
+ * description. Always displayed as plain text (never Markdown/HTML) — an
+ * embedded link here should never become clickable.
  */
 export function sanitizeDescription(description: string | null): string | null {
 	if (!description) return null;
 
 	const cleaned = description
 		.replace(MARKDOWN_LINK_PATTERN, '')
+		.replace(REFERENCE_LINK_PATTERN, '')
+		.replace(REFERENCE_DEFINITION_PATTERN, '')
 		.replace(BARE_URL_PATTERN, '')
 		.replace(/[ \t]+\n/g, '\n')
 		.replace(/\n{3,}/g, '\n\n')

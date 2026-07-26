@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { todayLocalDateString } from '$lib/client/date';
 
 	let {
 		open,
@@ -32,12 +33,6 @@
 		ebook: 'Ebook',
 		audiobook: 'Audiobook'
 	};
-
-	function todayLocalDateString(): string {
-		const now = new Date();
-		const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-		return local.toISOString().slice(0, 10);
-	}
 
 	let selectedFormat = $state<Format>('physical');
 	let startDate = $state('');

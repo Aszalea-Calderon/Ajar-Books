@@ -196,6 +196,33 @@ export const actions: Actions = {
 			.where(eq(userBooks.id, result.userBook.id));
 	},
 
+	// Follow-up prompt shown right after a book transitions to "Finished"
+	// (whether that happened automatically by crossing the reading goal, or
+	// manually via the status control) — lets you set a rating and correct
+	// the finish date, since it might not have actually been "just now".
+	confirmFinished: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const ratingRaw = data.get('rating');
+		const finishedAtRaw = String(data.get('finishedAt') ?? '');
+
+		const rating = ratingRaw ? Number(ratingRaw) : null;
+		const finishedAt =
+			finishedAtRaw && !Number.isNaN(Date.parse(finishedAtRaw))
+				? new Date(finishedAtRaw)
+				: new Date();
+
+		await db
+			.update(userBooks)
+			.set({
+				rating: rating != null && Number.isFinite(rating) ? rating : null,
+				finishedAt
+			})
+			.where(eq(userBooks.id, result.userBook.id));
+	},
+
 	addTag: async ({ request, params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');
