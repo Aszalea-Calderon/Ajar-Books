@@ -215,6 +215,13 @@
 		{/if}
 
 		<div class="book-detail__columns">
+			{#if data.book.description}
+				<div class="book-detail__panel">
+					<h3>About the book</h3>
+					<p class="book-detail__description">{data.book.description}</p>
+				</div>
+			{/if}
+
 			<div class="book-detail__panel tag-grid">
 				<TagEditor
 					label="Genre"
@@ -235,13 +242,6 @@
 					suggestions={data.suggestionsByType.setting}
 				/>
 			</div>
-
-			{#if data.book.description}
-				<div class="book-detail__panel">
-					<h3>About the book</h3>
-					<p class="book-detail__description">{data.book.description}</p>
-				</div>
-			{/if}
 		</div>
 
 		{#if data.userBook.status === 'reading' || data.userBook.status === 'finished' || data.logs.length > 0}
