@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
@@ -10,7 +11,7 @@
 	}: { open?: boolean; googleBooksApiKey: string | null } = $props();
 
 	let dialogEl: HTMLDialogElement;
-	let section = $state<'themes' | 'fonts' | 'integrations'>('themes');
+	let section = $state<'themes' | 'fonts' | 'integrations' | 'data'>('themes');
 	let justSaved = $state(false);
 
 	$effect(() => {
@@ -82,6 +83,14 @@
 			>
 				Integrations
 			</button>
+			<button
+				type="button"
+				class="settings-modal__nav-item"
+				class:settings-modal__nav-item--active={section === 'data'}
+				onclick={() => (section = 'data')}
+			>
+				Data
+			</button>
 		</nav>
 		<div class="settings-modal__content">
 			{#if section === 'themes'}
@@ -131,7 +140,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else}
+			{:else if section === 'integrations'}
 				<h3>Google Books API Key</h3>
 				<p class="settings-hint">
 					Optional — widens search results and improves cover art. Get a free key from the <a
@@ -167,6 +176,13 @@
 						<p class="settings-hint settings-hint--success">Saved.</p>
 					{/if}
 				</form>
+			{:else}
+				<h3>Your Data</h3>
+				<p class="settings-hint">
+					Download a full JSON snapshot of your library — every book, its tags, and its reading
+					logs.
+				</p>
+				<a class="settings-trigger" href={resolve('/(app)/export')} download>Export your data</a>
 			{/if}
 		</div>
 	</div>

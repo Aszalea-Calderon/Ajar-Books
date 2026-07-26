@@ -314,6 +314,7 @@ button {
 }
 
 .app-nav__account {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
@@ -325,26 +326,49 @@ button {
 	justify-content: center;
 	width: 2rem;
 	height: 2rem;
-	border-radius: 50%;
+	padding: 0;
 	background: var(--color-primary);
+	border: none;
+	border-radius: 50%;
 	color: var(--color-primary-text);
 	font-size: var(--font-size-sm);
 	font-weight: 600;
-	text-decoration: none;
+	cursor: pointer;
 }
 
-.app-nav__logout {
-	background: none;
+.app-nav__account-menu {
+	position: absolute;
+	top: calc(100% + var(--space-2));
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 10rem;
+	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	color: var(--color-text-muted);
-	padding: var(--space-2) var(--space-3);
-	border-radius: var(--radius-sm);
-	font-size: var(--font-size-sm);
+	border-radius: var(--radius-md);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+	overflow: hidden;
+	z-index: 10;
 }
 
-.app-nav__logout:hover {
+.app-nav__account-option {
+	width: 100%;
+	padding: var(--space-3) var(--space-4);
+	background: none;
+	border: none;
 	color: var(--color-text);
-	border-color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.app-nav__account-option:hover {
+	background: var(--color-surface-raised);
+}
+
+.app-nav__account-option--danger {
+	color: var(--color-danger);
 }
 
 .app-main {
@@ -877,6 +901,7 @@ button {
 .format-toggle {
 	display: flex;
 	gap: var(--space-2);
+	margin-bottom: var(--space-4);
 }
 
 .format-toggle__pill {

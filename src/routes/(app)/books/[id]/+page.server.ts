@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { desc, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
+import { parseLocalDateInput } from '$lib/date';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
 import {
@@ -103,8 +104,7 @@ export const actions: Actions = {
 		const totalPagesRaw = data.get('totalPages');
 		const totalMinutesRaw = data.get('totalMinutes');
 		const startedAtRaw = String(data.get('startedAt') ?? '');
-		const startedAt =
-			startedAtRaw && !Number.isNaN(Date.parse(startedAtRaw)) ? new Date(startedAtRaw) : new Date();
+		const startedAt = parseLocalDateInput(startedAtRaw) ?? new Date();
 
 		await db
 			.update(userBooks)
@@ -207,12 +207,10 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const ratingRaw = data.get('rating');
 		const finishedAtRaw = String(data.get('finishedAt') ?? '');
+		const note = String(data.get('note') ?? '').trim();
 
 		const rating = ratingRaw ? Number(ratingRaw) : null;
-		const finishedAt =
-			finishedAtRaw && !Number.isNaN(Date.parse(finishedAtRaw))
-				? new Date(finishedAtRaw)
-				: new Date();
+		const finishedAt = parseLocalDateInput(finishedAtRaw) ?? new Date();
 
 		await db
 			.update(userBooks)
@@ -221,6 +219,14 @@ export const actions: Actions = {
 				finishedAt
 			})
 			.where(eq(userBooks.id, result.userBook.id));
+
+		if (note) {
+			await db.insert(readingLogs).values({
+				userBookId: result.userBook.id,
+				note,
+				loggedAt: finishedAt
+			});
+		}
 	},
 
 	addTag: async ({ request, params }) => {

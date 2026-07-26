@@ -1,10 +1,5 @@
-import type { Actions, PageServerLoad } from './$types';
-import { getSettings, updateSettings } from '$lib/server/settings';
-
-export const load: PageServerLoad = async () => {
-	const settings = await getSettings();
-	return { googleBooksApiKey: settings.googleBooksApiKey };
-};
+import type { Actions } from './$types';
+import { updateSettings } from '$lib/server/settings';
 
 export const actions: Actions = {
 	saveGoogleBooksKey: async ({ request }) => {

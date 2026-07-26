@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { todayLocalDateString } from '$lib/client/date';
+	import { todayLocalDateString } from '$lib/date';
 
 	let {
 		open,

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
 
 	let initial = $derived(data.user?.username.charAt(0).toUpperCase() ?? '?');
+	let accountMenuOpen = $state(false);
+	let settingsOpen = $state(false);
 
 	const navLinks = [
 		{ label: 'Home', path: '/', href: resolve('/') },
@@ -34,11 +37,40 @@
 		</nav>
 
 		<div class="app-nav__account">
-			<a class="app-nav__avatar" href={resolve('/profile')} title={data.user?.username}>{initial}</a
+			<button
+				type="button"
+				class="app-nav__avatar"
+				title={data.user?.username}
+				onclick={() => (accountMenuOpen = !accountMenuOpen)}
 			>
-			<form method="POST" action="/logout">
-				<button class="app-nav__logout" type="submit">Log out</button>
-			</form>
+				{initial}
+			</button>
+			{#if accountMenuOpen}
+				<div class="app-nav__account-menu">
+					<a
+						class="app-nav__account-option"
+						href={resolve('/profile')}
+						onclick={() => (accountMenuOpen = false)}
+					>
+						Profile
+					</a>
+					<button
+						type="button"
+						class="app-nav__account-option"
+						onclick={() => {
+							settingsOpen = true;
+							accountMenuOpen = false;
+						}}
+					>
+						Settings
+					</button>
+					<form method="POST" action="/logout">
+						<button class="app-nav__account-option app-nav__account-option--danger" type="submit">
+							Log out
+						</button>
+					</form>
+				</div>
+			{/if}
 		</div>
 	</header>
 
@@ -46,3 +78,5 @@
 		{@render children()}
 	</main>
 </div>
+
+<SettingsModal bind:open={settingsOpen} googleBooksApiKey={data.googleBooksApiKey} />

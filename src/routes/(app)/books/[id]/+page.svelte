@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { toLocalDateInputValue, todayLocalDateString } from '$lib/client/date';
+	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StarRating from '$lib/components/StarRating.svelte';
@@ -95,6 +95,10 @@
 	);
 
 	let isUntouched = $derived(data.userBook.status === 'added');
+	// Once finished, the tracker's done its job — hide it rather than show a
+	// permanently-full bar. It reappears automatically if status moves away
+	// from 'finished' again (e.g. a manual "Currently Reading" for a reread).
+	let showTracker = $derived(!!data.userBook.format && data.userBook.status !== 'finished');
 	let isAudiobook = $derived(data.userBook.format === 'audiobook');
 	let progressLabel = $derived(isAudiobook ? 'Listening progress' : 'Reading progress');
 	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
@@ -141,9 +145,13 @@
 							<form
 								method="POST"
 								action="?/removeBook"
-								use:enhance
+								use:enhance={() => {
+									return async ({ update }) => {
+										await update();
+										resetMenuOpen = false;
+									};
+								}}
 								onsubmit={(event) => {
-									resetMenuOpen = false;
 									if (
 										!confirm(
 											`Remove "${data.book.title}" from your library? This clears its progress, format, and rating, but keeps it as a book you can start tracking again.`
@@ -162,7 +170,6 @@
 								action="?/delete"
 								use:enhance
 								onsubmit={(event) => {
-									resetMenuOpen = false;
 									if (
 										!confirm(
 											`Delete "${data.book.title}" and all its logged progress? This can't be undone.`
@@ -229,7 +236,7 @@
 			</div>
 		</div>
 
-		{#if data.userBook.format}
+		{#if showTracker}
 			<div class="book-detail__panel">
 				<ProgressBar
 					label={progressLabel}
@@ -316,7 +323,7 @@
 					</ul>
 				{/if}
 
-				{#if data.userBook.format}
+				{#if showTracker}
 					<div class="activity-log__footer">
 						<button
 							type="button"
@@ -520,6 +527,10 @@
 					max={todayLocalDateString()}
 					bind:value={finishedDate}
 				/>
+			</div>
+			<div class="auth-field">
+				<label for="finishedNoteInput">Any closing thoughts? (optional)</label>
+				<input id="finishedNoteInput" name="note" type="text" />
 			</div>
 			<button class="auth-submit" type="submit">Save</button>
 		</form>
