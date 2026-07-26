@@ -109,18 +109,21 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 
 ---
 
-## Phase 2.7 — Library Browsing & Filtering
+## Phase 2.7 — Library & Explore (Search) Browsing
 
-**Why this order:** extends the same "fix at one-book scale before Import brings a whole history at once" logic as Phase 2.6 — once Import lands you may have hundreds of books at once, and filtering only helps if it exists before that flood arrives. Pairs naturally with the pagination item already flagged in Phase 2.5.
+**Why this order:** extends the same "fix at one-book scale before Import brings a whole history at once" logic as Phase 2.6 — once Import lands you may have hundreds of books at once, and filtering/browsing only helps if it exists before that flood arrives. Pairs naturally with the pagination item already flagged in Phase 2.5.
 
-**Estimate:** 3-5 days
+**Estimate:** 4-6 days
 
-| Done | Task                                                                                                                                                                                      |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ☐    | Build a dedicated Library page listing every added book (currently only reachable indirectly via Search or the dashboard's Currently Reading section)                                     |
-| ☐    | Filter the Library page by genre / mood / setting / status (want to read, reading, finished, DNF) / format / rating                                                                       |
-| ☐    | Add lightweight filters to the external Search page's results (e.g. hide results already in your library, filter by format availability) — smaller in scope than the Library page filters |
-| ☐    | Verify: with a library of tagged, mixed-status books, every filter combination returns the expected set                                                                                   |
+| Done | Task                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ☐    | Build a dedicated Library page listing every added book (currently only reachable indirectly via Search or the dashboard's Currently Reading section)                                                                                                                                                                                                                                                              |
+| ☐    | Filter the Library page by genre / mood / setting / status (want to read, reading, finished, DNF) / format / rating                                                                                                                                                                                                                                                                                                |
+| ☐    | Add a view-mode toggle (cards / list, possibly others) to the Search/Explore page — same toggle should apply to the new Library page above for a consistent browsing experience across both                                                                                                                                                                                                                        |
+| ☐    | Show genre tags on each Search/Explore result card, pulled from Open Library's `subject` field — confirmed this is returnable directly in the bulk `search.json` response (`fields=...,subject`), no extra per-result API call needed, run through the existing genre-normalization mapping. Google Books results won't have equivalent bulk subject data, so this only populates for Open-Library-sourced results |
+| ☐    | Add lightweight filters to the Search/Explore page's results (e.g. hide results already in your library, filter by format availability) — smaller in scope than the Library page filters above                                                                                                                                                                                                                     |
+| ☐    | Evolve the book detail page's "More by [author]" link into a real inline section: a small preview (using the same card/list view as Explore) of a few more books by that author, with a "View more" action that navigates to the Search/Explore page pre-filtered by that author                                                                                                                                   |
+| ☐    | Verify: with a library of tagged, mixed-status books, every filter/view-mode combination on both the Library page and Search/Explore returns the expected result                                                                                                                                                                                                                                                   |
 
 ---
 
