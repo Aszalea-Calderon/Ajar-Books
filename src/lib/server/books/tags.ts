@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { tags, userBookTags } from '$lib/server/db/schema';
 import { CANONICAL_GENRES } from './genreMapping';
@@ -67,4 +67,79 @@ export async function applyGenreSuggestions(userBookId: string, genres: string[]
 	for (const genre of genres) {
 		await addTag(userBookId, 'genre', genre);
 	}
+}
+
+export type TagWithUsage = { id: string; name: string; usageCount: number };
+
+/**
+ * Every tag of a given type with how many books currently use it — powers
+ * Settings' "Manage Tags" list. Unlike getSuggestedTagNames (autocomplete,
+ * includes the curated-but-unused genre list), this only ever shows tags
+ * that actually exist as rows, since renaming/deleting an unused canonical
+ * genre wouldn't do anything.
+ */
+export async function getAllTagsWithUsage(type: TagType): Promise<TagWithUsage[]> {
+	const rows = await db
+		.select({ id: tags.id, name: tags.name, usageCount: count(userBookTags.id) })
+		.from(tags)
+		.leftJoin(userBookTags, eq(userBookTags.tagId, tags.id))
+		.where(eq(tags.type, type))
+		.groupBy(tags.id);
+
+	return rows
+		.map((r) => ({ ...r, usageCount: Number(r.usageCount) }))
+		.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Renames a tag across every book that uses it. If another tag of the same
+ * type already has the target name, merges into it instead of erroring —
+ * every link moves to the existing tag (dropping any that would duplicate
+ * a link already there), and the old, now-empty tag row is removed. This
+ * is the main tool for cleaning up typo'd/duplicate tags before Import
+ * multiplies them across a much bigger batch of books.
+ */
+export async function renameTag(tagId: string, newName: string) {
+	const trimmed = newName.trim();
+	if (!trimmed) return;
+
+	const [tag] = await db.select().from(tags).where(eq(tags.id, tagId));
+	if (!tag || tag.name === trimmed) return;
+
+	const [conflict] = await db
+		.select()
+		.from(tags)
+		.where(and(eq(tags.type, tag.type), eq(tags.name, trimmed)));
+
+	if (!conflict) {
+		await db.update(tags).set({ name: trimmed }).where(eq(tags.id, tagId));
+		return;
+	}
+
+	const links = await db.select().from(userBookTags).where(eq(userBookTags.tagId, tagId));
+
+	for (const link of links) {
+		const [alreadyLinked] = await db
+			.select()
+			.from(userBookTags)
+			.where(
+				and(eq(userBookTags.userBookId, link.userBookId), eq(userBookTags.tagId, conflict.id))
+			);
+
+		if (alreadyLinked) {
+			await db.delete(userBookTags).where(eq(userBookTags.id, link.id));
+		} else {
+			await db.update(userBookTags).set({ tagId: conflict.id }).where(eq(userBookTags.id, link.id));
+		}
+	}
+
+	await db.delete(tags).where(eq(tags.id, tagId));
+}
+
+/**
+ * Deletes a tag from the master list entirely — cascades to remove it from
+ * every book that had it (see userBookTags' onDelete: 'cascade').
+ */
+export async function deleteTagGlobally(tagId: string) {
+	await db.delete(tags).where(eq(tags.id, tagId));
 }

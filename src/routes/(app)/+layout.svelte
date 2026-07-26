@@ -84,4 +84,5 @@
 	bind:open={settingsOpen}
 	googleBooksApiKey={data.googleBooksApiKey}
 	languagePriority={data.languagePriority}
+	manageableTags={data.manageableTags}
 />

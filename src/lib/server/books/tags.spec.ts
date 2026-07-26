@@ -1,7 +1,16 @@
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/server/db';
 import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
-import { addTag, getSuggestedTagNames, getTagsForUserBook, removeTag } from './tags';
+import {
+	addTag,
+	deleteTagGlobally,
+	getAllTagsWithUsage,
+	getSuggestedTagNames,
+	getTagsForUserBook,
+	removeTag,
+	renameTag
+} from './tags';
 
 async function seedUserBook() {
 	const [book] = await db.insert(books).values({ title: 'Test Book' }).returning();
@@ -161,5 +170,124 @@ describe('getSuggestedTagNames', () => {
 		await addTag(userBookId, 'mood', 'Heavy');
 
 		expect(await getSuggestedTagNames('mood')).toEqual(['Heavy']);
+	});
+});
+
+describe('getAllTagsWithUsage', () => {
+	beforeEach(async () => {
+		await db.delete(userBookTags);
+		await db.delete(userBooks);
+		await db.delete(books);
+		await db.delete(tags);
+	});
+
+	it('reports how many books use each tag', async () => {
+		const bookA = await seedUserBook();
+		const bookB = await seedUserBook();
+		await addTag(bookA, 'genre', 'Fantasy');
+		await addTag(bookB, 'genre', 'Fantasy');
+		await addTag(bookA, 'genre', 'Horror');
+
+		const genreTags = await getAllTagsWithUsage('genre');
+		expect(genreTags).toEqual([
+			{ id: expect.any(String), name: 'Fantasy', usageCount: 2 },
+			{ id: expect.any(String), name: 'Horror', usageCount: 1 }
+		]);
+	});
+
+	it('includes a tag with zero usage (e.g. removed from its only book)', async () => {
+		const userBookId = await seedUserBook();
+		await addTag(userBookId, 'mood', 'Heavy');
+		const [tag] = await getTagsForUserBook(userBookId, 'mood');
+		await removeTag(userBookId, tag.id);
+
+		expect(await getAllTagsWithUsage('mood')).toEqual([
+			{ id: tag.id, name: 'Heavy', usageCount: 0 }
+		]);
+	});
+});
+
+describe('renameTag', () => {
+	beforeEach(async () => {
+		await db.delete(userBookTags);
+		await db.delete(userBooks);
+		await db.delete(books);
+		await db.delete(tags);
+	});
+
+	it('renames a tag in place when the new name has no conflict', async () => {
+		const userBookId = await seedUserBook();
+		await addTag(userBookId, 'genre', 'Scifi');
+		const [tag] = await getTagsForUserBook(userBookId, 'genre');
+
+		await renameTag(tag.id, 'Science Fiction');
+
+		expect((await getTagsForUserBook(userBookId, 'genre')).map((t) => t.name)).toEqual([
+			'Science Fiction'
+		]);
+	});
+
+	it('merges into an existing tag of the same name instead of erroring', async () => {
+		const bookA = await seedUserBook();
+		const bookB = await seedUserBook();
+		await addTag(bookA, 'genre', 'Scifi');
+		await addTag(bookB, 'genre', 'Science Fiction');
+		const [typo] = await getTagsForUserBook(bookA, 'genre');
+
+		await renameTag(typo.id, 'Science Fiction');
+
+		expect((await getTagsForUserBook(bookA, 'genre')).map((t) => t.name)).toEqual([
+			'Science Fiction'
+		]);
+		// The typo'd tag row is gone, not just unlinked.
+		expect(await db.select().from(tags).where(eq(tags.id, typo.id))).toEqual([]);
+	});
+
+	it('merging does not create a duplicate link on a book that already has the target tag', async () => {
+		const userBookId = await seedUserBook();
+		await addTag(userBookId, 'genre', 'Scifi');
+		await addTag(userBookId, 'genre', 'Science Fiction');
+		const [typo] = (await getTagsForUserBook(userBookId, 'genre')).filter(
+			(t) => t.name === 'Scifi'
+		);
+
+		await renameTag(typo.id, 'Science Fiction');
+
+		expect((await getTagsForUserBook(userBookId, 'genre')).map((t) => t.name)).toEqual([
+			'Science Fiction'
+		]);
+	});
+
+	it('is a no-op for a blank name', async () => {
+		const userBookId = await seedUserBook();
+		await addTag(userBookId, 'genre', 'Fantasy');
+		const [tag] = await getTagsForUserBook(userBookId, 'genre');
+
+		await renameTag(tag.id, '   ');
+
+		expect((await getTagsForUserBook(userBookId, 'genre')).map((t) => t.name)).toEqual(['Fantasy']);
+	});
+});
+
+describe('deleteTagGlobally', () => {
+	beforeEach(async () => {
+		await db.delete(userBookTags);
+		await db.delete(userBooks);
+		await db.delete(books);
+		await db.delete(tags);
+	});
+
+	it('removes the tag from every book that had it', async () => {
+		const bookA = await seedUserBook();
+		const bookB = await seedUserBook();
+		await addTag(bookA, 'genre', 'Fantasy');
+		await addTag(bookB, 'genre', 'Fantasy');
+		const [tag] = await getTagsForUserBook(bookA, 'genre');
+
+		await deleteTagGlobally(tag.id);
+
+		expect(await getTagsForUserBook(bookA, 'genre')).toEqual([]);
+		expect(await getTagsForUserBook(bookB, 'genre')).toEqual([]);
+		expect(await db.select().from(tags)).toEqual([]);
 	});
 });

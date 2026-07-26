@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { updateSettings } from '$lib/server/settings';
 import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
+import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 
@@ -71,5 +72,20 @@ export const actions: Actions = {
 		const languagePriority = String(data.get('languagePriority') ?? '');
 		if (!LANGUAGE_PRIORITY_OPTIONS.some((o) => o.code === languagePriority)) return;
 		await updateSettings({ languagePriority });
+	},
+
+	renameTag: async ({ request }) => {
+		const data = await request.formData();
+		const tagId = String(data.get('tagId') ?? '');
+		const name = String(data.get('name') ?? '');
+		if (!tagId || !name.trim()) return;
+		await renameTag(tagId, name);
+	},
+
+	deleteTag: async ({ request }) => {
+		const data = await request.formData();
+		const tagId = String(data.get('tagId') ?? '');
+		if (!tagId) return;
+		await deleteTagGlobally(tagId);
 	}
 };
