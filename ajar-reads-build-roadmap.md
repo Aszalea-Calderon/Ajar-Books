@@ -84,6 +84,21 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 
 ---
 
+## Phase 2.6 — Book Detail Refinements
+
+**Why this order:** these make the core tracking experience correctable before Import brings in your whole reading history at once — a wrong page count, a status that should've been "finished," or a book that shouldn't have been added are all far more likely to show up at Import scale than one book at a time, so the tools to fix them are worth having first.
+**Estimate:** 3-5 days
+
+| Done | Task                                                                                                                                                                                                                   |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ☑    | Add "About the book" panel (real synopsis + page count pulled from Open Library/Google Books, never fabricated)                                                                                                        |
+| ☐    | Allow editing an existing reading-log entry (amount and note) instead of only ever being able to add new ones                                                                                                          |
+| ☐    | Reframe the Activity panel as "Chapter Notes" — a note-centric, editable journal rather than just an auto-generated log of progress timestamps                                                                         |
+| ☐    | Add a manual status control (Want to Read / Currently Reading / Finished) independent of the automatic progress-based transitions                                                                                      |
+| ☐    | Add a "Remove book" action, distinct from the existing hard Delete — resets the book to its default state (want to read, no progress/format) rather than erasing its history, as a softer alternative to full deletion |
+
+---
+
 ## Phase 3 — Import
 
 **Why this order:** importing your real history here means Phases 4 and 5 get built and tested against actual books, dates, and genre spread — a much better test than synthetic data.
