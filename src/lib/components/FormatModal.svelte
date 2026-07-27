@@ -62,6 +62,21 @@
 		if (selectedFormat !== 'audiobook') return suggestedPageCount;
 		return null;
 	});
+
+	// Audiobook length is edited as hours/minutes (how a reader actually
+	// thinks about it) rather than a raw minute count, storing/submitting
+	// totalMinutes underneath for precision. Re-syncs from totalDefault
+	// whenever the format/modal changes, same as startDate above.
+	let audiobookHours = $state(0);
+	let audiobookMinutes = $state(0);
+
+	$effect(() => {
+		const total = totalDefault ?? 0;
+		audiobookHours = Math.floor(total / 60);
+		audiobookMinutes = total % 60;
+	});
+
+	let audiobookTotalMinutes = $derived(audiobookHours * 60 + audiobookMinutes);
 </script>
 
 <dialog bind:this={dialogEl} class="settings-modal" onclose={onClose} onclick={closeOnBackdrop}>
@@ -114,14 +129,31 @@
 					name={selectedFormat === 'audiobook' ? 'totalMinutes' : 'totalPages'}
 					value={totalDefault}
 				/>
+			{:else if selectedFormat === 'audiobook'}
+				<p class="format-modal__field-label">Total length</p>
+				<div class="log-progress__time-fields">
+					<div class="auth-field">
+						<label for="formatModalHours">Hours</label>
+						<input id="formatModalHours" type="number" min="0" bind:value={audiobookHours} />
+					</div>
+					<div class="auth-field">
+						<label for="formatModalMinutes">Minutes</label>
+						<input
+							id="formatModalMinutes"
+							type="number"
+							min="0"
+							max="59"
+							bind:value={audiobookMinutes}
+						/>
+					</div>
+				</div>
+				<input type="hidden" name="totalMinutes" value={audiobookTotalMinutes} />
 			{:else}
 				<div class="auth-field">
-					<label for="formatModalTotal">
-						{selectedFormat === 'audiobook' ? 'Total length (minutes)' : 'Total pages'}
-					</label>
+					<label for="formatModalTotal">Total pages</label>
 					<input
 						id="formatModalTotal"
-						name={selectedFormat === 'audiobook' ? 'totalMinutes' : 'totalPages'}
+						name="totalPages"
 						type="number"
 						min="1"
 						value={totalDefault}
