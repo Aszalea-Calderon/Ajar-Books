@@ -10,7 +10,8 @@ Most reading trackers (GoodReads, StoryGraph, Fable) require an account with a t
 
 ## Features
 
-- **Currently reading** — track progress across physical books, ebooks, and audiobooks (page-based and time-based)
+- **Search & Want to Read** — search Open Library/Google Books, add books to your library, and track them through Want to Read → Currently Reading → Finished/DNF
+- **Currently reading** — track progress across physical books, ebooks, and audiobooks (page-based, time-based, or percent)
 - **Reading streak** — a Fable-style monthly calendar showing which books you read on which days
 - **Reading goals** — yearly, monthly, and weekly targets, book-count or page/minute-based
 - **Finished books** — full history, filterable
@@ -56,7 +57,7 @@ Copy `.env.example` to `.env` and set:
 - No analytics, no telemetry
 - Book search/metadata is pulled from [Open Library](https://openlibrary.org/), a third-party service, by default — no account or API key needed. Optional additional sources (Google Books, Ollama) only get called if you configure a key/URL yourself
 - All data lives in a single SQLite file — back it up by copying it
-- Data export (CSV/JSON) is planned but not yet built — see the roadmap
+- One-click data export (JSON) is available from your Profile page at any time
 
 ## Roadmap
 
