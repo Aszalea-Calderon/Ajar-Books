@@ -1002,6 +1002,11 @@ button {
 	font-size: var(--font-size-sm);
 }
 
+.community-rating {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
 .log-progress__time-fields {
 	display: flex;
 	gap: var(--space-4);

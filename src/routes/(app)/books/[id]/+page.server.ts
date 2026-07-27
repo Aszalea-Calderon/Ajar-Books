@@ -14,7 +14,7 @@ import {
 	untoggleWantToRead,
 	type BookStatus
 } from '$lib/server/books/progress';
-import { searchBooks, type BookSearchResult } from '$lib/server/books/search';
+import { searchBooks, getCommunityRating, type BookSearchResult } from '$lib/server/books/search';
 import { addBookToLibrary } from '$lib/server/books/library';
 import {
 	addTag,
@@ -192,6 +192,12 @@ export const load: PageServerLoad = async ({ params }) => {
 		book.id
 	);
 
+	// Same not-awaited streaming pattern as moreByAuthor above — a live,
+	// best-effort call that shouldn't block the page. Skipped entirely once
+	// the user has rated the book themselves, since the community rating is
+	// only ever shown as a fallback until then.
+	const communityRating = userBook.rating ? Promise.resolve(null) : getCommunityRating(book);
+
 	return {
 		book,
 		userBook,
@@ -201,7 +207,8 @@ export const load: PageServerLoad = async ({ params }) => {
 		suggestionsByType,
 		moreByAuthor,
 		otherBooksByAuthorInLibrary,
-		relatedBooks
+		relatedBooks,
+		communityRating
 	};
 };
 

@@ -126,6 +126,8 @@ type GoogleBooksItem = {
 		pageCount?: number;
 		publishedDate?: string;
 		language?: string;
+		averageRating?: number;
+		ratingsCount?: number;
 	};
 };
 
@@ -299,4 +301,69 @@ export async function searchBooks(query: string, page = 1): Promise<PagedSearchR
 		results: [...openLibrary.results, ...extraResults],
 		hasMore: openLibrary.hasMore || googleBooks.hasMore
 	};
+}
+
+export type CommunityRating = { average: number; count: number };
+
+async function getOpenLibraryCommunityRating(
+	openLibraryId: string
+): Promise<CommunityRating | null> {
+	if (!OPEN_LIBRARY_WORK_ID_PATTERN.test(openLibraryId)) return null;
+
+	try {
+		const res = await fetchWithTimeout(`https://openlibrary.org${openLibraryId}/ratings.json`);
+		if (!res.ok) return null;
+		const data: { summary?: { average?: number; count?: number } } = await res.json();
+		if (!data.summary?.count) return null;
+		return { average: data.summary.average ?? 0, count: data.summary.count };
+	} catch {
+		return null;
+	}
+}
+
+async function getGoogleBooksCommunityRating(
+	isbn: string,
+	apiKey: string
+): Promise<CommunityRating | null> {
+	try {
+		const url = new URL('https://www.googleapis.com/books/v1/volumes');
+		url.searchParams.set('q', `isbn:${isbn}`);
+		url.searchParams.set('key', apiKey);
+
+		const res = await fetchWithTimeout(url);
+		if (!res.ok) return null;
+		const data: GoogleBooksResponse = await res.json();
+		const info = data.items?.[0]?.volumeInfo;
+		if (!info?.averageRating || !info.ratingsCount) return null;
+		return { average: info.averageRating, count: info.ratingsCount };
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * A reference rating from the wider community, shown as a fallback until the
+ * user rates the book themselves. Open Library's work-level ratings are
+ * tried first (no key required, and it's the source we always search
+ * against); Google Books' per-edition rating is a fallback for books added
+ * from Google Books (no openLibraryId) when a key is configured. Best-effort
+ * — a book with neither source rated, or no key/id available, just shows no
+ * community rating rather than blocking anything.
+ */
+export async function getCommunityRating(book: {
+	openLibraryId: string | null;
+	isbn: string | null;
+}): Promise<CommunityRating | null> {
+	if (book.openLibraryId) {
+		const rating = await getOpenLibraryCommunityRating(book.openLibraryId);
+		if (rating) return rating;
+	}
+
+	if (book.isbn) {
+		const settings = await getSettings();
+		const apiKey = settings.googleBooksApiKey || env.GOOGLE_BOOKS_API_KEY;
+		if (apiKey) return await getGoogleBooksCommunityRating(book.isbn, apiKey);
+	}
+
+	return null;
 }

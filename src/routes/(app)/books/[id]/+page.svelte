@@ -181,6 +181,15 @@
 				/>
 				{#if !isUntouched}
 					<StarRating value={data.userBook.rating} />
+					{#if !data.userBook.rating}
+						{#await data.communityRating then communityRating}
+							{#if communityRating}
+								<span class="community-rating" title="{communityRating.count} community ratings">
+									★ {communityRating.average.toFixed(1)} community
+								</span>
+							{/if}
+						{/await}
+					{/if}
 					{#if isRereading}
 						<span class="reread-badge">Re-reading</span>
 					{/if}
