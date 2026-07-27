@@ -91,7 +91,30 @@ describe('getOpenLibraryWorkDetails', () => {
 
 		const result = await getOpenLibraryWorkDetails('/works/OL123W');
 
-		expect(fetchSpy).toHaveBeenCalledWith('https://openlibrary.org/works/OL123W.json');
+		expect(fetchSpy).toHaveBeenCalledWith(
+			'https://openlibrary.org/works/OL123W.json',
+			expect.objectContaining({ signal: expect.any(AbortSignal) })
+		);
 		expect(result).toEqual({ subjects: ['Fantasy'], description: 'A tale.' });
+	});
+
+	it('returns an empty result instead of throwing when the request times out', async () => {
+		vi.spyOn(global, 'fetch').mockRejectedValue(
+			new DOMException('The operation was aborted.', 'TimeoutError')
+		);
+
+		const result = await getOpenLibraryWorkDetails('/works/OL123W');
+		expect(result).toEqual({ subjects: [], description: null });
+	});
+
+	it('passes an AbortSignal that times out to fetch', async () => {
+		const fetchSpy = vi
+			.spyOn(global, 'fetch')
+			.mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
+
+		await getOpenLibraryWorkDetails('/works/OL123W');
+
+		const options = fetchSpy.mock.calls[0][1] as { signal?: AbortSignal };
+		expect(options.signal).toBeInstanceOf(AbortSignal);
 	});
 });

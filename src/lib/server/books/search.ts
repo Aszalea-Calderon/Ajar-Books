@@ -2,6 +2,15 @@ import { env } from '$env/dynamic/private';
 import { getSettings } from '$lib/server/settings';
 import { normalizeSubjectsToGenres } from './genreMapping';
 
+const FETCH_TIMEOUT_MS = 8000;
+
+// Open Library/Google Books are third-party services outside our control —
+// without a bound, a hung request leaves the user's search or add-book
+// action stuck indefinitely instead of failing visibly.
+function fetchWithTimeout(url: string | URL): Promise<Response> {
+	return fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+}
+
 export type BookSearchResult = {
 	title: string;
 	author: string | null;
@@ -61,7 +70,7 @@ async function searchOpenLibrary(
 		'key,title,author_name,cover_i,isbn,number_of_pages_median,first_publish_year,subject,language'
 	);
 
-	const res = await fetch(url);
+	const res = await fetchWithTimeout(url);
 	if (!res.ok) return [];
 
 	const data: OpenLibraryResponse = await res.json();
@@ -131,7 +140,7 @@ async function searchGoogleBooks(
 	url.searchParams.set('maxResults', '20');
 	url.searchParams.set('key', apiKey);
 
-	const res = await fetch(url);
+	const res = await fetchWithTimeout(url);
 	if (!res.ok) return [];
 
 	const data: GoogleBooksResponse = await res.json();
@@ -237,7 +246,7 @@ export async function getOpenLibraryWorkDetails(
 	}
 
 	try {
-		const res = await fetch(`https://openlibrary.org${openLibraryId}.json`);
+		const res = await fetchWithTimeout(`https://openlibrary.org${openLibraryId}.json`);
 		if (!res.ok) return { subjects: [], description: null };
 		const data: OpenLibraryWork = await res.json();
 		return {
