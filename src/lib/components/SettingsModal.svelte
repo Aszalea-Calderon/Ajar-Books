@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { trapFocus } from '$lib/trapFocus';
+	import ConfirmModal from './ConfirmModal.svelte';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
@@ -35,6 +36,20 @@
 		return tag.usageCount > 0
 			? `Delete the tag "${tag.name}"? It will be removed from ${tag.usageCount} ${tag.usageCount === 1 ? 'book' : 'books'}.`
 			: `Delete the tag "${tag.name}"?`;
+	}
+
+	let pendingConfirm = $state<{ form: HTMLFormElement; message: string; label: string } | null>(
+		null
+	);
+
+	function requestConfirm(event: MouseEvent, message: string, label = 'Confirm') {
+		const form = (event.currentTarget as HTMLElement).closest('form');
+		if (form) pendingConfirm = { form, message, label };
+	}
+
+	function confirmPendingSubmit() {
+		pendingConfirm?.form.requestSubmit();
+		pendingConfirm = null;
 	}
 
 	$effect(() => {
@@ -273,19 +288,15 @@
 										{tag.usageCount}
 										{tag.usageCount === 1 ? 'book' : 'books'}
 									</span>
-									<form
-										method="POST"
-										action="/profile?/deleteTag"
-										use:enhance={({ cancel }) => {
-											if (!confirm(deleteTagConfirmMessage(tag))) cancel();
-										}}
-									>
+									<form method="POST" action="/profile?/deleteTag" use:enhance>
 										<input type="hidden" name="tagId" value={tag.id} />
 										<button
-											type="submit"
+											type="button"
 											class="manage-tags__delete"
 											aria-label="Delete {tag.name}"
 											title="Delete {tag.name}"
+											onclick={(event) =>
+												requestConfirm(event, deleteTagConfirmMessage(tag), 'Delete')}
 										>
 											<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 												<path
@@ -311,3 +322,11 @@
 		</div>
 	</div>
 </dialog>
+
+<ConfirmModal
+	open={!!pendingConfirm}
+	message={pendingConfirm?.message ?? ''}
+	confirmLabel={pendingConfirm?.label ?? 'Confirm'}
+	onConfirm={confirmPendingSubmit}
+	onCancel={() => (pendingConfirm = null)}
+/>

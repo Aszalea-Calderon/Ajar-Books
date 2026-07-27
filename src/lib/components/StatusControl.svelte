@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import ConfirmModal from './ConfirmModal.svelte';
 
 	// Accepts the full BookStatus union (including 'added') even though only
 	// the 4 pills below are ever selectable — 'added' never actually matches
@@ -21,11 +22,18 @@
 	// resets progress (same confirm-gated action as the dedicated reset
 	// button) rather than doing nothing — Want to Read has its own lighter
 	// untoggle instead, since there's no progress/format/rating to lose yet.
-	// Cancelling via enhance's own `cancel()` — not `onsubmit` + preventDefault,
-	// which doesn't stop enhance's own fetch-based submission once it's
-	// already begun (confirmed live: cancelling the confirm() still deleted).
-	function confirmReset({ cancel }: { cancel: () => void }) {
-		if (!confirm(resetConfirmMessage)) cancel();
+	// Only one of the three reset forms is ever rendered at a time (each is
+	// behind its own `{#if status === ...}` branch), so a single pending-form
+	// reference is enough.
+	let pendingResetForm = $state<HTMLFormElement | null>(null);
+
+	function requestReset(event: MouseEvent) {
+		pendingResetForm = (event.currentTarget as HTMLElement).closest('form');
+	}
+
+	function confirmResetSubmit() {
+		pendingResetForm?.requestSubmit();
+		pendingResetForm = null;
 	}
 </script>
 
@@ -44,8 +52,12 @@
 	{/if}
 
 	{#if status === 'reading'}
-		<form method="POST" action="?/removeBook" use:enhance={confirmReset}>
-			<button type="submit" class="status-control__pill status-control__pill--active">
+		<form method="POST" action="?/removeBook" use:enhance>
+			<button
+				type="button"
+				class="status-control__pill status-control__pill--active"
+				onclick={requestReset}
+			>
 				Currently Reading
 			</button>
 		</form>
@@ -56,8 +68,12 @@
 	{/if}
 
 	{#if status === 'finished'}
-		<form method="POST" action="?/removeBook" use:enhance={confirmReset}>
-			<button type="submit" class="status-control__pill status-control__pill--active">
+		<form method="POST" action="?/removeBook" use:enhance>
+			<button
+				type="button"
+				class="status-control__pill status-control__pill--active"
+				onclick={requestReset}
+			>
 				Finished
 			</button>
 		</form>
@@ -66,8 +82,12 @@
 	{/if}
 
 	{#if status === 'dnf'}
-		<form method="POST" action="?/removeBook" use:enhance={confirmReset}>
-			<button type="submit" class="status-control__pill status-control__pill--active">
+		<form method="POST" action="?/removeBook" use:enhance>
+			<button
+				type="button"
+				class="status-control__pill status-control__pill--active"
+				onclick={requestReset}
+			>
 				Did Not Finish
 			</button>
 		</form>
@@ -78,3 +98,11 @@
 		</form>
 	{/if}
 </div>
+
+<ConfirmModal
+	open={!!pendingResetForm}
+	message={resetConfirmMessage}
+	confirmLabel="Reset"
+	onConfirm={confirmResetSubmit}
+	onCancel={() => (pendingResetForm = null)}
+/>

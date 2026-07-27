@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
 	import { trapFocus } from '$lib/trapFocus';
+	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import LogProgressModal from '$lib/components/LogProgressModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
@@ -32,6 +33,22 @@
 
 	let noteModalOpen = $state(false);
 	let noteDialogEl: HTMLDialogElement;
+
+	// Shared by the reset-trigger and Chapter Notes delete buttons — only one
+	// confirm-gated action is ever pending at a time on this page.
+	let pendingConfirm = $state<{ form: HTMLFormElement; message: string; label: string } | null>(
+		null
+	);
+
+	function requestConfirm(event: MouseEvent, message: string, label = 'Confirm') {
+		const form = (event.currentTarget as HTMLElement).closest('form');
+		if (form) pendingConfirm = { form, message, label };
+	}
+
+	function confirmPendingSubmit() {
+		pendingConfirm?.form.requestSubmit();
+		pendingConfirm = null;
+	}
 
 	let editingLog = $state<LogEntry | null>(null);
 	let editDialogEl: HTMLDialogElement;
@@ -194,18 +211,13 @@
 					{#if isRereading}
 						<span class="reread-badge">Re-reading</span>
 					{/if}
-					<form
-						method="POST"
-						action="?/removeBook"
-						use:enhance={({ cancel }) => {
-							if (!confirm(resetConfirmMessage)) cancel();
-						}}
-					>
+					<form method="POST" action="?/removeBook" use:enhance>
 						<button
-							type="submit"
+							type="button"
 							class="book-detail__reset-trigger"
 							aria-label="Reset this book's progress"
 							title="Reset this book's progress"
+							onclick={(event) => requestConfirm(event, resetConfirmMessage, 'Reset')}
 						>
 							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 								<path
@@ -487,19 +499,15 @@
 										/>
 									</svg>
 								</button>
-								<form
-									method="POST"
-									action="?/deleteLog"
-									use:enhance={({ cancel }) => {
-										if (!confirm('Delete this entry? This cannot be undone.')) cancel();
-									}}
-								>
+								<form method="POST" action="?/deleteLog" use:enhance>
 									<input type="hidden" name="logId" value={log.id} />
 									<button
-										type="submit"
+										type="button"
 										class="activity-log__icon-button activity-log__icon-button--danger"
 										aria-label="Delete entry"
 										title="Delete entry"
+										onclick={(event) =>
+											requestConfirm(event, 'Delete this entry? This cannot be undone.', 'Delete')}
 									>
 										<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 											<path
@@ -733,3 +741,11 @@
 		</form>
 	</div>
 </dialog>
+
+<ConfirmModal
+	open={!!pendingConfirm}
+	message={pendingConfirm?.message ?? ''}
+	confirmLabel={pendingConfirm?.label ?? 'Confirm'}
+	onConfirm={confirmPendingSubmit}
+	onCancel={() => (pendingConfirm = null)}
+/>
