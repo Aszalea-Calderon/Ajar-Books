@@ -156,4 +156,24 @@ describe('addBookToLibrary', () => {
 		await addBookToLibrary(result({ openLibraryId: null, isbn: '9780441013593' }));
 		expect(getOpenLibraryWorkDetails).not.toHaveBeenCalled();
 	});
+
+	it('uses genres already present on the result (from the search response) instead of re-deriving them from a second fetch', async () => {
+		const outcome = await addBookToLibrary(result({ genres: ['Fantasy', 'Science Fiction'] }));
+
+		const genreTags = await getTagsForUserBook(outcome.userBookId, 'genre');
+		expect(genreTags.map((t) => t.name).sort()).toEqual(['Fantasy', 'Science Fiction']);
+		// The work-details fetch still happens (for the description, which the
+		// search endpoint never supplies) but its subjects should be ignored
+		// since genres were already provided.
+		expect(getOpenLibraryWorkDetails).toHaveBeenCalled();
+	});
+
+	it('keeps genres already present on the result even if the work-details fetch times out (returns empty, as getOpenLibraryWorkDetails does on failure)', async () => {
+		vi.mocked(getOpenLibraryWorkDetails).mockResolvedValueOnce({ subjects: [], description: null });
+
+		const outcome = await addBookToLibrary(result({ genres: ['Mystery'] }));
+
+		const genreTags = await getTagsForUserBook(outcome.userBookId, 'genre');
+		expect(genreTags.map((t) => t.name)).toEqual(['Mystery']);
+	});
 });

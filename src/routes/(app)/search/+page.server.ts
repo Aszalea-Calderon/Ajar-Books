@@ -211,7 +211,7 @@ export const actions: Actions = {
 			description: String(data.get('description') ?? '') || null,
 			pageCount: pageCountRaw ? Number(pageCountRaw) : null,
 			publicationYear: publicationYearRaw ? Number(publicationYearRaw) : null,
-			genres: []
+			genres: data.getAll('genres').map(String)
 		});
 
 		throw redirect(303, `/books/${bookId}`);
@@ -238,7 +238,7 @@ export const actions: Actions = {
 			description: String(data.get('description') ?? '') || null,
 			pageCount: pageCountRaw ? Number(pageCountRaw) : null,
 			publicationYear: publicationYearRaw ? Number(publicationYearRaw) : null,
-			genres: []
+			genres: data.getAll('genres').map(String)
 		});
 
 		await setStatus(userBookId, 'want_to_read');

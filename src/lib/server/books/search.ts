@@ -3,12 +3,17 @@ import { getSettings } from '$lib/server/settings';
 import { normalizeSubjectsToGenres } from './genreMapping';
 
 const FETCH_TIMEOUT_MS = 8000;
+// Work-details/community-rating calls are best-effort enrichment (the add
+// action already succeeds without them) — capped much shorter than a real
+// search so a degraded Open Library doesn't stall "Add"/"Want to Read" for
+// the full 8s on top of whatever the search itself already waited.
+const ENRICHMENT_TIMEOUT_MS = 3000;
 
 // Open Library/Google Books are third-party services outside our control —
 // without a bound, a hung request leaves the user's search or add-book
 // action stuck indefinitely instead of failing visibly.
-function fetchWithTimeout(url: string | URL): Promise<Response> {
-	return fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+function fetchWithTimeout(url: string | URL, timeoutMs = FETCH_TIMEOUT_MS): Promise<Response> {
+	return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
 }
 
 export type BookSearchResult = {
@@ -264,7 +269,10 @@ export async function getOpenLibraryWorkDetails(
 	}
 
 	try {
-		const res = await fetchWithTimeout(`https://openlibrary.org${openLibraryId}.json`);
+		const res = await fetchWithTimeout(
+			`https://openlibrary.org${openLibraryId}.json`,
+			ENRICHMENT_TIMEOUT_MS
+		);
 		if (!res.ok) return { subjects: [], description: null };
 		const data: OpenLibraryWork = await res.json();
 		return {
@@ -311,7 +319,10 @@ async function getOpenLibraryCommunityRating(
 	if (!OPEN_LIBRARY_WORK_ID_PATTERN.test(openLibraryId)) return null;
 
 	try {
-		const res = await fetchWithTimeout(`https://openlibrary.org${openLibraryId}/ratings.json`);
+		const res = await fetchWithTimeout(
+			`https://openlibrary.org${openLibraryId}/ratings.json`,
+			ENRICHMENT_TIMEOUT_MS
+		);
 		if (!res.ok) return null;
 		const data: { summary?: { average?: number; count?: number } } = await res.json();
 		if (!data.summary?.count) return null;
@@ -330,7 +341,7 @@ async function getGoogleBooksCommunityRating(
 		url.searchParams.set('q', `isbn:${isbn}`);
 		url.searchParams.set('key', apiKey);
 
-		const res = await fetchWithTimeout(url);
+		const res = await fetchWithTimeout(url, ENRICHMENT_TIMEOUT_MS);
 		if (!res.ok) return null;
 		const data: GoogleBooksResponse = await res.json();
 		const info = data.items?.[0]?.volumeInfo;

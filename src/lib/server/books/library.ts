@@ -24,14 +24,20 @@ export async function addBookToLibrary(result: BookSearchResult) {
 
 	// Fetched once, before creating the book, so the description can be part
 	// of the initial insert. Only for a genuinely new book — best-effort, see
-	// getOpenLibraryWorkDetails.
+	// getOpenLibraryWorkDetails. `result.genres` already carries Open
+	// Library's inline search-result subjects (see searchOpenLibrary) — reuse
+	// them instead of re-deriving from a second network call, so a slow/down
+	// Open Library at add time loses only the description, not genre tags
+	// that were already fetched during search.
 	let description = result.description;
-	let genresToApply: string[] = [];
+	let genresToApply: string[] = result.genres;
 
-	if (!existingBook && result.openLibraryId) {
+	if (!existingBook && result.openLibraryId && (!description || genresToApply.length === 0)) {
 		const details = await getOpenLibraryWorkDetails(result.openLibraryId);
 		description = description ?? details.description;
-		genresToApply = normalizeSubjectsToGenres(details.subjects);
+		if (genresToApply.length === 0) {
+			genresToApply = normalizeSubjectsToGenres(details.subjects);
+		}
 	}
 
 	const book =
