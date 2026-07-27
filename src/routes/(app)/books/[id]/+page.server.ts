@@ -275,6 +275,7 @@ export const actions: Actions = {
 		const currentPageRaw = data.get('currentPage');
 		const hoursRaw = data.get('hours');
 		const minutesRaw = data.get('minutes');
+		const currentPercentRaw = data.get('currentPercent');
 		const note = String(data.get('note') ?? '').trim();
 
 		const totals = await getProgressTotals(result.userBook.id);
@@ -282,7 +283,17 @@ export const actions: Actions = {
 		let pagesRead: number | undefined;
 		let minutesRead: number | undefined;
 
-		if (currentPageRaw) {
+		if (currentPercentRaw != null) {
+			// A percentage means the same thing either way — convert it to
+			// whichever absolute unit this book's goal is actually tracked in,
+			// then fall through to the same delta math as the other modes.
+			const percent = Math.max(0, Math.min(100, Number(currentPercentRaw)));
+			if (result.userBook.totalPages) {
+				pagesRead = Math.round((percent / 100) * result.userBook.totalPages) - totals.pages;
+			} else if (result.userBook.totalMinutes) {
+				minutesRead = Math.round((percent / 100) * result.userBook.totalMinutes) - totals.minutes;
+			}
+		} else if (currentPageRaw) {
 			pagesRead = Number(currentPageRaw) - totals.pages;
 		} else if (hoursRaw != null && minutesRaw != null) {
 			const currentTotalMinutes = Number(hoursRaw) * 60 + Number(minutesRaw);

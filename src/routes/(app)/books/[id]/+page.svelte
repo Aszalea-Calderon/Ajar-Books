@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
 	import FormatModal from '$lib/components/FormatModal.svelte';
+	import LogProgressModal from '$lib/components/LogProgressModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StarRating from '$lib/components/StarRating.svelte';
 	import StatusControl from '$lib/components/StatusControl.svelte';
@@ -21,7 +22,6 @@
 
 	let formatModalMode = $state<'start' | 'change' | null>(null);
 	let logModalOpen = $state(false);
-	let logDialogEl: HTMLDialogElement;
 
 	// Once revealed for this page visit, keeps the Mood/Setting editor open
 	// even if the user removes the tag they just added — reappearing behind
@@ -58,15 +58,6 @@
 	});
 
 	$effect(() => {
-		if (!logDialogEl) return;
-		if (logModalOpen && !logDialogEl.open) {
-			logDialogEl.showModal();
-		} else if (!logModalOpen && logDialogEl.open) {
-			logDialogEl.close();
-		}
-	});
-
-	$effect(() => {
 		if (!editDialogEl) return;
 		if (editingLog && !editDialogEl.open) {
 			editDialogEl.showModal();
@@ -92,10 +83,6 @@
 			noteDialogEl.close();
 		}
 	});
-
-	function closeLogModalOnBackdrop(event: MouseEvent) {
-		if (event.target === logDialogEl) logModalOpen = false;
-	}
 
 	function closeEditModalOnBackdrop(event: MouseEvent) {
 		if (event.target === editDialogEl) editingLog = null;
@@ -553,85 +540,16 @@
 	onClose={() => (formatModalMode = null)}
 />
 
-<dialog
-	bind:this={logDialogEl}
-	class="settings-modal"
-	onclose={() => (logModalOpen = false)}
-	onclick={closeLogModalOnBackdrop}
->
-	<div class="settings-modal__header">
-		<h2>{logButtonLabel.replace('+ ', '')}</h2>
-		<button
-			type="button"
-			class="settings-modal__close"
-			aria-label="Close"
-			onclick={() => (logModalOpen = false)}
-		>
-			×
-		</button>
-	</div>
-	<div class="settings-modal__content">
-		<form
-			method="POST"
-			action="?/logProgress"
-			use:enhance={() => {
-				return async ({ update }) => {
-					await update();
-					logModalOpen = false;
-				};
-			}}
-		>
-			{#if isAudiobook}
-				<p class="settings-hint">
-					You left off at {Math.floor(data.totals.minutes / 60)}h {data.totals.minutes % 60}m.
-				</p>
-				<div class="log-progress__time-fields">
-					<div class="auth-field">
-						<label for="hoursListened">Hours</label>
-						<input
-							id="hoursListened"
-							name="hours"
-							type="number"
-							min="0"
-							value={Math.floor(data.totals.minutes / 60)}
-							required
-						/>
-					</div>
-					<div class="auth-field">
-						<label for="minutesListened">Minutes</label>
-						<input
-							id="minutesListened"
-							name="minutes"
-							type="number"
-							min="0"
-							max="59"
-							value={data.totals.minutes % 60}
-							required
-						/>
-					</div>
-				</div>
-			{:else}
-				<p class="settings-hint">You left off on page {data.totals.pages}.</p>
-				<div class="auth-field">
-					<label for="currentPage">What page are you on?</label>
-					<input
-						id="currentPage"
-						name="currentPage"
-						type="number"
-						min="1"
-						value={data.totals.pages || ''}
-						required
-					/>
-				</div>
-			{/if}
-			<div class="auth-field">
-				<label for="note">Note (optional)</label>
-				<input id="note" name="note" type="text" />
-			</div>
-			<button class="auth-submit" type="submit">Log</button>
-		</form>
-	</div>
-</dialog>
+<LogProgressModal
+	open={logModalOpen}
+	onClose={() => (logModalOpen = false)}
+	action="?/logProgress"
+	format={data.userBook.format}
+	totalPages={data.userBook.totalPages}
+	totalMinutes={data.userBook.totalMinutes}
+	currentPages={data.totals.pages}
+	currentMinutes={data.totals.minutes}
+/>
 
 <dialog
 	bind:this={editDialogEl}

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import LogProgressModal from '$lib/components/LogProgressModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import type { PageData } from './$types';
 
@@ -8,7 +8,6 @@
 
 	let selectedUserBookId = $state<string | null>(null);
 	let logModalOpen = $state(false);
-	let logDialogEl: HTMLDialogElement | undefined = $state();
 
 	let hero = $derived(
 		data.currentlyReading.find((row) => row.userBook.id === selectedUserBookId) ??
@@ -16,7 +15,6 @@
 	);
 
 	let isAudiobook = $derived(hero?.userBook.format === 'audiobook');
-	let logButtonLabel = $derived(isAudiobook ? '+ Log listening' : '+ Log progress');
 
 	const greetingTemplates = [
 		(name: string) => `Welcome back, ${name}!`,
@@ -35,19 +33,6 @@
 			row.userBook.format === 'audiobook' ? row.userBook.totalMinutes : row.userBook.totalPages;
 		if (!total) return null;
 		return Math.round((current / total) * 100);
-	}
-
-	$effect(() => {
-		if (!logDialogEl) return;
-		if (logModalOpen && !logDialogEl.open) {
-			logDialogEl.showModal();
-		} else if (!logModalOpen && logDialogEl.open) {
-			logDialogEl.close();
-		}
-	});
-
-	function closeLogModalOnBackdrop(event: MouseEvent) {
-		if (event.target === logDialogEl) logModalOpen = false;
 	}
 </script>
 
@@ -141,51 +126,14 @@
 </div>
 
 {#if hero}
-	<dialog
-		bind:this={logDialogEl}
-		class="settings-modal"
-		onclose={() => (logModalOpen = false)}
-		onclick={closeLogModalOnBackdrop}
-	>
-		<div class="settings-modal__header">
-			<h2>{logButtonLabel.replace('+ ', '')}</h2>
-			<button
-				type="button"
-				class="settings-modal__close"
-				aria-label="Close"
-				onclick={() => (logModalOpen = false)}
-			>
-				×
-			</button>
-		</div>
-		<div class="settings-modal__content">
-			<form
-				method="POST"
-				action={`/books/${hero.book.id}?/logProgress`}
-				use:enhance={() => {
-					return async ({ update }) => {
-						await update();
-						logModalOpen = false;
-					};
-				}}
-			>
-				{#if isAudiobook}
-					<div class="auth-field">
-						<label for="minutesRead">Minutes listened</label>
-						<input id="minutesRead" name="minutesRead" type="number" min="1" required />
-					</div>
-				{:else}
-					<div class="auth-field">
-						<label for="pagesRead">Pages read</label>
-						<input id="pagesRead" name="pagesRead" type="number" min="1" required />
-					</div>
-				{/if}
-				<div class="auth-field">
-					<label for="note">Note (optional)</label>
-					<input id="note" name="note" type="text" />
-				</div>
-				<button class="auth-submit" type="submit">Log</button>
-			</form>
-		</div>
-	</dialog>
+	<LogProgressModal
+		open={logModalOpen}
+		onClose={() => (logModalOpen = false)}
+		action={`/books/${hero.book.id}?/logProgress`}
+		format={hero.userBook.format}
+		totalPages={hero.userBook.totalPages}
+		totalMinutes={hero.userBook.totalMinutes}
+		currentPages={hero.totals.pages}
+		currentMinutes={hero.totals.minutes}
+	/>
 {/if}
