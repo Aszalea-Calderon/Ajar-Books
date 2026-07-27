@@ -408,6 +408,36 @@ button {
 	grid-column: 1 / -1;
 }
 
+.dashboard__panel--hero {
+	background: linear-gradient(135deg, var(--color-primary), var(--color-accent-purple));
+	border: none;
+	color: var(--color-primary-text);
+}
+
+.dashboard__panel--hero h2 {
+	color: var(--color-primary-text);
+}
+
+.dashboard__panel--hero .dashboard__empty {
+	color: var(--color-primary-text);
+	opacity: 0.85;
+}
+
+.dashboard__panel--hero .dashboard__cta {
+	display: inline-flex;
+	padding: var(--space-2) var(--space-4);
+	background: rgb(0 0 0 / 0.15);
+	border: 1px solid rgb(255 255 255 / 0.35);
+	border-radius: var(--radius-sm);
+	color: var(--color-primary-text);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.dashboard__panel--hero .dashboard__cta:hover {
+	background: rgb(0 0 0 / 0.3);
+}
+
 .dashboard__empty {
 	color: var(--color-text-muted);
 	margin: 0;
@@ -1370,6 +1400,26 @@ button {
 	background: var(--color-primary);
 }
 
+.dashboard__panel--hero .progress-bar__header {
+	color: var(--color-primary-text);
+	opacity: 0.75;
+}
+
+.dashboard__panel--hero .progress-bar__header span:last-child {
+	color: var(--color-primary-text);
+	opacity: 1;
+}
+
+.dashboard__panel--hero .progress-bar__track,
+.dashboard__panel--hero .progress-bar__segment {
+	background: rgb(0 0 0 / 0.2);
+}
+
+.dashboard__panel--hero .progress-bar__fill,
+.dashboard__panel--hero .progress-bar__segment--filled {
+	background: var(--color-primary-text);
+}
+
 .progress-bar__label {
 	margin: 0;
 	font-size: var(--font-size-sm);
@@ -1578,6 +1628,57 @@ button {
 	font-size: var(--font-size-lg);
 	font-weight: 600;
 	line-height: 1;
+}
+
+/* Overrides for the gradient hero background — the default surface/text
+   colors these controls otherwise use aren't guaranteed to read well
+   against an arbitrary accent-colored gradient. */
+.dashboard__panel--hero .currently-reading__eyebrow {
+	color: var(--color-primary-text);
+	opacity: 0.75;
+}
+
+.dashboard__panel--hero .currently-reading__title {
+	color: var(--color-primary-text);
+}
+
+.dashboard__panel--hero .currently-reading__author {
+	color: var(--color-primary-text);
+	opacity: 0.85;
+}
+
+.dashboard__panel--hero .currently-reading__cover--placeholder {
+	background: rgb(255 255 255 / 0.2);
+	border: 1px solid rgb(255 255 255 / 0.4);
+}
+
+.dashboard__panel--hero .currently-reading__track {
+	background: rgb(0 0 0 / 0.15);
+	border: 1px solid rgb(255 255 255 / 0.35);
+	color: var(--color-primary-text);
+}
+
+.dashboard__panel--hero .currently-reading__track:hover {
+	background: rgb(0 0 0 / 0.3);
+	opacity: 1;
+}
+
+.dashboard__panel--hero .currently-reading-chip {
+	background: rgb(0 0 0 / 0.15);
+	color: var(--color-primary-text);
+}
+
+.dashboard__panel--hero .currently-reading-chip--active {
+	border-color: rgb(255 255 255 / 0.6);
+}
+
+.dashboard__panel--hero .currently-reading-chip__cover--placeholder {
+	background: rgb(255 255 255 / 0.2);
+}
+
+.dashboard__panel--hero .currently-reading-chip__done {
+	color: var(--color-primary-text);
+	opacity: 0.75;
 }
 
 .settings-hint {

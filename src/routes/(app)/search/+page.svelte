@@ -62,7 +62,7 @@
 			<div class="search-toolbar">
 				<label class="search-toolbar__filter">
 					<input type="checkbox" bind:checked={hideInLibrary} />
-					Hide books already read
+					Already in library
 				</label>
 				<ViewToggle />
 			</div>
