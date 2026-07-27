@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { and, desc, eq, inArray, ne, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { parseLocalDateInput } from '$lib/date';
 import { db } from '$lib/server/db';
@@ -467,12 +467,20 @@ export const actions: Actions = {
 		const rating = ratingRaw ? Number(ratingRaw) : null;
 		const finishedAt = parseLocalDateInput(finishedAtRaw) ?? new Date();
 
+		// The automatic crossing-the-goal path (recomputeStatus) already flips
+		// status to 'finished' and counts the completion before this modal is
+		// even shown — only count it here too when this is the sole transition
+		// (the manual "Finished" pill path), so a completion is never counted
+		// twice.
+		const alreadyFinished = result.userBook.status === 'finished';
+
 		await db
 			.update(userBooks)
 			.set({
 				status: 'finished',
 				rating: rating != null && Number.isFinite(rating) ? rating : null,
-				finishedAt
+				finishedAt,
+				...(alreadyFinished ? {} : { timesFinished: sql`${userBooks.timesFinished} + 1` })
 			})
 			.where(eq(userBooks.id, result.userBook.id));
 

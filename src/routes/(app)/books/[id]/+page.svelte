@@ -132,6 +132,9 @@
 	// recomputeStatus path is the one exception, which does null it out
 	// when a correction drops a book back under its goal (not a real reread).
 	let isRereading = $derived(data.userBook.status === 'reading' && !!data.userBook.finishedAt);
+	// Worth surfacing once it's genuinely been read more than once — a first
+	// read showing "Read 1 time" isn't information, just noise.
+	let showTimesFinished = $derived(data.userBook.timesFinished > 1);
 	// Once finished (or given up on), the tracker's done its job — hide it
 	// rather than show a stale bar. It reappears automatically if status
 	// moves away from these again (e.g. a manual "Currently Reading" for a
@@ -415,13 +418,19 @@
 							+ Add page count
 						</button>
 					{/if}
-					{#if data.book.pageCount && (data.book.publicationYear || isRereading)}
+					{#if data.book.pageCount && (data.book.publicationYear || showTimesFinished || isRereading)}
 						<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
 					{/if}
 					{#if data.book.publicationYear}
 						<span>Published {data.book.publicationYear}</span>
 					{/if}
-					{#if data.book.publicationYear && isRereading}
+					{#if data.book.publicationYear && (showTimesFinished || isRereading)}
+						<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
+					{/if}
+					{#if showTimesFinished}
+						<span>Read {data.userBook.timesFinished} times</span>
+					{/if}
+					{#if showTimesFinished && isRereading}
 						<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
 					{/if}
 					{#if isRereading}

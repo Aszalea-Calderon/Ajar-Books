@@ -55,6 +55,10 @@ export const userBooks = sqliteTable('user_books', {
 	rating: real('rating'),
 	startedAt: integer('started_at', { mode: 'timestamp' }),
 	finishedAt: integer('finished_at', { mode: 'timestamp' }),
+	// finishedAt only ever holds the most recent completion — this counts every
+	// genuine transition into 'finished', so a reread's full history isn't
+	// lost the way a single timestamp would lose it.
+	timesFinished: integer('times_finished').notNull().default(0),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

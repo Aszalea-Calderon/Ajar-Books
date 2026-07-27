@@ -1,0 +1,1 @@
+ALTER TABLE `user_books` ADD `times_finished` integer DEFAULT 0 NOT NULL;

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { userBooks, readingLogs } from '$lib/server/db/schema';
-import { and, eq, isNull, sum } from 'drizzle-orm';
+import { and, eq, isNull, sql, sum } from 'drizzle-orm';
 
 export async function getProgressTotals(userBookId: string) {
 	const [row] = await db
@@ -32,11 +32,12 @@ async function recomputeStatus(userBookId: string) {
 	const minutesComplete = userBook.totalMinutes != null && totals.minutes >= userBook.totalMinutes;
 	const isComplete = pagesComplete || minutesComplete;
 
-	const updates: Partial<typeof userBooks.$inferInsert> = {};
+	const updates: Record<string, unknown> = {};
 
 	if (isComplete && userBook.status !== 'finished') {
 		updates.status = 'finished';
 		updates.finishedAt = new Date();
+		updates.timesFinished = sql`${userBooks.timesFinished} + 1`;
 	} else if (!isComplete && userBook.status === 'finished') {
 		updates.status = 'reading';
 		updates.finishedAt = null;
@@ -132,13 +133,16 @@ export async function setStatus(userBookId: string, status: BookStatus) {
 	const [userBook] = await db.select().from(userBooks).where(eq(userBooks.id, userBookId));
 	if (!userBook) throw new Error('UserBook not found');
 
-	const updates: Partial<typeof userBooks.$inferInsert> = { status };
+	const updates: Record<string, unknown> = { status };
 
 	if (status === 'reading' && !userBook.startedAt) {
 		updates.startedAt = new Date();
 	}
 	if (status === 'finished' && !userBook.finishedAt) {
 		updates.finishedAt = new Date();
+	}
+	if (status === 'finished' && userBook.status !== 'finished') {
+		updates.timesFinished = sql`${userBooks.timesFinished} + 1`;
 	}
 
 	await db.update(userBooks).set(updates).where(eq(userBooks.id, userBookId));
@@ -181,7 +185,8 @@ export async function resetUserBook(userBookId: string) {
 			totalMinutes: null,
 			rating: null,
 			startedAt: null,
-			finishedAt: null
+			finishedAt: null,
+			timesFinished: 0
 		})
 		.where(eq(userBooks.id, userBookId));
 }
