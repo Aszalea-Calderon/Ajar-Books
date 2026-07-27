@@ -46,8 +46,10 @@
 	<section class="dashboard__panel dashboard__panel--hero">
 		<h2>Currently Reading</h2>
 		{#if !hero}
-			<p class="dashboard__empty">Nothing in progress yet.</p>
-			<a class="dashboard__cta" href={resolve('/search')}>Add a Book</a>
+			<div class="dashboard__empty-state">
+				<p class="dashboard__empty">Nothing in progress yet.</p>
+				<a class="dashboard__cta" href={resolve('/search')}>Add a Book</a>
+			</div>
 		{:else}
 			<div class="currently-reading">
 				<a

@@ -438,10 +438,20 @@ button {
 .dashboard__panel--hero .dashboard__empty {
 	color: var(--color-primary-text);
 	opacity: 0.85;
+	margin: 0;
+}
+
+.dashboard__empty-state {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+	padding: var(--space-12) 0;
 }
 
 .dashboard__panel--hero .dashboard__cta {
 	display: inline-flex;
+	flex-shrink: 0;
 	padding: var(--space-2) var(--space-4);
 	background: rgb(0 0 0 / 0.15);
 	border: 1px solid rgb(255 255 255 / 0.35);
