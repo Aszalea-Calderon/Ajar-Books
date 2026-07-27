@@ -384,7 +384,7 @@
 				{/if}
 				{#if data.relatedBooks.length > 0}
 					<div class="related-books">
-						<h4 class="related-books__label">Related books in your library</h4>
+						<h4 class="related-books__label">Related books</h4>
 						<div class="related-books__list">
 							{#each data.relatedBooks as book (book.id)}
 								<a
@@ -399,6 +399,16 @@
 									{/if}
 								</a>
 							{/each}
+							{#if data.relatedBooksHasMore && data.tagsByType.genre[0]}
+								<a
+									class="related-books__view-more"
+									href={resolve(
+										`/profile?genre=${encodeURIComponent(data.tagsByType.genre[0].name)}`
+									)}
+								>
+									View more
+								</a>
+							{/if}
 						</div>
 					</div>
 				{/if}
@@ -465,29 +475,48 @@
 					tags={data.tagsByType.genre}
 					suggestions={data.suggestionsByType.genre}
 				/>
-				{#if data.tagsByType.mood.length > 0 || moodRevealed}
-					<TagEditor
-						label="Mood"
-						type="mood"
-						tags={data.tagsByType.mood}
-						suggestions={data.suggestionsByType.mood}
-					/>
+				{#if data.tagsByType.mood.length === 0 && !moodRevealed && data.tagsByType.setting.length === 0 && !settingRevealed}
+					<div class="tag-grid__reveal-row">
+						<button type="button" class="tag-grid__reveal" onclick={() => (moodRevealed = true)}>
+							+ Add mood
+						</button>
+						<button
+							type="button"
+							class="tag-grid__reveal"
+							onclick={() => (settingRevealed = true)}
+						>
+							+ Add setting
+						</button>
+					</div>
 				{:else}
-					<button type="button" class="tag-grid__reveal" onclick={() => (moodRevealed = true)}>
-						+ Add mood
-					</button>
-				{/if}
-				{#if data.tagsByType.setting.length > 0 || settingRevealed}
-					<TagEditor
-						label="Setting"
-						type="setting"
-						tags={data.tagsByType.setting}
-						suggestions={data.suggestionsByType.setting}
-					/>
-				{:else}
-					<button type="button" class="tag-grid__reveal" onclick={() => (settingRevealed = true)}>
-						+ Add setting
-					</button>
+					{#if data.tagsByType.mood.length > 0 || moodRevealed}
+						<TagEditor
+							label="Mood"
+							type="mood"
+							tags={data.tagsByType.mood}
+							suggestions={data.suggestionsByType.mood}
+						/>
+					{:else}
+						<button type="button" class="tag-grid__reveal" onclick={() => (moodRevealed = true)}>
+							+ Add mood
+						</button>
+					{/if}
+					{#if data.tagsByType.setting.length > 0 || settingRevealed}
+						<TagEditor
+							label="Setting"
+							type="setting"
+							tags={data.tagsByType.setting}
+							suggestions={data.suggestionsByType.setting}
+						/>
+					{:else}
+						<button
+							type="button"
+							class="tag-grid__reveal"
+							onclick={() => (settingRevealed = true)}
+						>
+							+ Add setting
+						</button>
+					{/if}
 				{/if}
 				{#if data.otherBooksByAuthorInLibrary.length > 0}
 					<div class="also-by-author">

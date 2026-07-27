@@ -93,30 +93,93 @@
 		<div class="search-results" class:search-results--cards={viewModeState.current === 'cards'}>
 			{#each visibleResults as result (resultKey(result))}
 				{#if result.libraryBookId}
-					<a
-						class="search-result"
-						href={resolve('/(app)/books/[id]', { id: result.libraryBookId })}
-					>
-						{#if result.coverUrl}
-							<img class="search-result__cover" src={result.coverUrl} alt="" />
+					<div class="search-result">
+						<a
+							class="search-result__preview"
+							href={resolve('/(app)/books/[id]', { id: result.libraryBookId })}
+						>
+							{#if result.coverUrl}
+								<img class="search-result__cover" src={result.coverUrl} alt="" />
+							{:else}
+								<div class="search-result__cover search-result__cover--placeholder"></div>
+							{/if}
+							<div class="search-result__info">
+								<p class="search-result__title">{result.title}</p>
+								{#if result.author}
+									<p class="search-result__author">{result.author}</p>
+								{/if}
+								{#if result.genres.length > 0}
+									<div class="search-result__genres">
+										{#each result.genres as genre (genre)}
+											<span class="tag-chip tag-chip--static">{genre}</span>
+										{/each}
+									</div>
+								{/if}
+							</div>
+							<span class="search-result__label">View in library</span>
+						</a>
+						{#if result.isWantToRead}
+							<form
+								method="POST"
+								action="?/removeFromWantToRead"
+								use:enhance={() => {
+									submittingKey = resultKey(result);
+									return async ({ update }) => {
+										await update();
+										submittingKey = null;
+									};
+								}}
+							>
+								<input type="hidden" name="bookId" value={result.libraryBookId} />
+								<button
+									type="submit"
+									class="search-result__bookmark search-result__bookmark--active"
+									aria-label="Remove {result.title} from Want to Read"
+									title="Remove from Want to Read"
+									disabled={submittingKey === resultKey(result)}
+								>
+									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+										<path fill="currentColor" d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z" />
+									</svg>
+								</button>
+							</form>
 						{:else}
-							<div class="search-result__cover search-result__cover--placeholder"></div>
+							<form
+								method="POST"
+								action="?/addToWantToRead"
+								use:enhance={() => {
+									submittingKey = resultKey(result);
+									return async ({ update }) => {
+										await update();
+										submittingKey = null;
+									};
+								}}
+							>
+								<input type="hidden" name="title" value={result.title} />
+								<input type="hidden" name="author" value={result.author ?? ''} />
+								<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
+								<input type="hidden" name="openLibraryId" value={result.openLibraryId ?? ''} />
+								<input type="hidden" name="isbn" value={result.isbn ?? ''} />
+								<input type="hidden" name="description" value={result.description ?? ''} />
+								<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
+								<input type="hidden" name="publicationYear" value={result.publicationYear ?? ''} />
+								{#each result.genres as genre (genre)}
+									<input type="hidden" name="genres" value={genre} />
+								{/each}
+								<button
+									type="submit"
+									class="search-result__bookmark"
+									aria-label="Add {result.title} to Want to Read"
+									title="Add to Want to Read"
+									disabled={submittingKey === resultKey(result)}
+								>
+									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+										<path fill="currentColor" d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z" />
+									</svg>
+								</button>
+							</form>
 						{/if}
-						<div class="search-result__info">
-							<p class="search-result__title">{result.title}</p>
-							{#if result.author}
-								<p class="search-result__author">{result.author}</p>
-							{/if}
-							{#if result.genres.length > 0}
-								<div class="search-result__genres">
-									{#each result.genres as genre (genre)}
-										<span class="tag-chip tag-chip--static">{genre}</span>
-									{/each}
-								</div>
-							{/if}
-						</div>
-						<span class="search-result__label">View in library</span>
-					</a>
+					</div>
 				{:else}
 					<form
 						method="POST"

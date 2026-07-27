@@ -3,13 +3,14 @@ import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { searchBooks, type BookSearchResult } from '$lib/server/books/search';
 import { addBookToLibrary } from '$lib/server/books/library';
-import { setStatus } from '$lib/server/books/progress';
+import { setStatus, untoggleWantToRead } from '$lib/server/books/progress';
 import { db } from '$lib/server/db';
 import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
 
 // Cross-references live search results against books already in the local
 // library (by Open Library id or ISBN) so the UI can show "already in
-// library" instead of a duplicate add button.
+// library" instead of a duplicate add button, and whether the bookmark
+// toggle should render as already-checked.
 async function attachLibraryIds(results: BookSearchResult[]) {
 	const matchConditions = results
 		.flatMap((r) => [
@@ -20,17 +21,23 @@ async function attachLibraryIds(results: BookSearchResult[]) {
 
 	const existing = matchConditions.length
 		? await db
-				.select()
+				.select({ book: books, status: userBooks.status })
 				.from(books)
+				.leftJoin(userBooks, eq(userBooks.bookId, books.id))
 				.where(or(...matchConditions))
 		: [];
 
 	return results.map((r) => {
 		const match = existing.find(
-			(b) =>
-				(r.openLibraryId && b.openLibraryId === r.openLibraryId) || (r.isbn && b.isbn === r.isbn)
+			({ book }) =>
+				(r.openLibraryId && book.openLibraryId === r.openLibraryId) ||
+				(r.isbn && book.isbn === r.isbn)
 		);
-		return { ...r, libraryBookId: match?.id ?? null };
+		return {
+			...r,
+			libraryBookId: match?.book.id ?? null,
+			isWantToRead: match?.status === 'want_to_read'
+		};
 	});
 }
 
@@ -242,5 +249,18 @@ export const actions: Actions = {
 		});
 
 		await setStatus(userBookId, 'want_to_read');
+	},
+
+	// Unchecking the bookmark on a result already in the library — mirrors
+	// StatusControl's own "Want to Read" untoggle, just reachable from search
+	// too. Only needs the bookId (already resolved by attachLibraryIds); a
+	// book that was never added has nothing to untoggle.
+	removeFromWantToRead: async ({ request }) => {
+		const data = await request.formData();
+		const bookId = String(data.get('bookId') ?? '');
+		if (!bookId) return fail(400, { error: 'Missing bookId' });
+
+		const [userBook] = await db.select().from(userBooks).where(eq(userBooks.bookId, bookId));
+		if (userBook) await untoggleWantToRead(userBook.id);
 	}
 };

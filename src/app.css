@@ -855,6 +855,11 @@ button {
 	cursor: default;
 }
 
+.search-result__bookmark--active {
+	color: var(--color-primary);
+	border-color: var(--color-primary);
+}
+
 .search-result__preview {
 	display: flex;
 	align-items: center;
@@ -866,6 +871,7 @@ button {
 	padding: 0;
 	margin: 0;
 	text-align: left;
+	text-decoration: none;
 	color: inherit;
 	font: inherit;
 	cursor: pointer;
@@ -1635,6 +1641,20 @@ button {
 	background: var(--color-surface-raised);
 }
 
+.related-books__view-more {
+	margin-left: auto;
+	padding-left: var(--space-3);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	text-decoration: underline;
+	white-space: nowrap;
+}
+
+.related-books__view-more:hover {
+	color: var(--color-text);
+}
+
 /* Progress bar */
 .progress-bar {
 	margin-bottom: var(--space-4);
@@ -2104,6 +2124,16 @@ button {
 
 .tag-grid__reveal:hover {
 	color: var(--color-text);
+}
+
+.tag-grid__reveal-row {
+	display: flex;
+	gap: var(--space-4);
+}
+
+.tag-grid__reveal-row .tag-grid__reveal {
+	display: inline;
+	margin-bottom: 0;
 }
 
 /* Tag editor */

@@ -35,7 +35,7 @@ const RELATED_BOOKS_LIMIT = 8;
  * network call), ranked by how many genre tags two books have in common.
  */
 async function getRelatedBooksInLibrary(genreTagIds: string[], currentBookId: string) {
-	if (genreTagIds.length === 0) return [];
+	if (genreTagIds.length === 0) return { books: [], hasMore: false };
 
 	const rows = await db
 		.select({ book: books })
@@ -51,10 +51,14 @@ async function getRelatedBooksInLibrary(genreTagIds: string[], currentBookId: st
 		else countByBookId.set(row.book.id, { book: row.book, count: 1 });
 	}
 
-	return [...countByBookId.values()]
+	const sortedBooks = [...countByBookId.values()]
 		.sort((a, b) => b.count - a.count)
-		.slice(0, RELATED_BOOKS_LIMIT)
 		.map((entry) => entry.book);
+
+	return {
+		books: sortedBooks.slice(0, RELATED_BOOKS_LIMIT),
+		hasMore: sortedBooks.length > RELATED_BOOKS_LIMIT
+	};
 }
 
 /**
@@ -187,7 +191,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	const otherBooksByAuthorInLibrary = book.author
 		? await getOtherBooksByAuthorInLibrary(book.author, book.id)
 		: [];
-	const relatedBooks = await getRelatedBooksInLibrary(
+	const { books: relatedBooks, hasMore: relatedBooksHasMore } = await getRelatedBooksInLibrary(
 		tagsByType.genre.map((tag) => tag.id),
 		book.id
 	);
@@ -208,6 +212,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		moreByAuthor,
 		otherBooksByAuthorInLibrary,
 		relatedBooks,
+		relatedBooksHasMore,
 		communityRating
 	};
 };
