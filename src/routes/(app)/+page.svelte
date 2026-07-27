@@ -16,6 +16,12 @@
 
 	let isAudiobook = $derived(hero?.userBook.format === 'audiobook');
 
+	// Keeps the row to a single line rather than wrapping — "See more" links
+	// out to the full Currently Reading list once there's more than this.
+	const CHIP_LIMIT = 5;
+	let visibleChips = $derived(data.currentlyReading.slice(0, CHIP_LIMIT));
+	let hasMoreChips = $derived(data.currentlyReading.length > CHIP_LIMIT);
+
 	const greetingTemplates = [
 		(name: string) => `Welcome back, ${name}!`,
 		(name: string) => `Good to see you, ${name}.`,
@@ -84,7 +90,7 @@
 			</div>
 
 			<div class="currently-reading-chips">
-				{#each data.currentlyReading as row (row.userBook.id)}
+				{#each visibleChips as row (row.userBook.id)}
 					{@const done = percentDone(row)}
 					<button
 						type="button"
@@ -107,9 +113,18 @@
 						</span>
 					</button>
 				{/each}
-				<a class="currently-reading-chip currently-reading-chip--add" href={resolve('/search')}>
-					+
-				</a>
+				{#if hasMoreChips}
+					<a
+						class="currently-reading-chip currently-reading-chip--see-more"
+						href={resolve('/profile?status=reading')}
+					>
+						See more
+					</a>
+				{:else}
+					<a class="currently-reading-chip currently-reading-chip--add" href={resolve('/search')}>
+						+
+					</a>
+				{/if}
 			</div>
 		{/if}
 	</section>

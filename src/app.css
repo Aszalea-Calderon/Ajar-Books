@@ -1743,13 +1743,15 @@ button {
 
 .currently-reading-chips {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
+	overflow-x: auto;
 	gap: var(--space-2);
 	margin-top: var(--space-4);
 }
 
 .currently-reading-chip {
 	display: flex;
+	flex-shrink: 0;
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-2) var(--space-3);
@@ -1808,6 +1810,14 @@ button {
 	font-size: var(--font-size-lg);
 	font-weight: 600;
 	line-height: 1;
+}
+
+.currently-reading-chip--see-more {
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-2) var(--space-4);
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 /* Overrides for the gradient hero background — the default surface/text
