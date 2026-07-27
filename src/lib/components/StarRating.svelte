@@ -4,6 +4,9 @@
 	let { value }: { value: number | null } = $props();
 
 	const stars = [1, 2, 3, 4, 5];
+	// Quarter-star increments: each star is split into 4 clickable zones
+	// instead of 2, so a rating can land on .25/.5/.75 as well as a whole star.
+	const quarters = [0.25, 0.5, 0.75, 1];
 </script>
 
 <form method="POST" action="?/setRating" use:enhance class="star-rating">
@@ -12,20 +15,15 @@
 			class="star-rating__star"
 			style="--fill: {Math.max(0, Math.min(1, (value ?? 0) - (star - 1))) * 100}%"
 		>
-			<button
-				type="submit"
-				name="rating"
-				value={star - 0.5}
-				class="star-rating__half star-rating__half--left"
-				aria-label="Rate {star - 0.5} stars"
-			></button>
-			<button
-				type="submit"
-				name="rating"
-				value={star}
-				class="star-rating__half star-rating__half--right"
-				aria-label="Rate {star} stars"
-			></button>
+			{#each quarters as quarter, i (quarter)}
+				<button
+					type="submit"
+					name="rating"
+					value={star - 1 + quarter}
+					class="star-rating__quarter star-rating__quarter--{i + 1}"
+					aria-label="Rate {star - 1 + quarter} stars"
+				></button>
+			{/each}
 		</span>
 	{/each}
 </form>

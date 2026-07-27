@@ -714,18 +714,14 @@
 							class="star-rating__star"
 							style="--fill: {Math.max(0, Math.min(1, finishedRating - (star - 1))) * 100}%"
 						>
-							<button
-								type="button"
-								class="star-rating__half star-rating__half--left"
-								onclick={() => (finishedRating = star - 0.5)}
-								aria-label="Rate {star - 0.5} stars"
-							></button>
-							<button
-								type="button"
-								class="star-rating__half star-rating__half--right"
-								onclick={() => (finishedRating = star)}
-								aria-label="Rate {star} stars"
-							></button>
+							{#each [0.25, 0.5, 0.75, 1] as quarter, i (quarter)}
+								<button
+									type="button"
+									class="star-rating__quarter star-rating__quarter--{i + 1}"
+									onclick={() => (finishedRating = star - 1 + quarter)}
+									aria-label="Rate {star - 1 + quarter} stars"
+								></button>
+							{/each}
 						</span>
 					{/each}
 				</div>
