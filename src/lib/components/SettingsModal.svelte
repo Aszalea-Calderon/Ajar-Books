@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { tick, untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { trapFocus } from '$lib/trapFocus';
 	import ConfirmModal from './ConfirmModal.svelte';
+	import Dropdown from './Dropdown.svelte';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
@@ -22,7 +24,7 @@
 	} = $props();
 
 	let dialogEl: HTMLDialogElement;
-	let section = $state<'themes' | 'fonts' | 'integrations' | 'tags' | 'data'>('themes');
+	let section = $state<'themes' | 'fonts' | 'search' | 'integrations' | 'tags' | 'data'>('themes');
 	let justSaved = $state(false);
 	let languageJustSaved = $state(false);
 
@@ -50,6 +52,18 @@
 	function confirmPendingSubmit() {
 		pendingConfirm?.form.requestSubmit();
 		pendingConfirm = null;
+	}
+
+	let selectedLanguage = $state(untrack(() => languagePriority));
+	let languageFormEl = $state<HTMLFormElement>();
+
+	async function handleLanguageChange(value: string) {
+		selectedLanguage = value;
+		languageJustSaved = false;
+		// Wait for the hidden input's value to reflect the new selection
+		// before submitting, since the form reads the live DOM value.
+		await tick();
+		languageFormEl?.requestSubmit();
 	}
 
 	$effect(() => {
@@ -113,6 +127,14 @@
 				onclick={() => (section = 'fonts')}
 			>
 				Fonts
+			</button>
+			<button
+				type="button"
+				class="settings-modal__nav-item"
+				class:settings-modal__nav-item--active={section === 'search'}
+				onclick={() => (section = 'search')}
+			>
+				Search
 			</button>
 			<button
 				type="button"
@@ -187,44 +209,39 @@
 						</button>
 					{/each}
 				</div>
-			{:else if section === 'integrations'}
+			{:else if section === 'search'}
 				<h3>Language Priority</h3>
 				<p class="settings-hint">
 					When a book has editions in multiple languages, search results prefer this language — it
 					doesn't hide other-language editions, just ranks a matching one higher.
 				</p>
 				<form
+					bind:this={languageFormEl}
 					method="POST"
 					action="/profile?/saveLanguagePriority"
 					use:enhance={() => {
-						languageJustSaved = false;
 						return async ({ update }) => {
 							await update();
 							languageJustSaved = true;
 						};
 					}}
 				>
+					<input type="hidden" name="languagePriority" value={selectedLanguage} />
 					<div class="auth-field">
-						<label for="languagePriority">Preferred language</label>
-						<select
-							id="languagePriority"
-							name="languagePriority"
-							value={languagePriority}
-							onchange={(event) => {
-								languageJustSaved = false;
-								event.currentTarget.form?.requestSubmit();
-							}}
-						>
-							{#each LANGUAGE_PRIORITY_OPTIONS as option (option.code)}
-								<option value={option.code}>{option.label}</option>
-							{/each}
-						</select>
+						<label for="languagePriorityTrigger">Preferred language</label>
+						<Dropdown
+							id="languagePriorityTrigger"
+							value={selectedLanguage}
+							options={LANGUAGE_PRIORITY_OPTIONS.map((o) => ({ value: o.code, label: o.label }))}
+							ariaLabel="Preferred language"
+							onChange={handleLanguageChange}
+						/>
 					</div>
 					{#if languageJustSaved}
 						<p class="settings-hint settings-hint--success">Saved.</p>
 					{/if}
 				</form>
-
+			{:else if section === 'integrations'}
 				<h3>Google Books API Key</h3>
 				<p class="settings-hint">
 					Optional — widens search results and improves cover art. Get a free key from the <a

@@ -15,7 +15,6 @@ export const load: PageServerLoad = async ({ url }) => {
 	const statusFilter = url.searchParams.get('status') ?? '';
 	const genreFilter = url.searchParams.get('genre') ?? '';
 	const moodFilter = url.searchParams.get('mood') ?? '';
-	const settingFilter = url.searchParams.get('setting') ?? '';
 	const formatFilter = url.searchParams.get('format') ?? '';
 	const favoritesOnly = url.searchParams.get('favorites') === '1';
 
@@ -25,7 +24,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (statusFilter && entry.userBook.status !== statusFilter) return false;
 		if (genreFilter && !entry.tags.genre.includes(genreFilter)) return false;
 		if (moodFilter && !entry.tags.mood.includes(moodFilter)) return false;
-		if (settingFilter && !entry.tags.setting.includes(settingFilter)) return false;
 		if (formatFilter && entry.userBook.format !== formatFilter) return false;
 		if (favoritesOnly && (entry.userBook.rating ?? 0) < 4) return false;
 		return true;
@@ -46,11 +44,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		};
 	}).filter((group) => group.total > 0);
 
-	const [genres, moods, settings] = await Promise.all([
-		getUsedTagNames('genre'),
-		getUsedTagNames('mood'),
-		getUsedTagNames('setting')
-	]);
+	const [genres, moods] = await Promise.all([getUsedTagNames('genre'), getUsedTagNames('mood')]);
 
 	return {
 		groups,
@@ -58,19 +52,11 @@ export const load: PageServerLoad = async ({ url }) => {
 			status: statusFilter,
 			genre: genreFilter,
 			mood: moodFilter,
-			setting: settingFilter,
 			format: formatFilter,
 			favorites: favoritesOnly
 		},
-		filterOptions: { genres, moods, settings },
-		isFiltered: !!(
-			statusFilter ||
-			genreFilter ||
-			moodFilter ||
-			settingFilter ||
-			formatFilter ||
-			favoritesOnly
-		),
+		filterOptions: { genres, moods },
+		isFiltered: !!(statusFilter || genreFilter || moodFilter || formatFilter || favoritesOnly),
 		totalBookCount: allBooks.length
 	};
 };

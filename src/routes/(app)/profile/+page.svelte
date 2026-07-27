@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { viewModeState } from '$lib/client/viewMode.svelte';
+	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ViewToggle from '$lib/components/ViewToggle.svelte';
 	import type { PageData } from './$types';
 
@@ -69,42 +70,35 @@
 
 	<div class="search-toolbar">
 		<div class="profile-library__filters">
-			<select
+			<Dropdown
 				value={data.filters.genre}
-				onchange={(e) => updateFilter('genre', e.currentTarget.value)}
-			>
-				<option value="">All genres</option>
-				{#each data.filterOptions.genres as genre (genre)}
-					<option value={genre}>{genre}</option>
-				{/each}
-			</select>
-			<select
+				options={[
+					{ value: '', label: 'All genres' },
+					...data.filterOptions.genres.map((genre) => ({ value: genre, label: genre }))
+				]}
+				ariaLabel="Filter by genre"
+				onChange={(v) => updateFilter('genre', v)}
+			/>
+			<Dropdown
 				value={data.filters.mood}
-				onchange={(e) => updateFilter('mood', e.currentTarget.value)}
-			>
-				<option value="">All moods</option>
-				{#each data.filterOptions.moods as mood (mood)}
-					<option value={mood}>{mood}</option>
-				{/each}
-			</select>
-			<select
-				value={data.filters.setting}
-				onchange={(e) => updateFilter('setting', e.currentTarget.value)}
-			>
-				<option value="">All settings</option>
-				{#each data.filterOptions.settings as setting (setting)}
-					<option value={setting}>{setting}</option>
-				{/each}
-			</select>
-			<select
+				options={[
+					{ value: '', label: 'All moods' },
+					...data.filterOptions.moods.map((mood) => ({ value: mood, label: mood }))
+				]}
+				ariaLabel="Filter by mood"
+				onChange={(v) => updateFilter('mood', v)}
+			/>
+			<Dropdown
 				value={data.filters.format}
-				onchange={(e) => updateFilter('format', e.currentTarget.value)}
-			>
-				<option value="">All formats</option>
-				<option value="physical">Physical</option>
-				<option value="ebook">Ebook</option>
-				<option value="audiobook">Audiobook</option>
-			</select>
+				options={[
+					{ value: '', label: 'All formats' },
+					{ value: 'physical', label: 'Physical' },
+					{ value: 'ebook', label: 'Ebook' },
+					{ value: 'audiobook', label: 'Audiobook' }
+				]}
+				ariaLabel="Filter by format"
+				onChange={(v) => updateFilter('format', v)}
+			/>
 			<label class="search-toolbar__filter">
 				<input
 					type="checkbox"
