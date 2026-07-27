@@ -30,7 +30,7 @@
 </script>
 
 <svelte:head>
-	<title>Profile — Ajar Books</title>
+	<title>My Library — Ajar Books</title>
 </svelte:head>
 
 <div class="profile-library">

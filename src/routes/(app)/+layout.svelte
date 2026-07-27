@@ -71,7 +71,7 @@
 						href={resolve('/profile')}
 						onclick={() => (accountMenuOpen = false)}
 					>
-						Profile
+						My Library
 					</a>
 					<button
 						type="button"
