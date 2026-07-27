@@ -3,6 +3,7 @@ import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { searchBooks, type BookSearchResult } from '$lib/server/books/search';
 import { addBookToLibrary } from '$lib/server/books/library';
+import { setStatus } from '$lib/server/books/progress';
 import { db } from '$lib/server/db';
 import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
 
@@ -138,5 +139,32 @@ export const actions: Actions = {
 		});
 
 		throw redirect(303, `/books/${bookId}`);
+	},
+
+	// A bookmark icon on each result for mass-adding to Want to Read without
+	// leaving the search page — unlike `add`, doesn't redirect, so the user
+	// can keep bookmarking more results from the same list.
+	addToWantToRead: async ({ request }) => {
+		const data = await request.formData();
+		const title = String(data.get('title') ?? '');
+
+		if (!title) return fail(400, { error: 'Missing title' });
+
+		const pageCountRaw = data.get('pageCount');
+		const publicationYearRaw = data.get('publicationYear');
+
+		const { userBookId } = await addBookToLibrary({
+			title,
+			author: String(data.get('author') ?? '') || null,
+			coverUrl: String(data.get('coverUrl') ?? '') || null,
+			openLibraryId: String(data.get('openLibraryId') ?? '') || null,
+			isbn: String(data.get('isbn') ?? '') || null,
+			description: String(data.get('description') ?? '') || null,
+			pageCount: pageCountRaw ? Number(pageCountRaw) : null,
+			publicationYear: publicationYearRaw ? Number(publicationYearRaw) : null,
+			genres: []
+		});
+
+		await setStatus(userBookId, 'want_to_read');
 	}
 };
