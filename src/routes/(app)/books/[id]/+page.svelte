@@ -23,6 +23,12 @@
 	let logModalOpen = $state(false);
 	let logDialogEl: HTMLDialogElement;
 
+	// Once revealed for this page visit, keeps the Mood/Setting editor open
+	// even if the user removes the tag they just added — reappearing behind
+	// the reveal button mid-edit would be a jarring layout shift.
+	let moodRevealed = $state(false);
+	let settingRevealed = $state(false);
+
 	let noteModalOpen = $state(false);
 	let noteDialogEl: HTMLDialogElement;
 
@@ -189,22 +195,13 @@
 				{#if !isUntouched}
 					<StarRating value={data.userBook.rating} />
 					{#if isRereading}
-						<span class="reread-badge">
-							Re-reading · Last finished {data.userBook.finishedAt?.toLocaleDateString(undefined, {
-								month: 'short',
-								day: 'numeric',
-								year: 'numeric'
-							})}
-						</span>
+						<span class="reread-badge">Re-reading</span>
 					{/if}
 					<form
 						method="POST"
 						action="?/removeBook"
-						use:enhance
-						onsubmit={(event) => {
-							if (!confirm(resetConfirmMessage)) {
-								event.preventDefault();
-							}
+						use:enhance={({ cancel }) => {
+							if (!confirm(resetConfirmMessage)) cancel();
 						}}
 					>
 						<button
@@ -325,16 +322,28 @@
 			</div>
 
 			<div class="book-detail__panel tag-grid">
-				{#if data.book.pageCount || data.book.publicationYear}
+				{#if data.book.pageCount || data.book.publicationYear || isRereading}
 					<p class="book-detail__facts">
 						{#if data.book.pageCount}
 							<span>{data.book.pageCount} pages</span>
 						{/if}
-						{#if data.book.pageCount && data.book.publicationYear}
+						{#if data.book.pageCount && (data.book.publicationYear || isRereading)}
 							<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
 						{/if}
 						{#if data.book.publicationYear}
 							<span>Published {data.book.publicationYear}</span>
+						{/if}
+						{#if data.book.publicationYear && isRereading}
+							<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
+						{/if}
+						{#if isRereading}
+							<span>
+								Last read {data.userBook.finishedAt?.toLocaleDateString(undefined, {
+									month: 'short',
+									day: 'numeric',
+									year: 'numeric'
+								})}
+							</span>
 						{/if}
 					</p>
 				{/if}
@@ -344,6 +353,30 @@
 					tags={data.tagsByType.genre}
 					suggestions={data.suggestionsByType.genre}
 				/>
+				{#if data.tagsByType.mood.length > 0 || moodRevealed}
+					<TagEditor
+						label="Mood"
+						type="mood"
+						tags={data.tagsByType.mood}
+						suggestions={data.suggestionsByType.mood}
+					/>
+				{:else}
+					<button type="button" class="tag-grid__reveal" onclick={() => (moodRevealed = true)}>
+						+ Add mood
+					</button>
+				{/if}
+				{#if data.tagsByType.setting.length > 0 || settingRevealed}
+					<TagEditor
+						label="Setting"
+						type="setting"
+						tags={data.tagsByType.setting}
+						suggestions={data.suggestionsByType.setting}
+					/>
+				{:else}
+					<button type="button" class="tag-grid__reveal" onclick={() => (settingRevealed = true)}>
+						+ Add setting
+					</button>
+				{/if}
 				{#if data.otherBooksByAuthorInLibrary.length > 0}
 					<div class="also-by-author">
 						<h4 class="also-by-author__label">Also by {data.book.author} in your library</h4>
@@ -364,18 +397,6 @@
 						</div>
 					</div>
 				{/if}
-				<TagEditor
-					label="Mood"
-					type="mood"
-					tags={data.tagsByType.mood}
-					suggestions={data.suggestionsByType.mood}
-				/>
-				<TagEditor
-					label="Setting"
-					type="setting"
-					tags={data.tagsByType.setting}
-					suggestions={data.suggestionsByType.setting}
-				/>
 			</div>
 		</div>
 
@@ -418,11 +439,8 @@
 								<form
 									method="POST"
 									action="?/deleteLog"
-									use:enhance
-									onsubmit={(event) => {
-										if (!confirm('Delete this entry? This cannot be undone.')) {
-											event.preventDefault();
-										}
+									use:enhance={({ cancel }) => {
+										if (!confirm('Delete this entry? This cannot be undone.')) cancel();
 									}}
 								>
 									<input type="hidden" name="logId" value={log.id} />

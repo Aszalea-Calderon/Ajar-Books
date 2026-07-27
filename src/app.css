@@ -1596,10 +1596,10 @@ button {
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	width: 1.75rem;
-	height: 1.75rem;
-	background: none;
-	border: none;
+	width: 2.25rem;
+	height: 2.25rem;
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
 	color: var(--color-text-muted);
 	padding: 0;
@@ -1607,8 +1607,8 @@ button {
 }
 
 .manage-tags__delete:hover {
-	background: var(--color-surface-raised);
 	color: var(--color-danger);
+	border-color: var(--color-danger);
 }
 
 .accent-picker {
@@ -1646,6 +1646,22 @@ button {
 	font-weight: 600;
 	font-size: var(--font-size-sm);
 	text-decoration: none;
+}
+
+.tag-grid__reveal {
+	display: block;
+	margin-bottom: var(--space-4);
+	background: none;
+	border: none;
+	padding: 0;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.tag-grid__reveal:hover {
+	color: var(--color-text);
 }
 
 /* Tag editor */

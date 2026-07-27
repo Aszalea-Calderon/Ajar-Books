@@ -21,10 +21,11 @@
 	// resets progress (same confirm-gated action as the dedicated reset
 	// button) rather than doing nothing — Want to Read has its own lighter
 	// untoggle instead, since there's no progress/format/rating to lose yet.
-	function confirmReset(event: SubmitEvent) {
-		if (!confirm(resetConfirmMessage)) {
-			event.preventDefault();
-		}
+	// Cancelling via enhance's own `cancel()` — not `onsubmit` + preventDefault,
+	// which doesn't stop enhance's own fetch-based submission once it's
+	// already begun (confirmed live: cancelling the confirm() still deleted).
+	function confirmReset({ cancel }: { cancel: () => void }) {
+		if (!confirm(resetConfirmMessage)) cancel();
 	}
 </script>
 
@@ -43,7 +44,7 @@
 	{/if}
 
 	{#if status === 'reading'}
-		<form method="POST" action="?/removeBook" use:enhance onsubmit={confirmReset}>
+		<form method="POST" action="?/removeBook" use:enhance={confirmReset}>
 			<button type="submit" class="status-control__pill status-control__pill--active">
 				Currently Reading
 			</button>
@@ -55,7 +56,7 @@
 	{/if}
 
 	{#if status === 'finished'}
-		<form method="POST" action="?/removeBook" use:enhance onsubmit={confirmReset}>
+		<form method="POST" action="?/removeBook" use:enhance={confirmReset}>
 			<button type="submit" class="status-control__pill status-control__pill--active">
 				Finished
 			</button>
@@ -65,7 +66,7 @@
 	{/if}
 
 	{#if status === 'dnf'}
-		<form method="POST" action="?/removeBook" use:enhance onsubmit={confirmReset}>
+		<form method="POST" action="?/removeBook" use:enhance={confirmReset}>
 			<button type="submit" class="status-control__pill status-control__pill--active">
 				Did Not Finish
 			</button>

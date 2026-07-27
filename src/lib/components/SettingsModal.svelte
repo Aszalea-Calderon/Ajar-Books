@@ -274,11 +274,8 @@
 									<form
 										method="POST"
 										action="/profile?/deleteTag"
-										use:enhance
-										onsubmit={(event) => {
-											if (!confirm(deleteTagConfirmMessage(tag))) {
-												event.preventDefault();
-											}
+										use:enhance={({ cancel }) => {
+											if (!confirm(deleteTagConfirmMessage(tag))) cancel();
 										}}
 									>
 										<input type="hidden" name="tagId" value={tag.id} />
