@@ -59,6 +59,10 @@ export const userBooks = sqliteTable('user_books', {
 	// genuine transition into 'finished', so a reread's full history isn't
 	// lost the way a single timestamp would lose it.
 	timesFinished: integer('times_finished').notNull().default(0),
+	// A deliberate manual choice, not a rating threshold — most naturally set
+	// from the "Finished" flow, but can be toggled later from the book detail
+	// page for books finished before this existed.
+	isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

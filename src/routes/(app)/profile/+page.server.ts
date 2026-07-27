@@ -1,22 +1,46 @@
 import type { Actions, PageServerLoad } from './$types';
 import { updateSettings } from '$lib/server/settings';
 import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
-import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
+import { getLibraryBooks, getUsedTagNames, type LibraryBook } from '$lib/server/books/library';
 import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
+const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
+	reading: 'Currently Reading',
+	want_to_read: 'Want to Read',
+	finished: 'Finished',
+	dnf: 'Did Not Finish'
+};
 
-// Each status group loads this many cards initially, with a "Load more"
-// button to reveal the next batch — keeps the rendered page bounded once a
-// library (or a single status within it) grows well past a screenful.
-const PAGE_SIZE = 24;
+// A book with no genre tags falls into this catch-all bucket rather than
+// being silently dropped from its status section — sorted last, after every
+// real genre.
+const NO_GENRE_BUCKET = 'More to explore';
+
+function groupByGenre(entries: LibraryBook[]) {
+	const groups = new Map<string, LibraryBook[]>();
+	for (const entry of entries) {
+		const genres = entry.tags.genre.length > 0 ? entry.tags.genre : [NO_GENRE_BUCKET];
+		for (const genre of genres) {
+			const list = groups.get(genre) ?? [];
+			list.push(entry);
+			groups.set(genre, list);
+		}
+	}
+	return [...groups.entries()]
+		.map(([genre, books]) => ({ genre, books }))
+		.sort((a, b) => {
+			if (a.genre === NO_GENRE_BUCKET) return 1;
+			if (b.genre === NO_GENRE_BUCKET) return -1;
+			return a.genre.localeCompare(b.genre);
+		});
+}
 
 export const load: PageServerLoad = async ({ url }) => {
 	const statusFilter = url.searchParams.get('status') ?? '';
 	const genreFilter = url.searchParams.get('genre') ?? '';
 	const moodFilter = url.searchParams.get('mood') ?? '';
 	const formatFilter = url.searchParams.get('format') ?? '';
-	const favoritesOnly = url.searchParams.get('favorites') === '1';
 
 	const allBooks = await getLibraryBooks();
 
@@ -25,38 +49,42 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (genreFilter && !entry.tags.genre.includes(genreFilter)) return false;
 		if (moodFilter && !entry.tags.mood.includes(moodFilter)) return false;
 		if (formatFilter && entry.userBook.format !== formatFilter) return false;
-		if (favoritesOnly && (entry.userBook.rating ?? 0) < 4) return false;
 		return true;
 	});
 
-	const groups = STATUS_ORDER.map((status) => {
-		const statusBooks = filtered.filter((entry) => entry.userBook.status === status);
-		const requestedTake = Number(url.searchParams.get(`${status}Take`));
-		const take =
-			Number.isFinite(requestedTake) && requestedTake > PAGE_SIZE ? requestedTake : PAGE_SIZE;
+	const favoriteEntries = filtered.filter((entry) => entry.userBook.isFavorite);
 
-		return {
+	// Favorites is a cross-status shelf, not a status of its own — a
+	// favorited finished book still shows up in Finished too, further down.
+	const sections = [
+		...(favoriteEntries.length > 0
+			? [
+					{
+						status: 'favorites' as const,
+						label: 'Favorites',
+						groups: groupByGenre(favoriteEntries)
+					}
+				]
+			: []),
+		...STATUS_ORDER.map((status) => ({
 			status,
-			books: statusBooks.slice(0, take),
-			total: statusBooks.length,
-			take,
-			hasMore: statusBooks.length > take
-		};
-	}).filter((group) => group.total > 0);
+			label: STATUS_LABELS[status],
+			groups: groupByGenre(filtered.filter((entry) => entry.userBook.status === status))
+		})).filter((section) => section.groups.length > 0)
+	];
 
 	const [genres, moods] = await Promise.all([getUsedTagNames('genre'), getUsedTagNames('mood')]);
 
 	return {
-		groups,
+		sections,
 		filters: {
 			status: statusFilter,
 			genre: genreFilter,
 			mood: moodFilter,
-			format: formatFilter,
-			favorites: favoritesOnly
+			format: formatFilter
 		},
 		filterOptions: { genres, moods },
-		isFiltered: !!(statusFilter || genreFilter || moodFilter || formatFilter || favoritesOnly),
+		isFiltered: !!(statusFilter || genreFilter || moodFilter || formatFilter),
 		totalBookCount: allBooks.length
 	};
 };

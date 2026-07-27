@@ -62,6 +62,7 @@
 	let finishedDialogEl: HTMLDialogElement;
 	let finishedRating = $state(0);
 	let finishedDate = $state('');
+	let finishedFavorite = $state(false);
 	let lastSeenStatus = $state<typeof data.userBook.status | null>(null);
 
 	$effect(() => {
@@ -71,6 +72,7 @@
 			finishedDate = data.userBook.finishedAt
 				? toLocalDateInputValue(data.userBook.finishedAt)
 				: todayLocalDateString();
+			finishedFavorite = data.userBook.isFavorite;
 			finishedModalOpen = true;
 		}
 		lastSeenStatus = current;
@@ -198,6 +200,7 @@
 						finishedDate = data.userBook.finishedAt
 							? toLocalDateInputValue(data.userBook.finishedAt)
 							: todayLocalDateString();
+						finishedFavorite = data.userBook.isFavorite;
 						finishedModalOpen = true;
 					}}
 				/>
@@ -211,6 +214,19 @@
 								</span>
 							{/if}
 						{/await}
+					{/if}
+					{#if data.userBook.finishedAt}
+						<form method="POST" action="?/toggleFavorite" use:enhance>
+							<button
+								type="submit"
+								class="book-detail__favorite-toggle"
+								class:book-detail__favorite-toggle--active={data.userBook.isFavorite}
+								aria-label={data.userBook.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+								title={data.userBook.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+							>
+								★
+							</button>
+						</form>
 					{/if}
 					{#if isRereading}
 						<span class="reread-badge">Re-reading</span>
@@ -732,6 +748,10 @@
 				<label for="finishedNoteInput">Any closing thoughts? (optional)</label>
 				<input id="finishedNoteInput" name="note" type="text" />
 			</div>
+			<label class="finished-favorite">
+				<input type="checkbox" name="isFavorite" bind:checked={finishedFavorite} />
+				★ Add to Favorites
+			</label>
 			<button class="auth-submit" type="submit">Save</button>
 		</form>
 	</div>

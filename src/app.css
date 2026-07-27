@@ -1017,16 +1017,57 @@ button {
 	font-weight: 600;
 }
 
-.profile-library__groups {
+.profile-library__sections {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-6);
+	gap: var(--space-8);
 }
 
-.profile-library__group {
+.profile-library__section {
 	display: flex;
 	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.profile-library__section-heading {
+	margin: 0;
+	font-size: var(--font-size-lg);
+}
+
+.profile-library__section--favorites .profile-library__section-heading {
+	color: #f5b942;
+}
+
+.profile-library__section--dnf .profile-library__section-heading {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-base);
+}
+
+.profile-library__genre-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.profile-library__row {
+	display: flex;
+	flex-wrap: nowrap;
+	overflow-x: auto;
 	gap: var(--space-3);
+	padding-bottom: var(--space-2);
+}
+
+.profile-library__row .search-result {
+	flex-shrink: 0;
+	width: 18rem;
+}
+
+.profile-library__row--cards .search-result {
+	flex-direction: column;
+	align-items: stretch;
+	text-align: center;
+	gap: var(--space-2);
+	width: 9rem;
 }
 
 .profile-library__load-more {
@@ -1105,6 +1146,41 @@ button {
 .book-detail__reset-trigger:hover {
 	color: var(--color-text);
 	border-color: var(--color-text-muted);
+}
+
+.book-detail__favorite-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0;
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-lg);
+	line-height: 1;
+	cursor: pointer;
+}
+
+.book-detail__favorite-toggle:hover {
+	color: var(--color-text);
+	border-color: var(--color-text-muted);
+}
+
+.book-detail__favorite-toggle--active {
+	color: #f5b942;
+	border-color: #f5b942;
+}
+
+.finished-favorite {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-bottom: var(--space-4);
+	font-size: var(--font-size-sm);
+	cursor: pointer;
 }
 
 .book-detail__cover {

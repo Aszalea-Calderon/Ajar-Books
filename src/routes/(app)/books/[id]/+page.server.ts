@@ -390,6 +390,18 @@ export const actions: Actions = {
 		await untoggleWantToRead(result.userBook.id);
 	},
 
+	// Retroactive toggle for books finished before Favorites existed, or for
+	// changing your mind later without reopening the whole Finished flow.
+	toggleFavorite: async ({ params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		await db
+			.update(userBooks)
+			.set({ isFavorite: !result.userBook.isFavorite })
+			.where(eq(userBooks.id, result.userBook.id));
+	},
+
 	// Manual fallback for when neither Open Library nor Google Books has a
 	// page count — also unblocks page-based progress tracking for this book,
 	// since "Start Reading" has nothing else to prefill its total from.
@@ -463,6 +475,7 @@ export const actions: Actions = {
 		const ratingRaw = data.get('rating');
 		const finishedAtRaw = String(data.get('finishedAt') ?? '');
 		const note = String(data.get('note') ?? '').trim();
+		const isFavorite = data.get('isFavorite') === 'on';
 
 		const rating = ratingRaw ? Number(ratingRaw) : null;
 		const finishedAt = parseLocalDateInput(finishedAtRaw) ?? new Date();
@@ -480,6 +493,7 @@ export const actions: Actions = {
 				status: 'finished',
 				rating: rating != null && Number.isFinite(rating) ? rating : null,
 				finishedAt,
+				isFavorite,
 				...(alreadyFinished ? {} : { timesFinished: sql`${userBooks.timesFinished} + 1` })
 			})
 			.where(eq(userBooks.id, result.userBook.id));
