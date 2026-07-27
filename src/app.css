@@ -1271,6 +1271,22 @@ button {
 	opacity: 0.6;
 }
 
+.book-detail__facts .tag-grid__reveal {
+	display: inline;
+	margin-bottom: 0;
+	font-size: inherit;
+}
+
+.book-detail__page-count-form input {
+	width: 6rem;
+	padding: var(--space-1) var(--space-2);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text);
+	font-size: var(--font-size-sm);
+}
+
 .activity-log__footer {
 	display: flex;
 	align-items: center;

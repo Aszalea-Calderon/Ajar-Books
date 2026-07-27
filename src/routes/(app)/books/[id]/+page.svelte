@@ -30,6 +30,7 @@
 	// the reveal button mid-edit would be a jarring layout shift.
 	let moodRevealed = $state(false);
 	let settingRevealed = $state(false);
+	let pageCountRevealed = $state(false);
 
 	let noteModalOpen = $state(false);
 	let noteDialogEl: HTMLDialogElement;
@@ -385,31 +386,54 @@
 			</div>
 
 			<div class="book-detail__panel tag-grid">
-				{#if data.book.pageCount || data.book.publicationYear || isRereading}
-					<p class="book-detail__facts">
-						{#if data.book.pageCount}
-							<span>{data.book.pageCount} pages</span>
-						{/if}
-						{#if data.book.pageCount && (data.book.publicationYear || isRereading)}
-							<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
-						{/if}
-						{#if data.book.publicationYear}
-							<span>Published {data.book.publicationYear}</span>
-						{/if}
-						{#if data.book.publicationYear && isRereading}
-							<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
-						{/if}
-						{#if isRereading}
-							<span>
-								Last read {data.userBook.finishedAt?.toLocaleDateString(undefined, {
-									month: 'short',
-									day: 'numeric',
-									year: 'numeric'
-								})}
-							</span>
-						{/if}
-					</p>
-				{/if}
+				<div class="book-detail__facts">
+					{#if data.book.pageCount}
+						<span>{data.book.pageCount} pages</span>
+					{:else if pageCountRevealed}
+						<form
+							method="POST"
+							action="?/setPageCount"
+							use:enhance
+							class="book-detail__page-count-form"
+						>
+							<input
+								type="number"
+								name="pageCount"
+								min="1"
+								placeholder="Page count"
+								onblur={(event) => {
+									if (!event.currentTarget.value) pageCountRevealed = false;
+								}}
+							/>
+						</form>
+					{:else}
+						<button
+							type="button"
+							class="tag-grid__reveal"
+							onclick={() => (pageCountRevealed = true)}
+						>
+							+ Add page count
+						</button>
+					{/if}
+					{#if data.book.pageCount && (data.book.publicationYear || isRereading)}
+						<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
+					{/if}
+					{#if data.book.publicationYear}
+						<span>Published {data.book.publicationYear}</span>
+					{/if}
+					{#if data.book.publicationYear && isRereading}
+						<span class="book-detail__facts-divider" aria-hidden="true">&bull;</span>
+					{/if}
+					{#if isRereading}
+						<span>
+							Last read {data.userBook.finishedAt?.toLocaleDateString(undefined, {
+								month: 'short',
+								day: 'numeric',
+								year: 'numeric'
+							})}
+						</span>
+					{/if}
+				</div>
 				<TagEditor
 					label="Genre"
 					type="genre"

@@ -390,6 +390,22 @@ export const actions: Actions = {
 		await untoggleWantToRead(result.userBook.id);
 	},
 
+	// Manual fallback for when neither Open Library nor Google Books has a
+	// page count — also unblocks page-based progress tracking for this book,
+	// since "Start Reading" has nothing else to prefill its total from.
+	setPageCount: async ({ request, params }) => {
+		const result = await loadBookAndUserBook(params.id);
+		if (!result) error(404, 'Book not found');
+
+		const data = await request.formData();
+		const pageCount = Number(data.get('pageCount'));
+		if (!Number.isFinite(pageCount) || pageCount <= 0) {
+			return fail(400, { error: 'Enter a valid page count' });
+		}
+
+		await db.update(books).set({ pageCount }).where(eq(books.id, result.book.id));
+	},
+
 	removeBook: async ({ params }) => {
 		const result = await loadBookAndUserBook(params.id);
 		if (!result) error(404, 'Book not found');
