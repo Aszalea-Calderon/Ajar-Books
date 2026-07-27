@@ -353,6 +353,26 @@
 						{/await}
 					</div>
 				{/if}
+				{#if data.relatedBooks.length > 0}
+					<div class="related-books">
+						<h4 class="related-books__label">Related books in your library</h4>
+						<div class="related-books__list">
+							{#each data.relatedBooks as book (book.id)}
+								<a
+									class="related-books__book"
+									href={resolve('/(app)/books/[id]', { id: book.id })}
+									title={book.title}
+								>
+									{#if book.coverUrl}
+										<img class="related-books__cover" src={book.coverUrl} alt="" />
+									{:else}
+										<div class="related-books__cover related-books__cover--placeholder"></div>
+									{/if}
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			</div>
 
 			<div class="book-detail__panel tag-grid">

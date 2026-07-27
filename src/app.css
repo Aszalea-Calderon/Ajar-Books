@@ -1291,6 +1291,36 @@ button {
 	background: var(--color-surface-raised);
 }
 
+.related-books {
+	margin-top: var(--space-4);
+}
+
+.related-books__label {
+	margin: 0 0 var(--space-2);
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.related-books__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+}
+
+.related-books__cover {
+	width: 4.5rem;
+	height: 6.75rem;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+	display: block;
+}
+
+.related-books__cover--placeholder {
+	background: var(--color-surface-raised);
+}
+
 /* Progress bar */
 .progress-bar {
 	margin-bottom: var(--space-4);

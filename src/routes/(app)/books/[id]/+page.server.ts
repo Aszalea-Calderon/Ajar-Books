@@ -1,9 +1,9 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { and, desc, eq, ne, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { parseLocalDateInput } from '$lib/date';
 import { db } from '$lib/server/db';
-import { books, readingLogs, userBooks } from '$lib/server/db/schema';
+import { books, userBookTags, userBooks, readingLogs } from '$lib/server/db/schema';
 import {
 	deleteLog,
 	editProgress,
@@ -26,6 +26,36 @@ import {
 
 const TAG_TYPES: TagType[] = ['genre', 'mood', 'setting'];
 const MORE_BY_AUTHOR_LIMIT = 8;
+const RELATED_BOOKS_LIMIT = 8;
+
+/**
+ * Other books in the user's own library that share at least one genre tag
+ * with this one — genre/theme-based, distinct from the author-based "More
+ * by author" and "Also by author" sections. Purely a local lookup (no
+ * network call), ranked by how many genre tags two books have in common.
+ */
+async function getRelatedBooksInLibrary(genreTagIds: string[], currentBookId: string) {
+	if (genreTagIds.length === 0) return [];
+
+	const rows = await db
+		.select({ book: books })
+		.from(userBookTags)
+		.innerJoin(userBooks, eq(userBookTags.userBookId, userBooks.id))
+		.innerJoin(books, eq(userBooks.bookId, books.id))
+		.where(and(inArray(userBookTags.tagId, genreTagIds), ne(books.id, currentBookId)));
+
+	const countByBookId = new Map<string, { book: (typeof rows)[number]['book']; count: number }>();
+	for (const row of rows) {
+		const existing = countByBookId.get(row.book.id);
+		if (existing) existing.count += 1;
+		else countByBookId.set(row.book.id, { book: row.book, count: 1 });
+	}
+
+	return [...countByBookId.values()]
+		.sort((a, b) => b.count - a.count)
+		.slice(0, RELATED_BOOKS_LIMIT)
+		.map((entry) => entry.book);
+}
 
 /**
  * A handful of other books by the same author for the "More by [author]"
@@ -157,6 +187,10 @@ export const load: PageServerLoad = async ({ params }) => {
 	const otherBooksByAuthorInLibrary = book.author
 		? await getOtherBooksByAuthorInLibrary(book.author, book.id)
 		: [];
+	const relatedBooks = await getRelatedBooksInLibrary(
+		tagsByType.genre.map((tag) => tag.id),
+		book.id
+	);
 
 	return {
 		book,
@@ -166,7 +200,8 @@ export const load: PageServerLoad = async ({ params }) => {
 		tagsByType,
 		suggestionsByType,
 		moreByAuthor,
-		otherBooksByAuthorInLibrary
+		otherBooksByAuthorInLibrary,
+		relatedBooks
 	};
 };
 
