@@ -294,19 +294,53 @@
 							{:else}
 								<div class="more-by-author__list">
 									{#each preview as book (book.title)}
-										<a
-											class="more-by-author__book"
-											href={book.libraryBookId
-												? resolve('/(app)/books/[id]', { id: book.libraryBookId })
-												: resolve(`/search?q=${encodeURIComponent(book.title)}`)}
-											title={book.title}
-										>
-											{#if book.coverUrl}
-												<img class="more-by-author__cover" src={book.coverUrl} alt="" />
-											{:else}
-												<div class="more-by-author__cover more-by-author__cover--placeholder"></div>
-											{/if}
-										</a>
+										{#if book.libraryBookId}
+											<a
+												class="more-by-author__book"
+												href={resolve('/(app)/books/[id]', { id: book.libraryBookId })}
+												title={book.title}
+											>
+												{#if book.coverUrl}
+													<img class="more-by-author__cover" src={book.coverUrl} alt="" />
+												{:else}
+													<div
+														class="more-by-author__cover more-by-author__cover--placeholder"
+													></div>
+												{/if}
+											</a>
+										{:else}
+											<form method="POST" action="?/addFromAuthor" use:enhance>
+												<input type="hidden" name="title" value={book.result.title} />
+												<input type="hidden" name="author" value={book.result.author ?? ''} />
+												<input type="hidden" name="coverUrl" value={book.result.coverUrl ?? ''} />
+												<input
+													type="hidden"
+													name="openLibraryId"
+													value={book.result.openLibraryId ?? ''}
+												/>
+												<input type="hidden" name="isbn" value={book.result.isbn ?? ''} />
+												<input
+													type="hidden"
+													name="description"
+													value={book.result.description ?? ''}
+												/>
+												<input type="hidden" name="pageCount" value={book.result.pageCount ?? ''} />
+												<input
+													type="hidden"
+													name="publicationYear"
+													value={book.result.publicationYear ?? ''}
+												/>
+												<button type="submit" class="more-by-author__book" title="Add {book.title}">
+													{#if book.coverUrl}
+														<img class="more-by-author__cover" src={book.coverUrl} alt="" />
+													{:else}
+														<div
+															class="more-by-author__cover more-by-author__cover--placeholder"
+														></div>
+													{/if}
+												</button>
+											</form>
+										{/if}
 									{/each}
 									<a
 										class="more-by-author__view-more"

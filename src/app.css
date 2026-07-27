@@ -1215,6 +1215,11 @@ button {
 
 .more-by-author__book {
 	flex-shrink: 0;
+	display: block;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
 }
 
 .more-by-author__cover {

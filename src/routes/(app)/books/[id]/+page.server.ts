@@ -14,7 +14,8 @@ import {
 	untoggleWantToRead,
 	type BookStatus
 } from '$lib/server/books/progress';
-import { searchBooks } from '$lib/server/books/search';
+import { searchBooks, type BookSearchResult } from '$lib/server/books/search';
+import { addBookToLibrary } from '$lib/server/books/library';
 import {
 	addTag,
 	getSuggestedTagNames,
@@ -64,6 +65,10 @@ async function getMoreByAuthor(author: string, currentBookId: string) {
 		title: string;
 		coverUrl: string | null;
 		libraryBookId: string | null;
+		// Carried along so clicking a not-yet-added cover can add it directly
+		// (same one-click behavior as a Search result card) instead of only
+		// being able to fall back to a text search for it.
+		result: BookSearchResult;
 	}[] = [];
 
 	for (const result of others) {
@@ -83,7 +88,8 @@ async function getMoreByAuthor(author: string, currentBookId: string) {
 		preview.push({
 			title: result.title,
 			coverUrl: result.coverUrl,
-			libraryBookId: match?.id ?? null
+			libraryBookId: match?.id ?? null,
+			result
 		});
 
 		if (preview.length >= MORE_BY_AUTHOR_LIMIT) break;
@@ -336,6 +342,31 @@ export const actions: Actions = {
 		if (!result) error(404, 'Book not found');
 
 		await resetUserBook(result.userBook.id);
+	},
+
+	// Adds a "More by author" preview book directly, same one-click behavior
+	// as a Search result card, instead of only linking out to a text search.
+	addFromAuthor: async ({ request }) => {
+		const data = await request.formData();
+		const title = String(data.get('title') ?? '');
+		if (!title) return fail(400, { error: 'Missing title' });
+
+		const pageCountRaw = data.get('pageCount');
+		const publicationYearRaw = data.get('publicationYear');
+
+		const { bookId } = await addBookToLibrary({
+			title,
+			author: String(data.get('author') ?? '') || null,
+			coverUrl: String(data.get('coverUrl') ?? '') || null,
+			openLibraryId: String(data.get('openLibraryId') ?? '') || null,
+			isbn: String(data.get('isbn') ?? '') || null,
+			description: String(data.get('description') ?? '') || null,
+			pageCount: pageCountRaw ? Number(pageCountRaw) : null,
+			publicationYear: publicationYearRaw ? Number(publicationYearRaw) : null,
+			genres: []
+		});
+
+		throw redirect(303, `/books/${bookId}`);
 	},
 
 	setRating: async ({ request, params }) => {
