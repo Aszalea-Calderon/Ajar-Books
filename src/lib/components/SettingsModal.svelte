@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { trapFocus } from '$lib/trapFocus';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
@@ -67,6 +68,7 @@
 	class="settings-modal"
 	onclose={() => (open = false)}
 	onclick={closeOnBackdropClick}
+	use:trapFocus
 >
 	<div class="settings-modal__header">
 		<h2>Settings</h2>

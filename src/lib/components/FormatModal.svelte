@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { todayLocalDateString } from '$lib/date';
+	import { trapFocus } from '$lib/trapFocus';
 
 	let {
 		open,
@@ -79,7 +80,13 @@
 	let audiobookTotalMinutes = $derived(audiobookHours * 60 + audiobookMinutes);
 </script>
 
-<dialog bind:this={dialogEl} class="settings-modal" onclose={onClose} onclick={closeOnBackdrop}>
+<dialog
+	bind:this={dialogEl}
+	class="settings-modal"
+	onclose={onClose}
+	onclick={closeOnBackdrop}
+	use:trapFocus
+>
 	<div class="settings-modal__header">
 		<h2>{heading}</h2>
 		<button type="button" class="settings-modal__close" aria-label="Close" onclick={onClose}>

@@ -9,6 +9,7 @@
 
 	let initial = $derived(data.user?.username.charAt(0).toUpperCase() ?? '?');
 	let accountMenuOpen = $state(false);
+	let accountButton = $state<HTMLButtonElement>();
 	let settingsOpen = $state(false);
 
 	const navLinks = [
@@ -39,17 +40,34 @@
 
 		<div class="app-nav__account" use:clickOutside={() => (accountMenuOpen = false)}>
 			<button
+				bind:this={accountButton}
 				type="button"
 				class="app-nav__avatar"
 				title={data.user?.username}
+				aria-haspopup="true"
+				aria-expanded={accountMenuOpen}
 				onclick={() => (accountMenuOpen = !accountMenuOpen)}
+				onkeydown={(event) => {
+					if (event.key !== 'Escape') return;
+					accountMenuOpen = false;
+				}}
 			>
 				{initial}
 			</button>
 			{#if accountMenuOpen}
-				<div class="app-nav__account-menu">
+				<div
+					class="app-nav__account-menu"
+					role="menu"
+					tabindex="-1"
+					onkeydown={(event) => {
+						if (event.key !== 'Escape') return;
+						accountMenuOpen = false;
+						accountButton?.focus();
+					}}
+				>
 					<a
 						class="app-nav__account-option"
+						role="menuitem"
 						href={resolve('/profile')}
 						onclick={() => (accountMenuOpen = false)}
 					>
@@ -58,6 +76,7 @@
 					<button
 						type="button"
 						class="app-nav__account-option"
+						role="menuitem"
 						onclick={() => {
 							settingsOpen = true;
 							accountMenuOpen = false;
@@ -66,7 +85,11 @@
 						Settings
 					</button>
 					<form method="POST" action="/logout">
-						<button class="app-nav__account-option app-nav__account-option--danger" type="submit">
+						<button
+							class="app-nav__account-option app-nav__account-option--danger"
+							role="menuitem"
+							type="submit"
+						>
 							Log out
 						</button>
 					</form>

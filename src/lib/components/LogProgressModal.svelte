@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { trapFocus } from '$lib/trapFocus';
 
 	let {
 		open,
@@ -50,7 +51,13 @@
 	});
 </script>
 
-<dialog bind:this={dialogEl} class="settings-modal" onclose={onClose} onclick={closeOnBackdrop}>
+<dialog
+	bind:this={dialogEl}
+	class="settings-modal"
+	onclose={onClose}
+	onclick={closeOnBackdrop}
+	use:trapFocus
+>
 	<div class="settings-modal__header">
 		<h2>{heading}</h2>
 		<button type="button" class="settings-modal__close" aria-label="Close" onclick={onClose}>

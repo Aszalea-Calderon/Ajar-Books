@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
+	import { trapFocus } from '$lib/trapFocus';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import LogProgressModal from '$lib/components/LogProgressModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
@@ -565,6 +566,7 @@
 	class="settings-modal"
 	onclose={() => (editingLog = null)}
 	onclick={closeEditModalOnBackdrop}
+	use:trapFocus
 >
 	<div class="settings-modal__header">
 		<h2>Edit entry</h2>
@@ -630,6 +632,7 @@
 	class="settings-modal"
 	onclose={() => (finishedModalOpen = false)}
 	onclick={closeFinishedModalOnBackdrop}
+	use:trapFocus
 >
 	<div class="settings-modal__header">
 		<h2>Nice, you finished it!</h2>
@@ -698,6 +701,7 @@
 	class="settings-modal"
 	onclose={() => (noteModalOpen = false)}
 	onclick={closeNoteModalOnBackdrop}
+	use:trapFocus
 >
 	<div class="settings-modal__header">
 		<h2>Add a note</h2>
