@@ -241,5 +241,28 @@
 				</div>
 			{/each}
 		</div>
+	{:else if data.starterRecommendations.length > 0}
+		<div class="search-recommendations">
+			<h3 class="search-recommendations__heading">Not sure where to start? A few ideas:</h3>
+			{#each data.starterRecommendations as group (group.genre)}
+				<div class="search-recommendations__group">
+					<h4 class="search-recommendations__genre">{group.genre}</h4>
+					<div class="search-results search-results--cards">
+						{#each group.books as book (book.title)}
+							<a
+								class="search-result"
+								href={resolve(`/search?q=${encodeURIComponent(`${book.title} ${book.author}`)}`)}
+							>
+								<div class="search-result__cover search-result__cover--placeholder"></div>
+								<div class="search-result__info">
+									<p class="search-result__title">{book.title}</p>
+									<p class="search-result__author">{book.author}</p>
+								</div>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
 	{/if}
 </div>

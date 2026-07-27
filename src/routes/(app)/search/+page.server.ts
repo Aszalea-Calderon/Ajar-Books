@@ -80,21 +80,97 @@ async function getWantToReadByGenre() {
 		.sort((a, b) => a.genre.localeCompare(b.genre));
 }
 
+// Shown only to a genuinely first-time user (empty library, not just an
+// empty Want to Read list — see hasAnyBooks below) in place of a blank
+// pre-search page. Deliberately just title/author, not full search results —
+// no cover art or Open Library id is fabricated; clicking one runs a real
+// search for it, going through the same verified add/bookmark flow as any
+// other result.
+const STARTER_RECOMMENDATIONS: { genre: string; books: { title: string; author: string }[] }[] = [
+	{
+		genre: 'Fantasy',
+		books: [
+			{ title: 'The Hobbit', author: 'J.R.R. Tolkien' },
+			{ title: 'A Wizard of Earthsea', author: 'Ursula K. Le Guin' },
+			{ title: 'Mistborn: The Final Empire', author: 'Brandon Sanderson' }
+		]
+	},
+	{
+		genre: 'Mystery',
+		books: [
+			{ title: 'And Then There Were None', author: 'Agatha Christie' },
+			{ title: 'The Big Sleep', author: 'Raymond Chandler' },
+			{ title: 'Gone Girl', author: 'Gillian Flynn' }
+		]
+	},
+	{
+		genre: 'Romance',
+		books: [
+			{ title: 'Pride and Prejudice', author: 'Jane Austen' },
+			{ title: 'The Hating Game', author: 'Sally Thorne' },
+			{ title: 'Outlander', author: 'Diana Gabaldon' }
+		]
+	},
+	{
+		genre: 'Science Fiction',
+		books: [
+			{ title: 'Dune', author: 'Frank Herbert' },
+			{ title: 'The Martian', author: 'Andy Weir' },
+			{ title: "Ender's Game", author: 'Orson Scott Card' }
+		]
+	},
+	{
+		genre: 'Classics',
+		books: [
+			{ title: 'To Kill a Mockingbird', author: 'Harper Lee' },
+			{ title: '1984', author: 'George Orwell' },
+			{ title: 'Jane Eyre', author: 'Charlotte Brontë' }
+		]
+	}
+];
+
+async function hasAnyBooks() {
+	const [row] = await db.select({ id: books.id }).from(books).limit(1);
+	return !!row;
+}
+
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q')?.trim() ?? '';
 	if (!query) {
-		return { query, results: [], hasMore: false, wantToReadByGenre: await getWantToReadByGenre() };
+		const wantToReadByGenre = await getWantToReadByGenre();
+		const starterRecommendations =
+			wantToReadByGenre.length === 0 && !(await hasAnyBooks()) ? STARTER_RECOMMENDATIONS : [];
+		return {
+			query,
+			results: [],
+			hasMore: false,
+			wantToReadByGenre,
+			starterRecommendations
+		};
 	}
 
 	try {
 		const { results, hasMore } = await searchBooks(query);
 		const resultsWithLibraryId = await attachLibraryIds(results);
-		return { query, results: resultsWithLibraryId, hasMore, wantToReadByGenre: [] };
+		return {
+			query,
+			results: resultsWithLibraryId,
+			hasMore,
+			wantToReadByGenre: [],
+			starterRecommendations: []
+		};
 	} catch {
 		// Open Library/Google Books are third-party services outside our
 		// control — a timeout or outage there shouldn't crash the whole page,
 		// just report the search as failed so the user can retry.
-		return { query, results: [], hasMore: false, wantToReadByGenre: [], searchFailed: true };
+		return {
+			query,
+			results: [],
+			hasMore: false,
+			wantToReadByGenre: [],
+			starterRecommendations: [],
+			searchFailed: true
+		};
 	}
 };
 
