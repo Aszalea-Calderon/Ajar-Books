@@ -40,7 +40,10 @@ type OpenLibraryDoc = {
 
 type OpenLibraryResponse = {
 	docs: OpenLibraryDoc[];
+	numFound?: number;
 };
+
+const RESULTS_PER_PAGE = 20;
 
 // Open Library's search index uses MARC/ISO 639-2 (bibliographic) three-letter
 // codes, but the rest of the app (Settings UI, Google Books' `volumeInfo`)
@@ -58,20 +61,24 @@ const OPEN_LIBRARY_LANGUAGE_CODES: Record<string, string> = {
 	ru: 'rus'
 };
 
+type PagedSearchResult = { results: BookSearchResult[]; hasMore: boolean };
+
 async function searchOpenLibrary(
 	query: string,
-	languagePriority: string
-): Promise<BookSearchResult[]> {
+	languagePriority: string,
+	page: number
+): Promise<PagedSearchResult> {
 	const url = new URL('https://openlibrary.org/search.json');
 	url.searchParams.set('q', query);
-	url.searchParams.set('limit', '20');
+	url.searchParams.set('page', String(page));
+	url.searchParams.set('limit', String(RESULTS_PER_PAGE));
 	url.searchParams.set(
 		'fields',
 		'key,title,author_name,cover_i,isbn,number_of_pages_median,first_publish_year,subject,language'
 	);
 
 	const res = await fetchWithTimeout(url);
-	if (!res.ok) return [];
+	if (!res.ok) return { results: [], hasMore: false };
 
 	const data: OpenLibraryResponse = await res.json();
 
@@ -103,7 +110,10 @@ async function searchOpenLibrary(
 	// otherwise preserves Open Library's own relevance ranking.
 	results.sort((a, b) => Number(b.hasPreferredLanguage) - Number(a.hasPreferredLanguage));
 
-	return results.map((r) => r.result);
+	return {
+		results: results.map((r) => r.result),
+		hasMore: page * RESULTS_PER_PAGE < (data.numFound ?? 0)
+	};
 }
 
 type GoogleBooksItem = {
@@ -121,6 +131,7 @@ type GoogleBooksItem = {
 
 type GoogleBooksResponse = {
 	items?: GoogleBooksItem[];
+	totalItems?: number;
 };
 
 // Google's publishedDate is "YYYY", "YYYY-MM", or "YYYY-MM-DD" — only the
@@ -133,15 +144,17 @@ export function parsePublicationYear(publishedDate?: string): number | null {
 async function searchGoogleBooks(
 	query: string,
 	apiKey: string,
-	languagePriority: string
-): Promise<BookSearchResult[]> {
+	languagePriority: string,
+	page: number
+): Promise<PagedSearchResult> {
 	const url = new URL('https://www.googleapis.com/books/v1/volumes');
 	url.searchParams.set('q', query);
-	url.searchParams.set('maxResults', '20');
+	url.searchParams.set('maxResults', String(RESULTS_PER_PAGE));
+	url.searchParams.set('startIndex', String((page - 1) * RESULTS_PER_PAGE));
 	url.searchParams.set('key', apiKey);
 
 	const res = await fetchWithTimeout(url);
-	if (!res.ok) return [];
+	if (!res.ok) return { results: [], hasMore: false };
 
 	const data: GoogleBooksResponse = await res.json();
 
@@ -179,7 +192,10 @@ async function searchGoogleBooks(
 
 	results.sort((a, b) => Number(b.hasPreferredLanguage) - Number(a.hasPreferredLanguage));
 
-	return results.map((r) => r.result);
+	return {
+		results: results.map((r) => r.result),
+		hasMore: page * RESULTS_PER_PAGE < (data.totalItems ?? 0)
+	};
 }
 
 type OpenLibraryWorkDescription = string | { type: string; value: string };
@@ -264,18 +280,23 @@ export async function getOpenLibraryWorkDetails(
  * to GOOGLE_BOOKS_API_KEY), and only contributes results whose ISBN isn't
  * already covered by an Open Library result.
  */
-export async function searchBooks(query: string): Promise<BookSearchResult[]> {
+export async function searchBooks(query: string, page = 1): Promise<PagedSearchResult> {
 	const settings = await getSettings();
 	const apiKey = settings.googleBooksApiKey || env.GOOGLE_BOOKS_API_KEY;
 	const languagePriority = settings.languagePriority;
 
-	const [openLibraryResults, googleBooksResults] = await Promise.all([
-		searchOpenLibrary(query, languagePriority),
-		apiKey ? searchGoogleBooks(query, apiKey, languagePriority) : Promise.resolve([])
+	const [openLibrary, googleBooks] = await Promise.all([
+		searchOpenLibrary(query, languagePriority, page),
+		apiKey
+			? searchGoogleBooks(query, apiKey, languagePriority, page)
+			: Promise.resolve({ results: [], hasMore: false })
 	]);
 
-	const knownIsbns = new Set(openLibraryResults.map((r) => r.isbn).filter(Boolean));
-	const extraResults = googleBooksResults.filter((r) => !r.isbn || !knownIsbns.has(r.isbn));
+	const knownIsbns = new Set(openLibrary.results.map((r) => r.isbn).filter(Boolean));
+	const extraResults = googleBooks.results.filter((r) => !r.isbn || !knownIsbns.has(r.isbn));
 
-	return [...openLibraryResults, ...extraResults];
+	return {
+		results: [...openLibrary.results, ...extraResults],
+		hasMore: openLibrary.hasMore || googleBooks.hasMore
+	};
 }

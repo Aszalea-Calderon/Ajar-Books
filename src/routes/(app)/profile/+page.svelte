@@ -31,6 +31,20 @@
 		} else {
 			params.set(key, value === true ? '1' : value);
 		}
+		// Changing a filter changes which books belong to each group, so any
+		// "Load more" progress from before no longer means the same thing.
+		for (const paramKey of [...params.keys()]) {
+			if (paramKey.endsWith('Take')) params.delete(paramKey);
+		}
+		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
+	}
+
+	// Must match the server's PAGE_SIZE in +page.server.ts.
+	const PAGE_SIZE = 24;
+
+	function loadMore(status: string, take: number) {
+		const params = new SvelteURLSearchParams(page.url.search);
+		params.set(`${status}Take`, String(take + PAGE_SIZE));
 		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
 	}
 </script>
@@ -144,6 +158,15 @@
 							</a>
 						{/each}
 					</div>
+					{#if group.hasMore}
+						<button
+							type="button"
+							class="profile-library__load-more"
+							onclick={() => loadMore(group.status, group.take)}
+						>
+							Load more ({group.total - group.take} remaining)
+						</button>
+					{/if}
 				</section>
 			{/each}
 		</div>

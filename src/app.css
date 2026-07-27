@@ -874,6 +874,25 @@ button {
 	gap: var(--space-3);
 }
 
+.profile-library__load-more {
+	display: block;
+	align-self: center;
+	margin: var(--space-4) auto 0;
+	padding: var(--space-2) var(--space-4);
+	background: none;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.profile-library__load-more:hover {
+	color: var(--color-text);
+	border-color: var(--color-text-muted);
+}
+
 .search-result__label {
 	display: inline-flex;
 	align-items: center;

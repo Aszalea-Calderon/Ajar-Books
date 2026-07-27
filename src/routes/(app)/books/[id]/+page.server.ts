@@ -65,7 +65,7 @@ async function getRelatedBooksInLibrary(genreTagIds: string[], currentBookId: st
 async function getMoreByAuthor(author: string, currentBookId: string) {
 	let results;
 	try {
-		results = await searchBooks(author);
+		({ results } = await searchBooks(author));
 	} catch {
 		return [];
 	}

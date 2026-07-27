@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { navigating } from '$app/state';
@@ -12,10 +13,26 @@
 	let submittingKey = $state<string | null>(null);
 	let hideInLibrary = $state(false);
 
+	// Accumulates across "Load more" clicks — reset below whenever a genuinely
+	// new search comes in from the server (data.results changing). The
+	// untrack() calls mark the initial reads as intentional (the $effect
+	// below is what keeps these in sync with `data`, not this declaration).
+	let allResults = $state(untrack(() => data.results));
+	let hasMore = $state(untrack(() => data.hasMore));
+	let currentPage = $state(1);
+	let loadingMore = $state(false);
+	let loadMoreFailed = $state(false);
+
+	$effect(() => {
+		allResults = data.results;
+		hasMore = data.hasMore;
+		currentPage = 1;
+	});
+
 	let isSearching = $derived(!!navigating.to && navigating.to.url.pathname === '/search');
 
 	let visibleResults = $derived(
-		hideInLibrary ? data.results.filter((r) => !r.libraryBookId) : data.results
+		hideInLibrary ? allResults.filter((r) => !r.libraryBookId) : allResults
 	);
 
 	function resultKey(result: { openLibraryId: string | null; isbn: string | null; title: string }) {
@@ -56,9 +73,14 @@
 	</form>
 
 	{#if data.query}
-		{#if data.results.length === 0 && !isSearching}
+		{#if data.searchFailed}
+			<p class="dashboard__empty">
+				Search is temporarily unavailable — Open Library or Google Books didn't respond in time. Try
+				again in a moment.
+			</p>
+		{:else if allResults.length === 0 && !isSearching}
 			<p class="dashboard__empty">No results for "{data.query}".</p>
-		{:else if data.results.length > 0}
+		{:else if allResults.length > 0}
 			<div class="search-toolbar">
 				<label class="search-toolbar__filter">
 					<input type="checkbox" bind:checked={hideInLibrary} />
@@ -147,6 +169,40 @@
 				{/if}
 			{/each}
 		</div>
+
+		{#if hasMore}
+			<form
+				method="POST"
+				action="?/loadMore"
+				use:enhance={() => {
+					loadingMore = true;
+					loadMoreFailed = false;
+					return async ({ result }) => {
+						loadingMore = false;
+						if (result.type === 'success' && result.data) {
+							allResults = [...allResults, ...(result.data.results as typeof allResults)];
+							hasMore = result.data.hasMore as boolean;
+							currentPage += 1;
+						} else {
+							loadMoreFailed = true;
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="q" value={data.query} />
+				<input type="hidden" name="page" value={currentPage + 1} />
+				{#if loadMoreFailed}
+					<p class="dashboard__empty">Couldn't load more results. Try again.</p>
+				{/if}
+				<button type="submit" class="profile-library__load-more" disabled={loadingMore}>
+					{#if loadingMore}
+						<span class="spinner"></span> Loading…
+					{:else}
+						Load more
+					{/if}
+				</button>
+			</form>
+		{/if}
 	{:else if data.wantToReadByGenre.length > 0}
 		<div class="search-recommendations">
 			<h3 class="search-recommendations__heading">From your Want to Read list</h3>

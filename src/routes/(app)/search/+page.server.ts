@@ -1,10 +1,37 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
-import { searchBooks } from '$lib/server/books/search';
+import { searchBooks, type BookSearchResult } from '$lib/server/books/search';
 import { addBookToLibrary } from '$lib/server/books/library';
 import { db } from '$lib/server/db';
 import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
+
+// Cross-references live search results against books already in the local
+// library (by Open Library id or ISBN) so the UI can show "already in
+// library" instead of a duplicate add button.
+async function attachLibraryIds(results: BookSearchResult[]) {
+	const matchConditions = results
+		.flatMap((r) => [
+			r.openLibraryId ? eq(books.openLibraryId, r.openLibraryId) : undefined,
+			r.isbn ? eq(books.isbn, r.isbn) : undefined
+		])
+		.filter((c) => c !== undefined);
+
+	const existing = matchConditions.length
+		? await db
+				.select()
+				.from(books)
+				.where(or(...matchConditions))
+		: [];
+
+	return results.map((r) => {
+		const match = existing.find(
+			(b) =>
+				(r.openLibraryId && b.openLibraryId === r.openLibraryId) || (r.isbn && b.isbn === r.isbn)
+		);
+		return { ...r, libraryBookId: match?.id ?? null };
+	});
+}
 
 // A lightweight "what to read next" nudge shown before the user searches for
 // anything — not a real recommendation engine, just their own Want to Read
@@ -55,37 +82,40 @@ async function getWantToReadByGenre() {
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q')?.trim() ?? '';
 	if (!query) {
-		return { query, results: [], wantToReadByGenre: await getWantToReadByGenre() };
+		return { query, results: [], hasMore: false, wantToReadByGenre: await getWantToReadByGenre() };
 	}
 
-	const results = await searchBooks(query);
-
-	const matchConditions = results
-		.flatMap((r) => [
-			r.openLibraryId ? eq(books.openLibraryId, r.openLibraryId) : undefined,
-			r.isbn ? eq(books.isbn, r.isbn) : undefined
-		])
-		.filter((c) => c !== undefined);
-
-	const existing = matchConditions.length
-		? await db
-				.select()
-				.from(books)
-				.where(or(...matchConditions))
-		: [];
-
-	const resultsWithLibraryId = results.map((r) => {
-		const match = existing.find(
-			(b) =>
-				(r.openLibraryId && b.openLibraryId === r.openLibraryId) || (r.isbn && b.isbn === r.isbn)
-		);
-		return { ...r, libraryBookId: match?.id ?? null };
-	});
-
-	return { query, results: resultsWithLibraryId, wantToReadByGenre: [] };
+	try {
+		const { results, hasMore } = await searchBooks(query);
+		const resultsWithLibraryId = await attachLibraryIds(results);
+		return { query, results: resultsWithLibraryId, hasMore, wantToReadByGenre: [] };
+	} catch {
+		// Open Library/Google Books are third-party services outside our
+		// control — a timeout or outage there shouldn't crash the whole page,
+		// just report the search as failed so the user can retry.
+		return { query, results: [], hasMore: false, wantToReadByGenre: [], searchFailed: true };
+	}
 };
 
 export const actions: Actions = {
+	loadMore: async ({ request }) => {
+		const data = await request.formData();
+		const query = String(data.get('q') ?? '').trim();
+		const page = Number(data.get('page') ?? '1');
+
+		if (!query || !Number.isInteger(page) || page < 1) {
+			return fail(400, { error: 'Invalid search page request' });
+		}
+
+		try {
+			const { results, hasMore } = await searchBooks(query, page);
+			const resultsWithLibraryId = await attachLibraryIds(results);
+			return { results: resultsWithLibraryId, hasMore };
+		} catch {
+			return fail(502, { error: 'Search is temporarily unavailable. Try again in a moment.' });
+		}
+	},
+
 	add: async ({ request }) => {
 		const data = await request.formData();
 		const title = String(data.get('title') ?? '');

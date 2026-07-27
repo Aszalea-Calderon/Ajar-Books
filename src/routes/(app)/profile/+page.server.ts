@@ -6,6 +6,11 @@ import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 
+// Each status group loads this many cards initially, with a "Load more"
+// button to reveal the next batch — keeps the rendered page bounded once a
+// library (or a single status within it) grows well past a screenful.
+const PAGE_SIZE = 24;
+
 export const load: PageServerLoad = async ({ url }) => {
 	const statusFilter = url.searchParams.get('status') ?? '';
 	const genreFilter = url.searchParams.get('genre') ?? '';
@@ -26,10 +31,20 @@ export const load: PageServerLoad = async ({ url }) => {
 		return true;
 	});
 
-	const groups = STATUS_ORDER.map((status) => ({
-		status,
-		books: filtered.filter((entry) => entry.userBook.status === status)
-	})).filter((group) => group.books.length > 0);
+	const groups = STATUS_ORDER.map((status) => {
+		const statusBooks = filtered.filter((entry) => entry.userBook.status === status);
+		const requestedTake = Number(url.searchParams.get(`${status}Take`));
+		const take =
+			Number.isFinite(requestedTake) && requestedTake > PAGE_SIZE ? requestedTake : PAGE_SIZE;
+
+		return {
+			status,
+			books: statusBooks.slice(0, take),
+			total: statusBooks.length,
+			take,
+			hasMore: statusBooks.length > take
+		};
+	}).filter((group) => group.total > 0);
 
 	const [genres, moods, settings] = await Promise.all([
 		getUsedTagNames('genre'),
