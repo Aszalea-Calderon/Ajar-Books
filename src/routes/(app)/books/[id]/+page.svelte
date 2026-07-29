@@ -480,11 +480,7 @@
 						<button type="button" class="tag-grid__reveal" onclick={() => (moodRevealed = true)}>
 							+ Add mood
 						</button>
-						<button
-							type="button"
-							class="tag-grid__reveal"
-							onclick={() => (settingRevealed = true)}
-						>
+						<button type="button" class="tag-grid__reveal" onclick={() => (settingRevealed = true)}>
 							+ Add setting
 						</button>
 					</div>
@@ -509,11 +505,7 @@
 							suggestions={data.suggestionsByType.setting}
 						/>
 					{:else}
-						<button
-							type="button"
-							class="tag-grid__reveal"
-							onclick={() => (settingRevealed = true)}
-						>
+						<button type="button" class="tag-grid__reveal" onclick={() => (settingRevealed = true)}>
 							+ Add setting
 						</button>
 					{/if}

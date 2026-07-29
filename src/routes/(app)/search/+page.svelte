@@ -154,7 +154,10 @@
 									disabled={submittingKey === resultKey(result)}
 								>
 									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-										<path fill="currentColor" d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z" />
+										<path
+											fill="currentColor"
+											d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
+										/>
 									</svg>
 								</button>
 							</form>
@@ -189,7 +192,10 @@
 									disabled={submittingKey === resultKey(result)}
 								>
 									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-										<path fill="currentColor" d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z" />
+										<path
+											fill="currentColor"
+											d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
+										/>
 									</svg>
 								</button>
 							</form>

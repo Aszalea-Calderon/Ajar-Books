@@ -18,6 +18,17 @@
 		{ value: 'dnf', label: 'Did Not Finish' }
 	];
 
+	// Collapsed-by-status, not expanded-by-status — a freshly loaded page (or
+	// a newly appearing section, e.g. after finishing your first book) always
+	// starts expanded rather than remembering to add every new status here.
+	let collapsedSections = $state(new Set<string>());
+	function toggleSection(status: string) {
+		const next = new Set(collapsedSections);
+		if (next.has(status)) next.delete(status);
+		else next.add(status);
+		collapsedSections = next;
+	}
+
 	function updateFilter(key: string, value: string | boolean) {
 		const params = new SvelteURLSearchParams(page.url.search);
 		if (!value) {
@@ -76,7 +87,10 @@
 		[...data.books].sort((a, b) => {
 			const av = sortValue(a, sortKey);
 			const bv = sortValue(b, sortKey);
-			const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv));
+			const cmp =
+				typeof av === 'number' && typeof bv === 'number'
+					? av - bv
+					: String(av).localeCompare(String(bv));
 			return sortDir === 'asc' ? cmp : -cmp;
 		})
 	);
@@ -174,11 +188,7 @@
 					<tr>
 						<th></th>
 						<th>
-							<button
-								type="button"
-								class="profile-table__sort"
-								onclick={() => toggleSort('title')}
-							>
+							<button type="button" class="profile-table__sort" onclick={() => toggleSort('title')}>
 								Title{#if sortKey === 'title'}<span class="profile-table__sort-arrow"
 										>{sortDir === 'asc' ? '▲' : '▼'}</span
 									>{/if}
@@ -243,9 +253,7 @@
 								{/if}
 							</td>
 							<td>
-								<a href={resolve('/(app)/books/[id]', { id: entry.book.id })}
-									>{entry.book.title}</a
-								>
+								<a href={resolve('/(app)/books/[id]', { id: entry.book.id })}>{entry.book.title}</a>
 								{#if entry.userBook.isFavorite}<span
 										class="profile-table__favorite"
 										title="Favorite">★</span
@@ -270,35 +278,55 @@
 					class:profile-library__section--favorites={section.status === 'favorites'}
 					class:profile-library__section--dnf={section.status === 'dnf'}
 				>
-					<h3 class="profile-library__section-heading">
+					<button
+						type="button"
+						class="profile-library__section-heading profile-library__section-heading--toggle"
+						aria-expanded={!collapsedSections.has(section.status)}
+						onclick={() => toggleSection(section.status)}
+					>
+						<svg
+							class="profile-library__section-chevron"
+							class:profile-library__section-chevron--collapsed={collapsedSections.has(
+								section.status
+							)}
+							viewBox="0 0 24 24"
+							width="16"
+							height="16"
+							aria-hidden="true"
+						>
+							<path fill="currentColor" d="M7 10l5 5 5-5z" />
+						</svg>
 						{#if section.status === 'favorites'}★{/if}
 						{section.label}
-					</h3>
-					<div
-						class="profile-library__row"
-						class:profile-library__row--cards={viewModeState.current === 'cards'}
-					>
-						{#each section.books as entry (entry.userBook.id)}
-							<a class="search-result" href={resolve('/(app)/books/[id]', { id: entry.book.id })}>
-								<div class="search-result__cover-wrap">
-									{#if entry.book.coverUrl}
-										<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
-									{:else}
-										<div class="search-result__cover search-result__cover--placeholder"></div>
-									{/if}
-									{#if entry.userBook.rating}
-										<span class="search-result__rating-badge">★ {entry.userBook.rating}</span>
-									{/if}
-								</div>
-								<div class="search-result__info">
-									<p class="search-result__title">{entry.book.title}</p>
-									{#if entry.book.author}
-										<p class="search-result__author">{entry.book.author}</p>
-									{/if}
-								</div>
-							</a>
-						{/each}
-					</div>
+					</button>
+					{#if !collapsedSections.has(section.status)}
+						<div
+							class="profile-library__row"
+							class:profile-library__row--cards={viewModeState.current === 'cards'}
+							class:profile-library__row--list={viewModeState.current === 'list'}
+						>
+							{#each section.books as entry (entry.userBook.id)}
+								<a class="search-result" href={resolve('/(app)/books/[id]', { id: entry.book.id })}>
+									<div class="search-result__cover-wrap">
+										{#if entry.book.coverUrl}
+											<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
+										{:else}
+											<div class="search-result__cover search-result__cover--placeholder"></div>
+										{/if}
+										{#if entry.userBook.rating}
+											<span class="search-result__rating-badge">★ {entry.userBook.rating}</span>
+										{/if}
+									</div>
+									<div class="search-result__info">
+										<p class="search-result__title">{entry.book.title}</p>
+										{#if entry.book.author}
+											<p class="search-result__author">{entry.book.author}</p>
+										{/if}
+									</div>
+								</a>
+							{/each}
+						</div>
+					{/if}
 				</section>
 			{/each}
 		</div>

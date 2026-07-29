@@ -1080,6 +1080,31 @@ button {
 	font-size: var(--font-size-lg);
 }
 
+.profile-library__section-heading--toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	background: none;
+	border: none;
+	padding: 0;
+	color: var(--color-text);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.profile-library__section-heading--toggle:hover {
+	color: var(--color-primary);
+}
+
+.profile-library__section-chevron {
+	flex-shrink: 0;
+	transition: transform 0.15s ease;
+}
+
+.profile-library__section-chevron--collapsed {
+	transform: rotate(-90deg);
+}
+
 .profile-library__section--favorites .profile-library__section-heading {
 	color: #f5b942;
 }
@@ -1100,6 +1125,17 @@ button {
 .profile-library__row .search-result {
 	flex-shrink: 0;
 	width: 18rem;
+}
+
+.profile-library__row--list {
+	flex-direction: column;
+	flex-wrap: wrap;
+	overflow-x: visible;
+	padding-bottom: 0;
+}
+
+.profile-library__row--list .search-result {
+	width: 100%;
 }
 
 .profile-library__row--cards .search-result {
