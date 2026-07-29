@@ -116,7 +116,6 @@
 									</div>
 								{/if}
 							</div>
-							<span class="search-result__label">View in library</span>
 						</a>
 						{#if result.isWantToRead}
 							<form
