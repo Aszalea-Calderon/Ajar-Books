@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { viewModeState } from '$lib/client/viewMode.svelte';
+	import { clickOutside } from '$lib/clickOutside';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ViewToggle from '$lib/components/ViewToggle.svelte';
 	import type { PageData } from './$types';
@@ -17,6 +18,13 @@
 		{ value: 'finished', label: 'Finished' },
 		{ value: 'dnf', label: 'Did Not Finish' }
 	];
+
+	let filterPanelOpen = $state(false);
+	let activeFilterCount = $derived(
+		[data.filters.status, data.filters.genre, data.filters.mood, data.filters.format].filter(
+			Boolean
+		).length
+	);
 
 	// Collapsed-by-status, not expanded-by-status — a freshly loaded page (or
 	// a newly appearing section, e.g. after finishing your first book) always
@@ -125,53 +133,83 @@
 				oninput={(e) => handleSearchInput(e.currentTarget.value)}
 			/>
 		</div>
-	</div>
-
-	<div class="profile-library__tabs">
-		{#each STATUS_TABS as tab (tab.value)}
+		<div class="profile-filter" use:clickOutside={() => (filterPanelOpen = false)}>
 			<button
 				type="button"
-				class="status-control__pill"
-				class:status-control__pill--active={data.filters.status === tab.value}
-				onclick={() => updateFilter('status', tab.value)}
+				class="profile-filter__trigger"
+				aria-expanded={filterPanelOpen}
+				aria-haspopup="true"
+				onclick={() => (filterPanelOpen = !filterPanelOpen)}
 			>
-				{tab.label}
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+					<path fill="currentColor" d="M3 5h18l-7 8v6l-4 2v-8L3 5Z" />
+				</svg>
+				Filter
+				{#if activeFilterCount > 0}
+					<span class="profile-filter__count">{activeFilterCount}</span>
+				{/if}
 			</button>
-		{/each}
+			{#if filterPanelOpen}
+				<div class="profile-filter__panel">
+					<div class="profile-filter__group">
+						<span class="profile-filter__group-label">Status</span>
+						<div class="profile-library__tabs">
+							{#each STATUS_TABS as tab (tab.value)}
+								<button
+									type="button"
+									class="status-control__pill"
+									class:status-control__pill--active={data.filters.status === tab.value}
+									onclick={() => updateFilter('status', tab.value)}
+								>
+									{tab.label}
+								</button>
+							{/each}
+						</div>
+					</div>
+					<div class="profile-filter__group">
+						<span class="profile-filter__group-label">Genre</span>
+						<Dropdown
+							value={data.filters.genre}
+							options={[
+								{ value: '', label: 'All genres' },
+								...data.filterOptions.genres.map((genre) => ({ value: genre, label: genre }))
+							]}
+							ariaLabel="Filter by genre"
+							onChange={(v) => updateFilter('genre', v)}
+						/>
+					</div>
+					<div class="profile-filter__group">
+						<span class="profile-filter__group-label">Mood</span>
+						<Dropdown
+							value={data.filters.mood}
+							options={[
+								{ value: '', label: 'All moods' },
+								...data.filterOptions.moods.map((mood) => ({ value: mood, label: mood }))
+							]}
+							ariaLabel="Filter by mood"
+							onChange={(v) => updateFilter('mood', v)}
+						/>
+					</div>
+					<div class="profile-filter__group">
+						<span class="profile-filter__group-label">Format</span>
+						<Dropdown
+							value={data.filters.format}
+							options={[
+								{ value: '', label: 'All formats' },
+								{ value: 'physical', label: 'Physical' },
+								{ value: 'ebook', label: 'Ebook' },
+								{ value: 'audiobook', label: 'Audiobook' }
+							]}
+							ariaLabel="Filter by format"
+							onChange={(v) => updateFilter('format', v)}
+						/>
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<div class="search-toolbar">
-		<div class="profile-library__filters">
-			<Dropdown
-				value={data.filters.genre}
-				options={[
-					{ value: '', label: 'All genres' },
-					...data.filterOptions.genres.map((genre) => ({ value: genre, label: genre }))
-				]}
-				ariaLabel="Filter by genre"
-				onChange={(v) => updateFilter('genre', v)}
-			/>
-			<Dropdown
-				value={data.filters.mood}
-				options={[
-					{ value: '', label: 'All moods' },
-					...data.filterOptions.moods.map((mood) => ({ value: mood, label: mood }))
-				]}
-				ariaLabel="Filter by mood"
-				onChange={(v) => updateFilter('mood', v)}
-			/>
-			<Dropdown
-				value={data.filters.format}
-				options={[
-					{ value: '', label: 'All formats' },
-					{ value: 'physical', label: 'Physical' },
-					{ value: 'ebook', label: 'Ebook' },
-					{ value: 'audiobook', label: 'Audiobook' }
-				]}
-				ariaLabel="Filter by format"
-				onChange={(v) => updateFilter('format', v)}
-			/>
-		</div>
 		<ViewToggle showTable />
 	</div>
 
