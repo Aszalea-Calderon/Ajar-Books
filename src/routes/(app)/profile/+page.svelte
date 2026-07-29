@@ -106,11 +106,16 @@
 					>
 						{#each section.books as entry (entry.userBook.id)}
 							<a class="search-result" href={resolve('/(app)/books/[id]', { id: entry.book.id })}>
-								{#if entry.book.coverUrl}
-									<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
-								{:else}
-									<div class="search-result__cover search-result__cover--placeholder"></div>
-								{/if}
+								<div class="search-result__cover-wrap">
+									{#if entry.book.coverUrl}
+										<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
+									{:else}
+										<div class="search-result__cover search-result__cover--placeholder"></div>
+									{/if}
+									{#if entry.userBook.rating}
+										<span class="search-result__rating-badge">★ {entry.userBook.rating}</span>
+									{/if}
+								</div>
 								<div class="search-result__info">
 									<p class="search-result__title">{entry.book.title}</p>
 									{#if entry.book.author}
@@ -124,9 +129,6 @@
 										</div>
 									{/if}
 								</div>
-								{#if entry.userBook.rating}
-									<span class="search-result__label">★ {entry.userBook.rating}</span>
-								{/if}
 							</a>
 						{/each}
 					</div>

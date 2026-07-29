@@ -898,6 +898,26 @@ button {
 	background: var(--color-surface-raised);
 }
 
+.search-result__cover-wrap {
+	position: relative;
+	flex-shrink: 0;
+}
+
+.search-result__rating-badge {
+	position: absolute;
+	top: var(--space-2);
+	left: var(--space-2);
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1) var(--space-2);
+	background: var(--color-primary);
+	color: var(--color-primary-text);
+	border-radius: var(--radius-sm);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+}
+
 .search-result__info {
 	flex: 1;
 	min-width: 0;
