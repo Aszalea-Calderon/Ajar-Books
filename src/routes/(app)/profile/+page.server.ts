@@ -17,15 +17,33 @@ const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
 // real genre.
 const NO_GENRE_BUCKET = 'More to explore';
 
-function groupByGenre(entries: LibraryBook[]) {
+// A book tagged with several genres only ever gets one home in these
+// sub-groups (alphabetically first, for a stable/deterministic pick) rather
+// than appearing once per genre tag — showing the same book two or three
+// times in one status section reads as repetition/clutter, not signal, and
+// doesn't get better as the library grows (it's driven by how many genres a
+// book has, not by book count).
+function primaryGenre(entry: LibraryBook): string {
+	if (entry.tags.genre.length === 0) return NO_GENRE_BUCKET;
+	return [...entry.tags.genre].sort((a, b) => a.localeCompare(b))[0];
+}
+
+// When a specific genre filter is active, every entry passed in already
+// matches it — group under that one genre directly instead of each entry's
+// primaryGenre, which could be a different tag on the same book and would
+// otherwise show a confusing heading (e.g. "Classics") under a filter the
+// user explicitly set to "Fantasy".
+function groupByGenre(entries: LibraryBook[], genreFilter: string) {
+	if (genreFilter) {
+		return entries.length > 0 ? [{ genre: genreFilter, books: entries }] : [];
+	}
+
 	const groups = new Map<string, LibraryBook[]>();
 	for (const entry of entries) {
-		const genres = entry.tags.genre.length > 0 ? entry.tags.genre : [NO_GENRE_BUCKET];
-		for (const genre of genres) {
-			const list = groups.get(genre) ?? [];
-			list.push(entry);
-			groups.set(genre, list);
-		}
+		const genre = primaryGenre(entry);
+		const list = groups.get(genre) ?? [];
+		list.push(entry);
+		groups.set(genre, list);
 	}
 	return [...groups.entries()]
 		.map(([genre, books]) => ({ genre, books }))
@@ -62,14 +80,17 @@ export const load: PageServerLoad = async ({ url }) => {
 					{
 						status: 'favorites' as const,
 						label: 'Favorites',
-						groups: groupByGenre(favoriteEntries)
+						groups: groupByGenre(favoriteEntries, genreFilter)
 					}
 				]
 			: []),
 		...STATUS_ORDER.map((status) => ({
 			status,
 			label: STATUS_LABELS[status],
-			groups: groupByGenre(filtered.filter((entry) => entry.userBook.status === status))
+			groups: groupByGenre(
+				filtered.filter((entry) => entry.userBook.status === status),
+				genreFilter
+			)
 		})).filter((section) => section.groups.length > 0)
 	];
 

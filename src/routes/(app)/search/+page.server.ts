@@ -43,9 +43,11 @@ async function attachLibraryIds(results: BookSearchResult[]) {
 
 // A lightweight "what to read next" nudge shown before the user searches for
 // anything — not a real recommendation engine, just their own Want to Read
-// list grouped by genre so it's not a blank page. A book with multiple
-// genre tags appears once per genre; one with none falls into a catch-all
-// bucket rather than being silently dropped.
+// list grouped by genre so it's not a blank page. A book with multiple genre
+// tags only appears once, under whichever tag sorts first alphabetically
+// (stable/deterministic) — repeating it under every genre it's tagged with
+// read as clutter in a short list; one with no genre tags falls into a
+// catch-all bucket rather than being silently dropped.
 const NO_GENRE_BUCKET = 'More to explore';
 
 async function getWantToReadByGenre() {
@@ -73,13 +75,12 @@ async function getWantToReadByGenre() {
 
 	const groups = new Map<string, (typeof rows)[number]['book'][]>();
 	for (const row of rows) {
-		const genres = genresByUserBook.get(row.userBookId);
-		const bucket = genres && genres.length > 0 ? genres : [NO_GENRE_BUCKET];
-		for (const genre of bucket) {
-			const list = groups.get(genre) ?? [];
-			list.push(row.book);
-			groups.set(genre, list);
-		}
+		const genres = genresByUserBook.get(row.userBookId) ?? [];
+		const genre =
+			genres.length > 0 ? [...genres].sort((a, b) => a.localeCompare(b))[0] : NO_GENRE_BUCKET;
+		const list = groups.get(genre) ?? [];
+		list.push(row.book);
+		groups.set(genre, list);
 	}
 
 	return [...groups.entries()]
