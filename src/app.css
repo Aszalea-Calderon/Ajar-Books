@@ -1058,8 +1058,8 @@ button {
 }
 
 .dropdown__option--selected {
-	background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-	color: var(--color-primary);
+	background: var(--color-primary);
+	color: var(--color-primary-text);
 	font-weight: 600;
 }
 

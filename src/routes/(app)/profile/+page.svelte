@@ -207,6 +207,7 @@
 							</button>
 						</th>
 						<th>Genre</th>
+						<th>Mood</th>
 						<th>
 							<button
 								type="button"
@@ -253,6 +254,7 @@
 							<td>{entry.book.author ?? '—'}</td>
 							<td>{STATUS_TABLE_LABELS[entry.userBook.status] ?? entry.userBook.status}</td>
 							<td>{entry.tags.genre.join(', ') || '—'}</td>
+							<td>{entry.tags.mood.join(', ') || '—'}</td>
 							<td>{entry.userBook.format ?? '—'}</td>
 							<td>{entry.userBook.rating ?? '—'}</td>
 						</tr>
