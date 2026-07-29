@@ -100,37 +100,36 @@
 						{#if section.status === 'favorites'}★{/if}
 						{section.label}
 					</h3>
-					{#each section.groups as group (group.genre)}
-						<div class="profile-library__genre-group">
-							<h4 class="search-recommendations__genre">{group.genre}</h4>
-							<div
-								class="profile-library__row"
-								class:profile-library__row--cards={viewModeState.current === 'cards'}
-							>
-								{#each group.books as entry (entry.userBook.id)}
-									<a
-										class="search-result"
-										href={resolve('/(app)/books/[id]', { id: entry.book.id })}
-									>
-										{#if entry.book.coverUrl}
-											<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
-										{:else}
-											<div class="search-result__cover search-result__cover--placeholder"></div>
-										{/if}
-										<div class="search-result__info">
-											<p class="search-result__title">{entry.book.title}</p>
-											{#if entry.book.author}
-												<p class="search-result__author">{entry.book.author}</p>
-											{/if}
+					<div
+						class="profile-library__row"
+						class:profile-library__row--cards={viewModeState.current === 'cards'}
+					>
+						{#each section.books as entry (entry.userBook.id)}
+							<a class="search-result" href={resolve('/(app)/books/[id]', { id: entry.book.id })}>
+								{#if entry.book.coverUrl}
+									<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
+								{:else}
+									<div class="search-result__cover search-result__cover--placeholder"></div>
+								{/if}
+								<div class="search-result__info">
+									<p class="search-result__title">{entry.book.title}</p>
+									{#if entry.book.author}
+										<p class="search-result__author">{entry.book.author}</p>
+									{/if}
+									{#if entry.tags.genre.length > 0}
+										<div class="search-result__genres">
+											{#each entry.tags.genre as genre (genre)}
+												<span class="tag-chip tag-chip--static">{genre}</span>
+											{/each}
 										</div>
-										{#if entry.userBook.rating}
-											<span class="search-result__label">★ {entry.userBook.rating}</span>
-										{/if}
-									</a>
-								{/each}
-							</div>
-						</div>
-					{/each}
+									{/if}
+								</div>
+								{#if entry.userBook.rating}
+									<span class="search-result__label">★ {entry.userBook.rating}</span>
+								{/if}
+							</a>
+						{/each}
+					</div>
 				</section>
 			{/each}
 		</div>
