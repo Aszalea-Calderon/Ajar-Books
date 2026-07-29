@@ -54,6 +54,10 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	return {
 		sections,
+		// A flat, ungrouped list for the Table view — a spreadsheet-like scan
+		// of everything matching the current filters shouldn't repeat a
+		// favorited book the way the card/list sections deliberately do.
+		books: filtered,
 		filters: {
 			status: statusFilter,
 			genre: genreFilter,
