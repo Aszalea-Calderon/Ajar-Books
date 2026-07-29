@@ -56,13 +56,29 @@
 
 <div class="search-page">
 	<form class="search-bar" onsubmit={handleSearchSubmit}>
-		<input
-			class="search-bar__input"
-			type="search"
-			name="q"
-			placeholder="Search by title or author…"
-			value={data.query}
-		/>
+		<div class="search-bar__input-wrap">
+			<svg
+				class="search-bar__icon"
+				viewBox="0 0 24 24"
+				width="16"
+				height="16"
+				aria-hidden="true"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+			>
+				<circle cx="11" cy="11" r="7" />
+				<line x1="21" y1="21" x2="16.65" y2="16.65" />
+			</svg>
+			<input
+				class="search-bar__input"
+				type="search"
+				name="q"
+				placeholder="Search by title or author…"
+				value={data.query}
+			/>
+		</div>
 		<button class="search-bar__submit" type="submit" disabled={isSearching}>
 			{#if isSearching}
 				<span class="spinner"></span> Searching…
