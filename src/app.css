@@ -1116,6 +1116,11 @@ button {
 	aspect-ratio: 2 / 3;
 }
 
+.profile-library__row--cards .search-result__rating-badge {
+	left: var(--space-1);
+	background: color-mix(in srgb, var(--color-primary) 85%, transparent);
+}
+
 .profile-library__load-more {
 	display: block;
 	align-self: center;
