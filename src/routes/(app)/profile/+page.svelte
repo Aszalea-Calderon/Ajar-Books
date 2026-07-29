@@ -313,7 +313,7 @@
 										{:else}
 											<div class="search-result__cover search-result__cover--placeholder"></div>
 										{/if}
-										{#if entry.userBook.rating}
+										{#if entry.userBook.rating && viewModeState.current !== 'list'}
 											<span class="search-result__rating-badge">★ {entry.userBook.rating}</span>
 										{/if}
 									</div>
@@ -323,6 +323,9 @@
 											<p class="search-result__author">{entry.book.author}</p>
 										{/if}
 									</div>
+									{#if entry.userBook.rating && viewModeState.current === 'list'}
+										<span class="search-result__label">★ {entry.userBook.rating}</span>
+									{/if}
 								</a>
 							{/each}
 						</div>
