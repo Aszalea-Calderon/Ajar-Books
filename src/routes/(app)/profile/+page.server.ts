@@ -17,6 +17,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	const genreFilter = url.searchParams.get('genre') ?? '';
 	const moodFilter = url.searchParams.get('mood') ?? '';
 	const formatFilter = url.searchParams.get('format') ?? '';
+	const queryFilter = (url.searchParams.get('q') ?? '').trim().toLowerCase();
 
 	const allBooks = await getLibraryBooks();
 
@@ -25,6 +26,12 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (genreFilter && !entry.tags.genre.includes(genreFilter)) return false;
 		if (moodFilter && !entry.tags.mood.includes(moodFilter)) return false;
 		if (formatFilter && entry.userBook.format !== formatFilter) return false;
+		if (
+			queryFilter &&
+			!entry.book.title.toLowerCase().includes(queryFilter) &&
+			!entry.book.author?.toLowerCase().includes(queryFilter)
+		)
+			return false;
 		return true;
 	});
 
@@ -51,10 +58,11 @@ export const load: PageServerLoad = async ({ url }) => {
 			status: statusFilter,
 			genre: genreFilter,
 			mood: moodFilter,
-			format: formatFilter
+			format: formatFilter,
+			q: url.searchParams.get('q') ?? ''
 		},
 		filterOptions: { genres, moods },
-		isFiltered: !!(statusFilter || genreFilter || moodFilter || formatFilter),
+		isFiltered: !!(statusFilter || genreFilter || moodFilter || formatFilter || queryFilter),
 		totalBookCount: allBooks.length
 	};
 };

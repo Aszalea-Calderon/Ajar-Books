@@ -27,6 +27,15 @@
 		}
 		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
 	}
+
+	// Debounced separately from updateFilter's other callers (status/genre/
+	// mood/format are single-click dropdowns/pills — a text box firing a
+	// navigation per keystroke would be much choppier).
+	let searchDebounce: ReturnType<typeof setTimeout> | undefined;
+	function handleSearchInput(value: string) {
+		clearTimeout(searchDebounce);
+		searchDebounce = setTimeout(() => updateFilter('q', value), 300);
+	}
 </script>
 
 <svelte:head>
@@ -34,6 +43,16 @@
 </svelte:head>
 
 <div class="profile-library">
+	<div class="search-bar">
+		<input
+			class="search-bar__input"
+			type="search"
+			placeholder="Search your library by title or author…"
+			value={data.filters.q}
+			oninput={(e) => handleSearchInput(e.currentTarget.value)}
+		/>
+	</div>
+
 	<div class="profile-library__tabs">
 		{#each STATUS_TABS as tab (tab.value)}
 			<button
@@ -120,13 +139,6 @@
 									<p class="search-result__title">{entry.book.title}</p>
 									{#if entry.book.author}
 										<p class="search-result__author">{entry.book.author}</p>
-									{/if}
-									{#if entry.tags.genre.length > 0}
-										<div class="search-result__genres">
-											{#each entry.tags.genre as genre (genre)}
-												<span class="tag-chip tag-chip--static">{genre}</span>
-											{/each}
-										</div>
 									{/if}
 								</div>
 							</a>
