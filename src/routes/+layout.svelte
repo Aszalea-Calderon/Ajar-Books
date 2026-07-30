@@ -6,7 +6,7 @@
 	import { initTheme } from '$lib/client/theme.svelte';
 	import { initFont } from '$lib/client/font.svelte';
 	import { initAccent } from '$lib/client/accent.svelte';
-	import { initViewMode } from '$lib/client/viewMode.svelte';
+	import { searchViewMode, profileViewMode } from '$lib/client/viewMode.svelte';
 	import { initBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
 
 	let { children } = $props();
@@ -15,7 +15,8 @@
 		initTheme();
 		initFont();
 		initAccent();
-		initViewMode();
+		searchViewMode.init();
+		profileViewMode.init();
 		initBackgroundTexture();
 	});
 </script>

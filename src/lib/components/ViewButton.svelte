@@ -1,16 +1,28 @@
 <script lang="ts">
-	import { viewModeState, setViewMode, type ViewMode } from '$lib/client/viewMode.svelte';
+	import type { ViewMode } from '$lib/client/viewMode.svelte';
 	import { clickOutside } from '$lib/clickOutside';
 
+	// Driven by whichever per-page view-mode store the caller passes in
+	// (Search and My Library each have their own persisted preference —
+	// see viewMode.svelte.ts) rather than importing a single shared store,
+	// so this component works for either page.
 	// Table is only offered where a table rendering actually exists (My
-	// Library) — Search's result cards don't have per-row personal metadata
-	// (status/rating/format) to make a table worth building there yet.
-	let { showTable = false }: { showTable?: boolean } = $props();
+	// Library and Search both do now) — pass showTable={false} for a page
+	// that doesn't.
+	let {
+		mode,
+		onSelect,
+		showTable = false
+	}: {
+		mode: ViewMode;
+		onSelect: (mode: ViewMode) => void;
+		showTable?: boolean;
+	} = $props();
 
 	let open = $state(false);
 
-	function select(mode: ViewMode) {
-		setViewMode(mode);
+	function select(next: ViewMode) {
+		onSelect(next);
 		open = false;
 	}
 </script>
@@ -45,7 +57,7 @@
 			<button
 				type="button"
 				class="view-button__option"
-				class:view-button__option--active={viewModeState.current === 'cards'}
+				class:view-button__option--active={mode === 'cards'}
 				onclick={() => select('cards')}
 			>
 				<svg
@@ -67,7 +79,7 @@
 			<button
 				type="button"
 				class="view-button__option"
-				class:view-button__option--active={viewModeState.current === 'list'}
+				class:view-button__option--active={mode === 'list'}
 				onclick={() => select('list')}
 			>
 				<svg
@@ -93,7 +105,7 @@
 				<button
 					type="button"
 					class="view-button__option"
-					class:view-button__option--active={viewModeState.current === 'table'}
+					class:view-button__option--active={mode === 'table'}
 					onclick={() => select('table')}
 				>
 					<svg

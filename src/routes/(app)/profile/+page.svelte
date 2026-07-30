@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
-	import { viewModeState } from '$lib/client/viewMode.svelte';
+	import { profileViewMode } from '$lib/client/viewMode.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import FilterButton from '$lib/components/FilterButton.svelte';
 	import ViewButton from '$lib/components/ViewButton.svelte';
@@ -187,7 +187,7 @@
 				/>
 			</div>
 		</FilterButton>
-		<ViewButton showTable />
+		<ViewButton mode={profileViewMode.state.current} onSelect={profileViewMode.set} showTable />
 	</div>
 
 	{#if data.totalBookCount === 0}
@@ -196,7 +196,7 @@
 		</p>
 	{:else if data.sections.length === 0}
 		<p class="dashboard__empty">No books match those filters.</p>
-	{:else if viewModeState.current === 'table'}
+	{:else if profileViewMode.state.current === 'table'}
 		<div class="data-table-wrap">
 			<table class="data-table">
 				<thead>
@@ -300,8 +300,8 @@
 					{#if !collapsedSections.has(section.status)}
 						<div
 							class="profile-library__row"
-							class:profile-library__row--cards={viewModeState.current === 'cards'}
-							class:profile-library__row--list={viewModeState.current === 'list'}
+							class:profile-library__row--cards={profileViewMode.state.current === 'cards'}
+							class:profile-library__row--list={profileViewMode.state.current === 'list'}
 						>
 							{#each section.books as entry (entry.userBook.id)}
 								<a class="search-result" href={resolve('/(app)/books/[id]', { id: entry.book.id })}>
@@ -311,7 +311,7 @@
 										{:else}
 											<div class="search-result__cover search-result__cover--placeholder"></div>
 										{/if}
-										{#if entry.userBook.rating && viewModeState.current !== 'list'}
+										{#if entry.userBook.rating && profileViewMode.state.current !== 'list'}
 											<span class="search-result__rating-badge">★ {entry.userBook.rating}</span>
 										{/if}
 									</div>
@@ -321,7 +321,7 @@
 											<p class="search-result__author">{entry.book.author}</p>
 										{/if}
 									</div>
-									{#if entry.userBook.rating && viewModeState.current === 'list'}
+									{#if entry.userBook.rating && profileViewMode.state.current === 'list'}
 										<span class="search-result__label">★ {entry.userBook.rating}</span>
 									{/if}
 								</a>

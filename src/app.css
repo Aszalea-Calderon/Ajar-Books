@@ -1008,7 +1008,8 @@ button {
 	gap: var(--space-4);
 }
 
-.profile-library__tabs {
+.profile-library__tabs,
+.pill-row {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--space-2);
