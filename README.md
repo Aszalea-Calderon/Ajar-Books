@@ -67,6 +67,8 @@ See [`ajar-reads-build-roadmap.md`](ajar-reads-build-roadmap.md) for the phased 
 
 Contributions are welcome once the core is further along — check open issues, or see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the project's technical decisions and reasoning before proposing changes.
 
+Have a feature request or run into a bug? Feel free to open a ticket — we're happy to take a look.
+
 ## License
 
 Licensed under [AGPL-3.0](LICENSE). This means: if you run a modified version of Ajar Reads as a network service, you're required to make your modified source available to your users. See the [LICENSE](LICENSE) file for full terms.

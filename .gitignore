@@ -28,3 +28,7 @@ vite.config.ts.timestamp-*
 
 # Docker Compose volume mount (the real app data — see docker-compose.yml)
 /data/
+
+# Real Goodreads/StoryGraph export files used to test Import locally —
+# someone's actual reading history/reviews shouldn't end up in the repo.
+*.csv

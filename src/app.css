@@ -1468,6 +1468,13 @@ button {
 	color: var(--color-text);
 }
 
+.import-upload__dropzone--active {
+	border-color: var(--color-primary);
+	border-style: solid;
+	background: var(--color-surface-raised);
+	color: var(--color-text);
+}
+
 .import-upload__dropzone input {
 	position: absolute;
 	width: 1px;

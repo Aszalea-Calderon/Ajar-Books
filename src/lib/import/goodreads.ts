@@ -6,7 +6,8 @@ import {
 	parseRatingOrNull,
 	parseDateOrNull,
 	splitList,
-	titleCase
+	titleCase,
+	stripHtml
 } from './parseHelpers';
 
 // A handful of headers only a genuine Goodreads export has — "Exclusive
@@ -75,6 +76,6 @@ export function mapGoodreadsRow(row: Record<string, string>): ImportRow {
 		timesFinished: status === 'finished' ? (parseIntOrNull(row['Read Count']) ?? 1) : null,
 		genres,
 		moods: [],
-		note: cleanText(row['My Review'])
+		note: stripHtml(cleanText(row['My Review']))
 	};
 }

@@ -6,7 +6,8 @@ import {
 	parseRatingOrNull,
 	parseDateOrNull,
 	splitList,
-	titleCase
+	titleCase,
+	stripHtml
 } from './parseHelpers';
 
 // "Read Status" and "Moods" together are distinctive to a StoryGraph
@@ -25,8 +26,13 @@ const READ_STATUS: Record<string, ImportStatus> = {
 	'did-not-finish': 'dnf'
 };
 
+// StoryGraph's real export values are "digital"/"audio" (confirmed against
+// an actual export) — "ebook"/"audiobook"/"physical book" are kept too in
+// case a different export version or locale uses them instead.
 const FORMAT_MAP: Record<string, ImportFormat> = {
+	digital: 'ebook',
 	ebook: 'ebook',
+	audio: 'audiobook',
 	audiobook: 'audiobook',
 	'physical book': 'physical',
 	hardcover: 'physical',
@@ -56,6 +62,10 @@ export function mapStoryGraphRow(row: Record<string, string>): ImportRow {
 		timesFinished: parseIntOrNull(row['Read Count']),
 		genres: splitList(row['Tags']).map(titleCase),
 		moods: splitList(row['Moods']).map(titleCase),
-		note: cleanText(row['Review'])
+		// StoryGraph's review field is rich text wrapped in raw HTML
+		// (<div>...&nbsp;</div>, occasionally <ul><li> lists) — stripped down
+		// to plain text since reading-log notes are displayed as-is, not
+		// rendered as HTML.
+		note: stripHtml(cleanText(row['Review']))
 	};
 }

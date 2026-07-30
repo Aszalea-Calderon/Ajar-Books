@@ -76,6 +76,30 @@ describe('mapStoryGraphRow', () => {
 		expect(mapStoryGraphRow(row({ Format: 'audiobook' })).format).toBe('audiobook');
 	});
 
+	// "digital"/"audio" are what a real StoryGraph export actually contains
+	// (confirmed against a real 395-row export) — "ebook"/"audiobook" above
+	// were only ever a documentation-based guess that turned out wrong.
+	it('maps the real-world "digital"/"audio" format values', () => {
+		expect(mapStoryGraphRow(row({ Format: 'digital' })).format).toBe('ebook');
+		expect(mapStoryGraphRow(row({ Format: 'audio' })).format).toBe('audiobook');
+	});
+
+	it('strips HTML markup from the review into plain text', () => {
+		const result = mapStoryGraphRow(
+			row({ Review: '<div>This is unhinged and funny in the best way possible&nbsp;</div>' })
+		);
+		expect(result.note).toBe('This is unhinged and funny in the best way possible');
+	});
+
+	it('turns an escaped &lt;spoiler&gt; convention into visible spoiler text, not a stripped tag', () => {
+		const result = mapStoryGraphRow(
+			row({
+				Review: '<div>A planet is coming. &lt;spoiler&gt;It eats Earth.&lt;/spoiler&gt;</div>'
+			})
+		);
+		expect(result.note).toBe('A planet is coming. <spoiler>It eats Earth.</spoiler>');
+	});
+
 	it('falls back gracefully when optional fields are blank', () => {
 		const result = mapStoryGraphRow(
 			row({ 'ISBN/UID': '', Format: '', 'Star Rating': '', Review: '', Moods: '', Tags: '' })

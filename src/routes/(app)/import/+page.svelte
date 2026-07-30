@@ -21,6 +21,7 @@
 	let rawRows = $state<Record<string, string>[]>([]);
 	let source = $state<ImportSource>('generic');
 	let genericMap = $state<GenericFieldMap>(emptyGenericFieldMap());
+	let isDraggingOver = $state(false);
 
 	const SOURCE_LABELS: Record<ImportSource, string> = {
 		goodreads: 'Goodreads',
@@ -48,12 +49,8 @@
 
 	let validRowCount = $derived(mappedRows.filter((r) => r.title.trim()).length);
 
-	async function handleFileChange(event: Event) {
+	async function loadFile(file: File) {
 		parseError = '';
-		const input = event.currentTarget as HTMLInputElement;
-		const file = input.files?.[0];
-		if (!file) return;
-
 		fileName = file.name;
 		const text = await file.text();
 		const parsed = parseCsv(text);
@@ -68,6 +65,24 @@
 		source = detectSource(headers);
 		genericMap = source === 'generic' ? guessGenericFieldMap(headers) : emptyGenericFieldMap();
 		step = 'preview';
+	}
+
+	function handleFileChange(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (file) loadFile(file);
+	}
+
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		isDraggingOver = false;
+		const file = event.dataTransfer?.files?.[0];
+		if (file) loadFile(file);
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		isDraggingOver = true;
 	}
 
 	function backToUpload() {
@@ -138,9 +153,15 @@
 
 	{#if step === 'upload'}
 		<div class="import-upload">
-			<label class="import-upload__dropzone">
+			<label
+				class="import-upload__dropzone"
+				class:import-upload__dropzone--active={isDraggingOver}
+				ondragover={handleDragOver}
+				ondragleave={() => (isDraggingOver = false)}
+				ondrop={handleDrop}
+			>
 				<input type="file" accept=".csv,text/csv" onchange={handleFileChange} />
-				<span>Choose a CSV file to upload</span>
+				<span>{isDraggingOver ? 'Drop it' : 'Choose a CSV file, or drag one here'}</span>
 			</label>
 			{#if parseError}
 				<p class="dashboard__empty">{parseError}</p>

@@ -81,3 +81,37 @@ export function titleCase(value: string): string {
 		.map((word) => word[0].toUpperCase() + word.slice(1))
 		.join(' ');
 }
+
+// StoryGraph's review field is rich text wrapped in raw HTML (<div>, <br>,
+// <ul>/<li>, &nbsp;) — reading-log notes are displayed as plain text, not
+// rendered HTML, so this strips markup down to readable text instead of
+// showing literal tags/entities. Real HTML tags are removed BEFORE entity
+// decoding (not after) — StoryGraph users also use an escaped "&lt;spoiler
+// &gt;...&lt;/spoiler&gt;" convention to mark spoilers as visible text, and
+// decoding those into real "<spoiler>" tags first would make the tag
+// stripper incorrectly eat them too.
+export function stripHtml(value: string | null): string | null {
+	if (!value) return null;
+
+	const withoutTags = value
+		.replace(/<br\s*\/?>/gi, '\n')
+		.replace(/<\/(div|p|li)>/gi, '\n')
+		.replace(/<[^>]+>/g, '');
+
+	const decoded = withoutTags
+		.replace(/&nbsp;/gi, ' ')
+		.replace(/&quot;/gi, '"')
+		.replace(/&apos;/gi, "'")
+		.replace(/&#39;/g, "'")
+		.replace(/&lt;/gi, '<')
+		.replace(/&gt;/gi, '>')
+		.replace(/&amp;/gi, '&');
+
+	const collapsed = decoded
+		.replace(/[ \t]+/g, ' ')
+		.replace(/\n{3,}/g, '\n\n')
+		.replace(/^[ \t]+|[ \t]+$/gm, '')
+		.trim();
+
+	return collapsed || null;
+}
