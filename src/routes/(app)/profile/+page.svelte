@@ -197,36 +197,28 @@
 	{:else if data.sections.length === 0}
 		<p class="dashboard__empty">No books match those filters.</p>
 	{:else if viewModeState.current === 'table'}
-		<div class="profile-table-wrap">
-			<table class="profile-table">
+		<div class="data-table-wrap">
+			<table class="data-table">
 				<thead>
 					<tr>
 						<th></th>
 						<th>
-							<button type="button" class="profile-table__sort" onclick={() => toggleSort('title')}>
-								Title{#if sortKey === 'title'}<span class="profile-table__sort-arrow"
+							<button type="button" class="data-table__sort" onclick={() => toggleSort('title')}>
+								Title{#if sortKey === 'title'}<span class="data-table__sort-arrow"
 										>{sortDir === 'asc' ? '▲' : '▼'}</span
 									>{/if}
 							</button>
 						</th>
 						<th>
-							<button
-								type="button"
-								class="profile-table__sort"
-								onclick={() => toggleSort('author')}
-							>
-								Author{#if sortKey === 'author'}<span class="profile-table__sort-arrow"
+							<button type="button" class="data-table__sort" onclick={() => toggleSort('author')}>
+								Author{#if sortKey === 'author'}<span class="data-table__sort-arrow"
 										>{sortDir === 'asc' ? '▲' : '▼'}</span
 									>{/if}
 							</button>
 						</th>
 						<th>
-							<button
-								type="button"
-								class="profile-table__sort"
-								onclick={() => toggleSort('status')}
-							>
-								Status{#if sortKey === 'status'}<span class="profile-table__sort-arrow"
+							<button type="button" class="data-table__sort" onclick={() => toggleSort('status')}>
+								Status{#if sortKey === 'status'}<span class="data-table__sort-arrow"
 										>{sortDir === 'asc' ? '▲' : '▼'}</span
 									>{/if}
 							</button>
@@ -234,23 +226,15 @@
 						<th>Genre</th>
 						<th>Mood</th>
 						<th>
-							<button
-								type="button"
-								class="profile-table__sort"
-								onclick={() => toggleSort('format')}
-							>
-								Format{#if sortKey === 'format'}<span class="profile-table__sort-arrow"
+							<button type="button" class="data-table__sort" onclick={() => toggleSort('format')}>
+								Format{#if sortKey === 'format'}<span class="data-table__sort-arrow"
 										>{sortDir === 'asc' ? '▲' : '▼'}</span
 									>{/if}
 							</button>
 						</th>
 						<th>
-							<button
-								type="button"
-								class="profile-table__sort"
-								onclick={() => toggleSort('rating')}
-							>
-								Rating{#if sortKey === 'rating'}<span class="profile-table__sort-arrow"
+							<button type="button" class="data-table__sort" onclick={() => toggleSort('rating')}>
+								Rating{#if sortKey === 'rating'}<span class="data-table__sort-arrow"
 										>{sortDir === 'asc' ? '▲' : '▼'}</span
 									>{/if}
 							</button>
@@ -260,18 +244,17 @@
 				<tbody>
 					{#each sortedBooks as entry (entry.userBook.id)}
 						<tr>
-							<td class="profile-table__cover-cell">
+							<td class="data-table__cover-cell">
 								{#if entry.book.coverUrl}
-									<img class="profile-table__cover" src={entry.book.coverUrl} alt="" />
+									<img class="data-table__cover" src={entry.book.coverUrl} alt="" />
 								{:else}
-									<div class="profile-table__cover profile-table__cover--placeholder"></div>
+									<div class="data-table__cover data-table__cover--placeholder"></div>
 								{/if}
 							</td>
 							<td>
 								<a href={resolve('/(app)/books/[id]', { id: entry.book.id })}>{entry.book.title}</a>
-								{#if entry.userBook.isFavorite}<span
-										class="profile-table__favorite"
-										title="Favorite">★</span
+								{#if entry.userBook.isFavorite}<span class="data-table__favorite" title="Favorite"
+										>★</span
 									>{/if}
 							</td>
 							<td>{entry.book.author ?? '—'}</td>

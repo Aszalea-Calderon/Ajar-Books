@@ -40,6 +40,44 @@
 		return result.openLibraryId ?? result.isbn ?? result.title;
 	}
 
+	type SortKey = 'title' | 'author' | 'publicationYear' | 'pageCount';
+	let sortKey = $state<SortKey>('title');
+	let sortDir = $state<'asc' | 'desc'>('asc');
+
+	function toggleSort(key: SortKey) {
+		if (sortKey === key) {
+			sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortKey = key;
+			sortDir = 'asc';
+		}
+	}
+
+	function sortValue(result: (typeof visibleResults)[number], key: SortKey): string | number {
+		switch (key) {
+			case 'title':
+				return result.title.toLowerCase();
+			case 'author':
+				return result.author?.toLowerCase() ?? '';
+			case 'publicationYear':
+				return result.publicationYear ?? -1;
+			case 'pageCount':
+				return result.pageCount ?? -1;
+		}
+	}
+
+	let sortedResults = $derived(
+		[...visibleResults].sort((a, b) => {
+			const av = sortValue(a, sortKey);
+			const bv = sortValue(b, sortKey);
+			const cmp =
+				typeof av === 'number' && typeof bv === 'number'
+					? av - bv
+					: String(av).localeCompare(String(bv));
+			return sortDir === 'asc' ? cmp : -cmp;
+		})
+	);
+
 	function handleSearchSubmit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
 		// A plain <form method="GET"> triggers a native full-page reload, which
 		// SvelteKit's client-side router (and its `navigating` state) never
@@ -96,7 +134,7 @@
 				</label>
 			</div>
 		</FilterButton>
-		<ViewButton />
+		<ViewButton showTable />
 	</form>
 
 	{#if data.query}
@@ -109,168 +147,347 @@
 			<p class="dashboard__empty">No results for "{data.query}".</p>
 		{/if}
 
-		<div class="search-results" class:search-results--cards={viewModeState.current === 'cards'}>
-			{#each visibleResults as result (resultKey(result))}
-				{#if result.libraryBookId}
-					<div class="search-result">
-						<a
-							class="search-result__preview"
-							href={resolve('/(app)/books/[id]', { id: result.libraryBookId })}
-						>
-							{#if result.coverUrl}
-								<img class="search-result__cover" src={result.coverUrl} alt="" />
-							{:else}
-								<div class="search-result__cover search-result__cover--placeholder"></div>
-							{/if}
-							<div class="search-result__info">
-								<p class="search-result__title">{result.title}</p>
-								{#if result.author}
-									<p class="search-result__author">{result.author}</p>
-								{/if}
-								{#if result.genres.length > 0}
-									<div class="search-result__genres">
-										{#each result.genres as genre (genre)}
-											<span class="tag-chip tag-chip--static">{genre}</span>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</a>
-						{#if result.isWantToRead}
-							<form
-								method="POST"
-								action="?/removeFromWantToRead"
-								use:enhance={() => {
-									submittingKey = resultKey(result);
-									return async ({ update }) => {
-										await update();
-										submittingKey = null;
-									};
-								}}
-							>
-								<input type="hidden" name="bookId" value={result.libraryBookId} />
-								<button
-									type="submit"
-									class="search-result__bookmark search-result__bookmark--active"
-									aria-label="Remove {result.title} from Want to Read"
-									title="Remove from Want to Read"
-									disabled={submittingKey === resultKey(result)}
-								>
-									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-										<path
-											fill="currentColor"
-											d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
-										/>
-									</svg>
+		{#if viewModeState.current === 'table'}
+			<div class="data-table-wrap">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th></th>
+							<th>
+								<button type="button" class="data-table__sort" onclick={() => toggleSort('title')}>
+									Title{#if sortKey === 'title'}<span class="data-table__sort-arrow"
+											>{sortDir === 'asc' ? '▲' : '▼'}</span
+										>{/if}
 								</button>
-							</form>
-						{:else}
-							<form
-								method="POST"
-								action="?/addToWantToRead"
-								use:enhance={() => {
-									submittingKey = resultKey(result);
-									return async ({ update }) => {
-										await update();
-										submittingKey = null;
-									};
-								}}
-							>
-								<input type="hidden" name="title" value={result.title} />
-								<input type="hidden" name="author" value={result.author ?? ''} />
-								<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
-								<input type="hidden" name="openLibraryId" value={result.openLibraryId ?? ''} />
-								<input type="hidden" name="isbn" value={result.isbn ?? ''} />
-								<input type="hidden" name="description" value={result.description ?? ''} />
-								<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
-								<input type="hidden" name="publicationYear" value={result.publicationYear ?? ''} />
-								{#each result.genres as genre (genre)}
-									<input type="hidden" name="genres" value={genre} />
-								{/each}
-								<button
-									type="submit"
-									class="search-result__bookmark"
-									aria-label="Add {result.title} to Want to Read"
-									title="Add to Want to Read"
-									disabled={submittingKey === resultKey(result)}
-								>
-									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-										<path
-											fill="currentColor"
-											d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
-										/>
-									</svg>
+							</th>
+							<th>
+								<button type="button" class="data-table__sort" onclick={() => toggleSort('author')}>
+									Author{#if sortKey === 'author'}<span class="data-table__sort-arrow"
+											>{sortDir === 'asc' ? '▲' : '▼'}</span
+										>{/if}
 								</button>
-							</form>
-						{/if}
-					</div>
-				{:else}
-					<form
-						method="POST"
-						action="?/add"
-						class="search-result"
-						use:enhance={() => {
-							submittingKey = resultKey(result);
-							return async ({ update }) => {
-								await update();
-								submittingKey = null;
-							};
-						}}
-					>
-						<input type="hidden" name="title" value={result.title} />
-						<input type="hidden" name="author" value={result.author ?? ''} />
-						<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
-						<input type="hidden" name="openLibraryId" value={result.openLibraryId ?? ''} />
-						<input type="hidden" name="isbn" value={result.isbn ?? ''} />
-						<input type="hidden" name="description" value={result.description ?? ''} />
-						<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
-						<input type="hidden" name="publicationYear" value={result.publicationYear ?? ''} />
-						{#each result.genres as genre (genre)}
-							<input type="hidden" name="genres" value={genre} />
+							</th>
+							<th>Genre</th>
+							<th>
+								<button
+									type="button"
+									class="data-table__sort"
+									onclick={() => toggleSort('publicationYear')}
+								>
+									Published{#if sortKey === 'publicationYear'}<span class="data-table__sort-arrow"
+											>{sortDir === 'asc' ? '▲' : '▼'}</span
+										>{/if}
+								</button>
+							</th>
+							<th>
+								<button
+									type="button"
+									class="data-table__sort"
+									onclick={() => toggleSort('pageCount')}
+								>
+									Pages{#if sortKey === 'pageCount'}<span class="data-table__sort-arrow"
+											>{sortDir === 'asc' ? '▲' : '▼'}</span
+										>{/if}
+								</button>
+							</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each sortedResults as result (resultKey(result))}
+							<tr>
+								<td class="data-table__cover-cell">
+									{#if result.coverUrl}
+										<img class="data-table__cover" src={result.coverUrl} alt="" />
+									{:else}
+										<div class="data-table__cover data-table__cover--placeholder"></div>
+									{/if}
+								</td>
+								<td>
+									{#if result.libraryBookId}
+										<a
+											class="data-table__link"
+											href={resolve('/(app)/books/[id]', { id: result.libraryBookId })}
+										>
+											{result.title}
+										</a>
+									{:else}
+										<form
+											method="POST"
+											action="?/add"
+											use:enhance={() => {
+												submittingKey = resultKey(result);
+												return async ({ update }) => {
+													await update();
+													submittingKey = null;
+												};
+											}}
+										>
+											<input type="hidden" name="title" value={result.title} />
+											<input type="hidden" name="author" value={result.author ?? ''} />
+											<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
+											<input
+												type="hidden"
+												name="openLibraryId"
+												value={result.openLibraryId ?? ''}
+											/>
+											<input type="hidden" name="isbn" value={result.isbn ?? ''} />
+											<input type="hidden" name="description" value={result.description ?? ''} />
+											<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
+											<input
+												type="hidden"
+												name="publicationYear"
+												value={result.publicationYear ?? ''}
+											/>
+											{#each result.genres as genre (genre)}
+												<input type="hidden" name="genres" value={genre} />
+											{/each}
+											<button
+												type="submit"
+												class="data-table__link data-table__link--button"
+												disabled={submittingKey === resultKey(result)}
+											>
+												{result.title}
+											</button>
+										</form>
+									{/if}
+								</td>
+								<td>{result.author ?? '—'}</td>
+								<td>{result.genres.join(', ') || '—'}</td>
+								<td>{result.publicationYear ?? '—'}</td>
+								<td>{result.pageCount ?? '—'}</td>
+								<td>
+									<form
+										method="POST"
+										action={result.isWantToRead ? '?/removeFromWantToRead' : '?/addToWantToRead'}
+										use:enhance={() => {
+											submittingKey = resultKey(result);
+											return async ({ update }) => {
+												await update();
+												submittingKey = null;
+											};
+										}}
+									>
+										{#if result.libraryBookId}
+											<input type="hidden" name="bookId" value={result.libraryBookId} />
+										{:else}
+											<input type="hidden" name="title" value={result.title} />
+											<input type="hidden" name="author" value={result.author ?? ''} />
+											<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
+											<input
+												type="hidden"
+												name="openLibraryId"
+												value={result.openLibraryId ?? ''}
+											/>
+											<input type="hidden" name="isbn" value={result.isbn ?? ''} />
+											<input type="hidden" name="description" value={result.description ?? ''} />
+											<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
+											<input
+												type="hidden"
+												name="publicationYear"
+												value={result.publicationYear ?? ''}
+											/>
+											{#each result.genres as genre (genre)}
+												<input type="hidden" name="genres" value={genre} />
+											{/each}
+										{/if}
+										<button
+											type="submit"
+											class="data-table__bookmark"
+											class:data-table__bookmark--active={result.isWantToRead}
+											aria-label={result.isWantToRead
+												? `Remove ${result.title} from Want to Read`
+												: `Add ${result.title} to Want to Read`}
+											title={result.isWantToRead
+												? 'Remove from Want to Read'
+												: 'Add to Want to Read'}
+											disabled={submittingKey === resultKey(result)}
+										>
+											<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+												<path
+													fill="currentColor"
+													d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
+												/>
+											</svg>
+										</button>
+									</form>
+								</td>
+							</tr>
 						{/each}
-						<button
-							type="submit"
-							class="search-result__preview"
-							disabled={submittingKey === resultKey(result)}
-						>
-							{#if result.coverUrl}
-								<img class="search-result__cover" src={result.coverUrl} alt="" />
+					</tbody>
+				</table>
+			</div>
+		{:else}
+			<div class="search-results" class:search-results--cards={viewModeState.current === 'cards'}>
+				{#each visibleResults as result (resultKey(result))}
+					{#if result.libraryBookId}
+						<div class="search-result">
+							<a
+								class="search-result__preview"
+								href={resolve('/(app)/books/[id]', { id: result.libraryBookId })}
+							>
+								{#if result.coverUrl}
+									<img class="search-result__cover" src={result.coverUrl} alt="" />
+								{:else}
+									<div class="search-result__cover search-result__cover--placeholder"></div>
+								{/if}
+								<div class="search-result__info">
+									<p class="search-result__title">{result.title}</p>
+									{#if result.author}
+										<p class="search-result__author">{result.author}</p>
+									{/if}
+									{#if result.genres.length > 0}
+										<div class="search-result__genres">
+											{#each result.genres as genre (genre)}
+												<span class="tag-chip tag-chip--static">{genre}</span>
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</a>
+							{#if result.isWantToRead}
+								<form
+									method="POST"
+									action="?/removeFromWantToRead"
+									use:enhance={() => {
+										submittingKey = resultKey(result);
+										return async ({ update }) => {
+											await update();
+											submittingKey = null;
+										};
+									}}
+								>
+									<input type="hidden" name="bookId" value={result.libraryBookId} />
+									<button
+										type="submit"
+										class="search-result__bookmark search-result__bookmark--active"
+										aria-label="Remove {result.title} from Want to Read"
+										title="Remove from Want to Read"
+										disabled={submittingKey === resultKey(result)}
+									>
+										<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+											<path
+												fill="currentColor"
+												d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
+											/>
+										</svg>
+									</button>
+								</form>
 							{:else}
-								<div class="search-result__cover search-result__cover--placeholder"></div>
+								<form
+									method="POST"
+									action="?/addToWantToRead"
+									use:enhance={() => {
+										submittingKey = resultKey(result);
+										return async ({ update }) => {
+											await update();
+											submittingKey = null;
+										};
+									}}
+								>
+									<input type="hidden" name="title" value={result.title} />
+									<input type="hidden" name="author" value={result.author ?? ''} />
+									<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
+									<input type="hidden" name="openLibraryId" value={result.openLibraryId ?? ''} />
+									<input type="hidden" name="isbn" value={result.isbn ?? ''} />
+									<input type="hidden" name="description" value={result.description ?? ''} />
+									<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
+									<input
+										type="hidden"
+										name="publicationYear"
+										value={result.publicationYear ?? ''}
+									/>
+									{#each result.genres as genre (genre)}
+										<input type="hidden" name="genres" value={genre} />
+									{/each}
+									<button
+										type="submit"
+										class="search-result__bookmark"
+										aria-label="Add {result.title} to Want to Read"
+										title="Add to Want to Read"
+										disabled={submittingKey === resultKey(result)}
+									>
+										<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+											<path
+												fill="currentColor"
+												d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
+											/>
+										</svg>
+									</button>
+								</form>
 							{/if}
-							<div class="search-result__info">
-								<p class="search-result__title">{result.title}</p>
-								{#if result.author}
-									<p class="search-result__author">{result.author}</p>
-								{/if}
-								{#if result.genres.length > 0}
-									<div class="search-result__genres">
-										{#each result.genres as genre (genre)}
-											<span class="tag-chip tag-chip--static">{genre}</span>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</button>
-						<button
-							type="submit"
-							formaction="?/addToWantToRead"
-							class="search-result__bookmark"
-							aria-label="Add {result.title} to Want to Read"
-							title="Add to Want to Read"
-							disabled={submittingKey === resultKey(result)}
+						</div>
+					{:else}
+						<form
+							method="POST"
+							action="?/add"
+							class="search-result"
+							use:enhance={() => {
+								submittingKey = resultKey(result);
+								return async ({ update }) => {
+									await update();
+									submittingKey = null;
+								};
+							}}
 						>
-							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-								<path fill="currentColor" d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z" />
-							</svg>
-						</button>
-						{#if submittingKey === resultKey(result)}
-							<span class="search-result__label"><span class="spinner"></span></span>
-						{/if}
-					</form>
-				{/if}
-			{/each}
-		</div>
+							<input type="hidden" name="title" value={result.title} />
+							<input type="hidden" name="author" value={result.author ?? ''} />
+							<input type="hidden" name="coverUrl" value={result.coverUrl ?? ''} />
+							<input type="hidden" name="openLibraryId" value={result.openLibraryId ?? ''} />
+							<input type="hidden" name="isbn" value={result.isbn ?? ''} />
+							<input type="hidden" name="description" value={result.description ?? ''} />
+							<input type="hidden" name="pageCount" value={result.pageCount ?? ''} />
+							<input type="hidden" name="publicationYear" value={result.publicationYear ?? ''} />
+							{#each result.genres as genre (genre)}
+								<input type="hidden" name="genres" value={genre} />
+							{/each}
+							<button
+								type="submit"
+								class="search-result__preview"
+								disabled={submittingKey === resultKey(result)}
+							>
+								{#if result.coverUrl}
+									<img class="search-result__cover" src={result.coverUrl} alt="" />
+								{:else}
+									<div class="search-result__cover search-result__cover--placeholder"></div>
+								{/if}
+								<div class="search-result__info">
+									<p class="search-result__title">{result.title}</p>
+									{#if result.author}
+										<p class="search-result__author">{result.author}</p>
+									{/if}
+									{#if result.genres.length > 0}
+										<div class="search-result__genres">
+											{#each result.genres as genre (genre)}
+												<span class="tag-chip tag-chip--static">{genre}</span>
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</button>
+							<button
+								type="submit"
+								formaction="?/addToWantToRead"
+								class="search-result__bookmark"
+								aria-label="Add {result.title} to Want to Read"
+								title="Add to Want to Read"
+								disabled={submittingKey === resultKey(result)}
+							>
+								<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+									<path
+										fill="currentColor"
+										d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1Z"
+									/>
+								</svg>
+							</button>
+							{#if submittingKey === resultKey(result)}
+								<span class="search-result__label"><span class="spinner"></span></span>
+							{/if}
+						</form>
+					{/if}
+				{/each}
+			</div>
+		{/if}
 
 		{#if hasMore}
 			<form

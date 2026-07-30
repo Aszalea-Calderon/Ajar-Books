@@ -682,7 +682,8 @@ button {
 	gap: var(--space-4);
 }
 
-.theme-options + h3 {
+.theme-options + h3,
+.accent-picker + h3 {
 	margin-top: var(--space-8);
 }
 
@@ -1320,17 +1321,17 @@ button {
 	border-color: var(--color-text-muted);
 }
 
-.profile-table-wrap {
+.data-table-wrap {
 	overflow-x: auto;
 }
 
-.profile-table {
+.data-table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: var(--font-size-sm);
 }
 
-.profile-table th {
+.data-table th {
 	padding: var(--space-2) var(--space-3);
 	text-align: left;
 	color: var(--color-text-muted);
@@ -1338,27 +1339,62 @@ button {
 	white-space: nowrap;
 }
 
-.profile-table td {
+.data-table td {
 	padding: var(--space-2) var(--space-3);
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }
 
-.profile-table tbody tr:hover {
+.data-table tbody tr:hover {
 	background: var(--color-surface-raised);
 }
 
-.profile-table td a {
+.data-table td a,
+.data-table__link {
 	color: var(--color-text);
 	font-weight: 600;
 	text-decoration: none;
 }
 
-.profile-table td a:hover {
+.data-table td a:hover,
+.data-table__link:hover {
 	text-decoration: underline;
 }
 
-.profile-table__sort {
+.data-table__link--button {
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	font: inherit;
+	cursor: pointer;
+}
+
+.data-table__bookmark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+.data-table__bookmark:hover {
+	color: var(--color-primary);
+	border-color: var(--color-primary);
+}
+
+.data-table__bookmark--active {
+	background: var(--color-primary);
+	border-color: var(--color-primary);
+	color: var(--color-primary-text);
+}
+
+.data-table__sort {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-1);
@@ -1372,19 +1408,19 @@ button {
 	cursor: pointer;
 }
 
-.profile-table__sort:hover {
+.data-table__sort:hover {
 	color: var(--color-text);
 }
 
-.profile-table__sort-arrow {
+.data-table__sort-arrow {
 	font-size: 0.7em;
 }
 
-.profile-table__cover-cell {
+.data-table__cover-cell {
 	width: 2.5rem;
 }
 
-.profile-table__cover {
+.data-table__cover {
 	width: 2rem;
 	height: 3rem;
 	object-fit: cover;
@@ -1392,11 +1428,11 @@ button {
 	display: block;
 }
 
-.profile-table__cover--placeholder {
+.data-table__cover--placeholder {
 	background: var(--color-surface-raised);
 }
 
-.profile-table__favorite {
+.data-table__favorite {
 	color: #f5b942;
 	margin-left: var(--space-1);
 }
