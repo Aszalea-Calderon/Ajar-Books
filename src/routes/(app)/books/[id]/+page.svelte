@@ -162,19 +162,17 @@
 
 <div class="book-detail">
 	<div class="book-detail__hero">
-		{#if data.userBook.finishedAt}
-			<form method="POST" action="?/toggleFavorite" use:enhance class="book-detail__favorite-form">
-				<button
-					type="submit"
-					class="book-detail__favorite-toggle"
-					class:book-detail__favorite-toggle--active={data.userBook.isFavorite}
-					aria-label={data.userBook.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-					title={data.userBook.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-				>
-					★
-				</button>
-			</form>
-		{/if}
+		<form method="POST" action="?/toggleFavorite" use:enhance class="book-detail__favorite-form">
+			<button
+				type="submit"
+				class="book-detail__favorite-toggle"
+				class:book-detail__favorite-toggle--active={data.userBook.isFavorite}
+				aria-label={data.userBook.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+				title={data.userBook.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+			>
+				★
+			</button>
+		</form>
 		<div class="book-detail__hero-content">
 			{#if data.book.coverUrl}
 				<img class="book-detail__cover" src={data.book.coverUrl} alt="" />
