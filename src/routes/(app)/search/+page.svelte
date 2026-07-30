@@ -5,7 +5,8 @@
 	import { navigating } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { viewModeState } from '$lib/client/viewMode.svelte';
-	import ViewToggle from '$lib/components/ViewToggle.svelte';
+	import FilterButton from '$lib/components/FilterButton.svelte';
+	import ViewButton from '$lib/components/ViewButton.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -86,6 +87,16 @@
 				Search
 			{/if}
 		</button>
+		<FilterButton activeCount={hideInLibrary ? 1 : 0}>
+			<div class="filter-button__group">
+				<span class="filter-button__group-label">Library</span>
+				<label class="search-toolbar__filter">
+					<input type="checkbox" bind:checked={hideInLibrary} />
+					Already in library
+				</label>
+			</div>
+		</FilterButton>
+		<ViewButton />
 	</form>
 
 	{#if data.query}
@@ -96,14 +107,6 @@
 			</p>
 		{:else if allResults.length === 0 && !isSearching}
 			<p class="dashboard__empty">No results for "{data.query}".</p>
-		{:else if allResults.length > 0}
-			<div class="search-toolbar">
-				<label class="search-toolbar__filter">
-					<input type="checkbox" bind:checked={hideInLibrary} />
-					Already in library
-				</label>
-				<ViewToggle />
-			</div>
 		{/if}
 
 		<div class="search-results" class:search-results--cards={viewModeState.current === 'cards'}>
