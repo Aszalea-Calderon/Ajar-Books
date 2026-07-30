@@ -87,7 +87,14 @@ body {
 	margin: 0;
 	font-family: var(--font-body);
 	font-size: var(--font-size-base);
-	background: var(--color-bg);
+	background-color: var(--color-bg);
+	/* A faint repeating texture (dot/plus/x/square, mixed for visual
+	   interest rather than a plain dot grid) behind every page — subtle
+	   enough it never competes with real content, just a bit of ambient
+	   detail on otherwise flat background. Fixed so it doesn't shift oddly
+	   during scroll. */
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='8' cy='8' r='1' fill='%23ffffff' fill-opacity='0.08'/><path d='M28 6 L32 6 M30 4 L30 8' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/><path d='M6 28 L10 32 M10 28 L6 32' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/><rect x='27' y='27' width='6' height='6' fill='none' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/></svg>");
+	background-attachment: fixed;
 	color: var(--color-text);
 	/* A branded default cursor (accent-colored arrow) for the app's general
 	   background/reading surfaces. Buttons/links keep the browser's native
@@ -98,14 +105,15 @@ body {
 	   light theme) so the shape stays visible against the page background
 	   either way. */
 	cursor:
-		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M3 2 L3 17 L7 13.5 L10 20 L13 18.5 L10 12 L16 12 Z' fill='%234c8edb' stroke='%23eef0f4' stroke-width='1.2' stroke-linejoin='round'/></svg>")
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M3 2 C3 1.4 3.7 1.1 4.2 1.5 L18.5 13 C19.1 13.5 18.8 14.4 18 14.4 L11.2 14.4 L14.6 21.3 C14.9 21.9 14.6 22.6 14 22.8 L12.2 23.5 C11.6 23.7 10.9 23.4 10.7 22.8 L7.5 15.6 L4.2 18.6 C3.6 19.1 2.7 18.7 2.7 17.9 L2.7 2.3 Z' fill='%234c8edb' stroke='%23eef0f4' stroke-width='1' stroke-linejoin='round'/></svg>")
 			3 2,
 		auto;
 }
 
 :root[data-theme='light'] body {
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='8' cy='8' r='1' fill='%23000000' fill-opacity='0.06'/><path d='M28 6 L32 6 M30 4 L30 8' stroke='%23000000' stroke-opacity='0.06' stroke-width='1'/><path d='M6 28 L10 32 M10 28 L6 32' stroke='%23000000' stroke-opacity='0.06' stroke-width='1'/><rect x='27' y='27' width='6' height='6' fill='none' stroke='%23000000' stroke-opacity='0.06' stroke-width='1'/></svg>");
 	cursor:
-		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M3 2 L3 17 L7 13.5 L10 20 L13 18.5 L10 12 L16 12 Z' fill='%231d5fa8' stroke='%23171a20' stroke-width='1.2' stroke-linejoin='round'/></svg>")
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M3 2 C3 1.4 3.7 1.1 4.2 1.5 L18.5 13 C19.1 13.5 18.8 14.4 18 14.4 L11.2 14.4 L14.6 21.3 C14.9 21.9 14.6 22.6 14 22.8 L12.2 23.5 C11.6 23.7 10.9 23.4 10.7 22.8 L7.5 15.6 L4.2 18.6 C3.6 19.1 2.7 18.7 2.7 17.9 L2.7 2.3 Z' fill='%231d5fa8' stroke='%23171a20' stroke-width='1' stroke-linejoin='round'/></svg>")
 			3 2,
 		auto;
 }
