@@ -8,6 +8,11 @@
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
+	import {
+		backgroundTextureState,
+		setBackgroundTexture,
+		type BackgroundTexture
+	} from '$lib/client/backgroundTexture.svelte';
 	import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 	import type { TagType, TagWithUsage } from '$lib/server/books/tags';
 
@@ -83,6 +88,11 @@
 	const fonts: { id: Font; label: string }[] = [
 		{ id: 'default', label: 'Default' },
 		{ id: 'dyslexic', label: 'Dyslexia-friendly' }
+	];
+
+	const backgroundTextures: { id: BackgroundTexture; label: string }[] = [
+		{ id: 'dotted', label: 'Dotted' },
+		{ id: 'none', label: 'None' }
 	];
 
 	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
@@ -193,6 +203,25 @@
 					<button type="button" class="settings-trigger" onclick={resetAccent}>
 						Reset to default
 					</button>
+				</div>
+
+				<h3>Background Pattern</h3>
+				<p class="settings-hint">
+					A faint dotted texture behind every page — purely decorative, turn it off if you'd rather
+					have a plain background.
+				</p>
+				<div class="theme-options">
+					{#each backgroundTextures as bg (bg.id)}
+						<button
+							type="button"
+							class="theme-option"
+							class:theme-option--selected={backgroundTextureState.current === bg.id}
+							onclick={() => setBackgroundTexture(bg.id)}
+						>
+							<span class="theme-swatch theme-swatch--bg-{bg.id}"></span>
+							{bg.label}
+						</button>
+					{/each}
 				</div>
 			{:else if section === 'fonts'}
 				<h3>Font</h3>

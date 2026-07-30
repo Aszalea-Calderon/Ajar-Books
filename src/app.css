@@ -118,6 +118,12 @@ body {
 		auto;
 }
 
+/* Opt-out for the background texture above — see Settings > Themes >
+   Background Pattern ($lib/client/backgroundTexture.svelte). */
+:root[data-bg-texture='none'] body {
+	background-image: none;
+}
+
 input,
 button {
 	font: inherit;
@@ -727,6 +733,15 @@ button {
 
 .theme-swatch--light {
 	background: linear-gradient(135deg, #f7f8fa 50%, var(--color-primary) 50%);
+}
+
+.theme-swatch--bg-dotted {
+	background-color: var(--color-bg);
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='4' cy='4' r='1' fill='%23ffffff' fill-opacity='0.35'/><circle cx='12' cy='12' r='1' fill='%23ffffff' fill-opacity='0.35'/></svg>");
+}
+
+.theme-swatch--bg-none {
+	background: var(--color-bg);
 }
 
 .font-preview {
@@ -1389,6 +1404,13 @@ button {
 	position: absolute;
 	bottom: var(--space-4);
 	right: var(--space-4);
+}
+
+.book-detail__favorite-form {
+	position: absolute;
+	top: var(--space-4);
+	right: var(--space-4);
+	z-index: 1;
 }
 
 .book-detail__reset-trigger {

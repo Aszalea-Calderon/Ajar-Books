@@ -7,6 +7,7 @@
 	import { initFont } from '$lib/client/font.svelte';
 	import { initAccent } from '$lib/client/accent.svelte';
 	import { initViewMode } from '$lib/client/viewMode.svelte';
+	import { initBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
 
 	let { children } = $props();
 
@@ -15,6 +16,7 @@
 		initFont();
 		initAccent();
 		initViewMode();
+		initBackgroundTexture();
 	});
 </script>
 
