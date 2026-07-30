@@ -89,6 +89,25 @@ body {
 	font-size: var(--font-size-base);
 	background: var(--color-bg);
 	color: var(--color-text);
+	/* A branded default cursor (accent-colored arrow) for the app's general
+	   background/reading surfaces. Buttons/links keep the browser's native
+	   pointer (see `button { cursor: pointer }` below) — that hand-cursor
+	   affordance is worth more for usability than a fully re-skinned set of
+	   click/grab/etc. cursor states would be worth for novelty. The outline
+	   color flips per theme (light outline on dark theme, dark outline on
+	   light theme) so the shape stays visible against the page background
+	   either way. */
+	cursor:
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M3 2 L3 17 L7 13.5 L10 20 L13 18.5 L10 12 L16 12 Z' fill='%234c8edb' stroke='%23eef0f4' stroke-width='1.2' stroke-linejoin='round'/></svg>")
+			3 2,
+		auto;
+}
+
+:root[data-theme='light'] body {
+	cursor:
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M3 2 L3 17 L7 13.5 L10 20 L13 18.5 L10 12 L16 12 Z' fill='%231d5fa8' stroke='%23171a20' stroke-width='1.2' stroke-linejoin='round'/></svg>")
+			3 2,
+		auto;
 }
 
 input,
@@ -725,6 +744,7 @@ button {
 /* Search page */
 .search-bar {
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--space-3);
 	margin-bottom: var(--space-6);
 }
@@ -1044,9 +1064,11 @@ button {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-4);
-	width: 18rem;
+	width: min(18rem, calc(100vw - 2rem));
+	max-height: calc(100vh - 8rem);
+	overflow-y: auto;
 	padding: var(--space-4);
-	background: var(--color-surface);
+	background: var(--color-surface-raised);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
 	box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
@@ -1515,6 +1537,9 @@ button {
 }
 
 .view-toggle__option {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
 	padding: var(--space-1) var(--space-3);
 	background: none;
 	border: none;
