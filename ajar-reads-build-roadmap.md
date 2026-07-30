@@ -238,6 +238,23 @@ _Not included:_ a theoretical TOCTOU race in first-run account creation was inve
 
 ---
 
+## Fix List
+
+A running list of smaller fixes/polish items to pick up before continuing into Phase 4 — not a single themed phase, just the next things queued up.
+
+| Done | Task                                                                     |
+| ---- | ------------------------------------------------------------------------ |
+| ☐    | Let My Library's (and Search's) Filter popover be reset back to defaults in one action, instead of clearing each dropdown/pill individually |
+| ☐    | Bring My Library's filters (genre/mood/format/status) to Search's filter too, for parity — Search currently only has hide-in-library and a client-side genre filter |
+| ☐    | Settings has a dark-mode readability issue somewhere (reported as "the page /% setting is not readable in dark mode") — exact location/control needs pinning down when picked up |
+| ☐    | Turn Settings from a modal into an actual page (its own route/URL) rather than a dialog overlay |
+| ☐    | Add a star-rating filter (e.g. My Library's Filter popover) alongside genre/mood/format/status |
+| ☐    | Add a real placeholder cover image for books with no cover art, instead of the current flat empty box |
+| ☐    | Remove the status toggle (Currently Reading / other status pills) from the My Library section — exact scope (which control, replaced with what) needs clarifying when picked up |
+| ☐    | Add profile icon and username editing to Settings |
+
+---
+
 ## Phase 4 — Streak Calendar & Goals
 
 **Why this order:** with real historical `ReadingLog` data from the import, the calendar has real content to render against immediately instead of an empty grid.
