@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { SvelteURLSearchParams, SvelteSet } from 'svelte/reactivity';
 	import { profileViewMode } from '$lib/client/viewMode.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import FilterButton from '$lib/components/FilterButton.svelte';
@@ -28,12 +28,10 @@
 	// Collapsed-by-status, not expanded-by-status — a freshly loaded page (or
 	// a newly appearing section, e.g. after finishing your first book) always
 	// starts expanded rather than remembering to add every new status here.
-	let collapsedSections = $state(new Set<string>());
+	let collapsedSections = new SvelteSet<string>();
 	function toggleSection(status: string) {
-		const next = new Set(collapsedSections);
-		if (next.has(status)) next.delete(status);
-		else next.add(status);
-		collapsedSections = next;
+		if (collapsedSections.has(status)) collapsedSections.delete(status);
+		else collapsedSections.add(status);
 	}
 
 	function updateFilter(key: string, value: string | boolean) {
