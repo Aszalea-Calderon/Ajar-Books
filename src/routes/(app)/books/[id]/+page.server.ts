@@ -197,10 +197,10 @@ export const load: PageServerLoad = async ({ params }) => {
 	);
 
 	// Same not-awaited streaming pattern as moreByAuthor above — a live,
-	// best-effort call that shouldn't block the page. Skipped entirely once
-	// the user has rated the book themselves, since the community rating is
-	// only ever shown as a fallback until then.
-	const communityRating = userBook.rating ? Promise.resolve(null) : getCommunityRating(book);
+	// best-effort call that shouldn't block the page. Shown alongside the
+	// user's own rating (not just as a fallback before they've rated it) —
+	// both are useful side by side.
+	const communityRating = getCommunityRating(book);
 
 	return {
 		book,
