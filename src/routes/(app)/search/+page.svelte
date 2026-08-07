@@ -54,6 +54,15 @@
 		return result.openLibraryId ?? result.isbn ?? result.title;
 	}
 
+	// Applied on a successful bookmark toggle instead of calling SvelteKit's
+	// default `update()` — that would invalidateAll() and re-run this page's
+	// load(), which hits Open Library/Google Books, just to reflect a status
+	// flip that's already fully known client-side.
+	function patchResult(key: string, patch: Partial<(typeof allResults)[number]>) {
+		const idx = allResults.findIndex((r) => resultKey(r) === key);
+		if (idx !== -1) allResults[idx] = { ...allResults[idx], ...patch };
+	}
+
 	type SortKey = 'title' | 'author' | 'publicationYear' | 'pageCount';
 	let sortKey = $state<SortKey>('title');
 	let sortDir = $state<'asc' | 'desc'>('asc');
@@ -294,9 +303,24 @@
 											method="POST"
 											action={result.isWantToRead ? '?/removeFromWantToRead' : '?/addToWantToRead'}
 											use:enhance={() => {
-												submittingKey = resultKey(result);
-												return async ({ update }) => {
-													await update();
+												const key = resultKey(result);
+												const wasWantToRead = result.isWantToRead;
+												submittingKey = key;
+												return async ({ result: actionResult, update }) => {
+													if (actionResult.type === 'success') {
+														if (wasWantToRead) {
+															patchResult(key, { isWantToRead: false });
+														} else {
+															const bookId =
+																(actionResult.data?.bookId as string | undefined) ?? null;
+															patchResult(key, {
+																isWantToRead: true,
+																libraryBookId: bookId ?? result.libraryBookId
+															});
+														}
+													} else {
+														await update();
+													}
 													submittingKey = null;
 												};
 											}}
@@ -386,9 +410,14 @@
 										method="POST"
 										action="?/removeFromWantToRead"
 										use:enhance={() => {
-											submittingKey = resultKey(result);
-											return async ({ update }) => {
-												await update();
+											const key = resultKey(result);
+											submittingKey = key;
+											return async ({ result: actionResult, update }) => {
+												if (actionResult.type === 'success') {
+													patchResult(key, { isWantToRead: false });
+												} else {
+													await update();
+												}
 												submittingKey = null;
 											};
 										}}
@@ -414,9 +443,14 @@
 										method="POST"
 										action="?/addToWantToRead"
 										use:enhance={() => {
-											submittingKey = resultKey(result);
-											return async ({ update }) => {
-												await update();
+											const key = resultKey(result);
+											submittingKey = key;
+											return async ({ result: actionResult, update }) => {
+												if (actionResult.type === 'success') {
+													patchResult(key, { isWantToRead: true });
+												} else {
+													await update();
+												}
 												submittingKey = null;
 											};
 										}}
@@ -459,9 +493,17 @@
 								action="?/add"
 								class="search-result"
 								use:enhance={() => {
-									submittingKey = resultKey(result);
-									return async ({ update }) => {
-										await update();
+									const key = resultKey(result);
+									submittingKey = key;
+									return async ({ action, result: actionResult, update }) => {
+										if (action.search === '?/addToWantToRead' && actionResult.type === 'success') {
+											const bookId = (actionResult.data?.bookId as string | undefined) ?? null;
+											patchResult(key, { isWantToRead: true, libraryBookId: bookId });
+										} else {
+											// The default `?/add` action redirects on success — let the
+											// normal enhance flow (and any failure) handle it as before.
+											await update();
+										}
 										submittingKey = null;
 									};
 								}}

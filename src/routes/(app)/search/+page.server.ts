@@ -237,7 +237,7 @@ export const actions: Actions = {
 		const pageCountRaw = data.get('pageCount');
 		const publicationYearRaw = data.get('publicationYear');
 
-		const { userBookId } = await addBookToLibrary({
+		const { bookId, userBookId } = await addBookToLibrary({
 			title,
 			author: String(data.get('author') ?? '') || null,
 			coverUrl: String(data.get('coverUrl') ?? '') || null,
@@ -250,6 +250,11 @@ export const actions: Actions = {
 		});
 
 		await setStatus(userBookId, 'want_to_read');
+
+		// Returned so the client can patch its already-loaded result list in
+		// place instead of re-running the whole (external-API-backed) search
+		// load just to learn the bookId a bookmark click just created.
+		return { bookId };
 	},
 
 	// Unchecking the bookmark on a result already in the library — mirrors
