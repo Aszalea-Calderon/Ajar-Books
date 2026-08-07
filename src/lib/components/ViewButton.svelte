@@ -8,15 +8,17 @@
 	// so this component works for either page.
 	// Table is only offered where a table rendering actually exists (My
 	// Library and Search both do now) — pass showTable={false} for a page
-	// that doesn't.
+	// that doesn't. Shelf is My Library only (see viewMode.svelte.ts).
 	let {
 		mode,
 		onSelect,
-		showTable = false
+		showTable = false,
+		showShelf = false
 	}: {
 		mode: ViewMode;
 		onSelect: (mode: ViewMode) => void;
 		showTable?: boolean;
+		showShelf?: boolean;
 	} = $props();
 
 	let open = $state(false);
@@ -124,6 +126,30 @@
 						<line x1="15" y1="3" x2="15" y2="21" />
 					</svg>
 					Table
+				</button>
+			{/if}
+			{#if showShelf}
+				<button
+					type="button"
+					class="view-button__option"
+					class:view-button__option--active={mode === 'shelf'}
+					onclick={() => select('shelf')}
+				>
+					<svg
+						viewBox="0 0 24 24"
+						width="14"
+						height="14"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path d="M4 4v16M20 4v16M4 9h16M4 15h16" />
+						<rect x="6" y="5" width="2" height="3.5" fill="currentColor" stroke="none" />
+						<rect x="10" y="5" width="2" height="3.5" fill="currentColor" stroke="none" />
+						<rect x="15" y="16" width="2" height="3.5" fill="currentColor" stroke="none" />
+					</svg>
+					Shelf
 				</button>
 			{/if}
 		</div>

@@ -7,6 +7,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import FilterButton from '$lib/components/FilterButton.svelte';
 	import ViewButton from '$lib/components/ViewButton.svelte';
+	import ShelfView from '$lib/components/shelf/ShelfView.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -185,13 +186,28 @@
 				/>
 			</div>
 		</FilterButton>
-		<ViewButton mode={profileViewMode.state.current} onSelect={profileViewMode.set} showTable />
+		<ViewButton
+			mode={profileViewMode.state.current}
+			onSelect={profileViewMode.set}
+			showTable
+			showShelf
+		/>
 	</div>
 
 	{#if data.totalBookCount === 0}
 		<p class="dashboard__empty">
 			Nothing here yet — books you add and set a status for will show up here.
 		</p>
+	{:else if profileViewMode.state.current === 'shelf'}
+		<ShelfView
+			books={data.books.map((entry) => ({
+				id: entry.book.id,
+				title: entry.book.title,
+				author: entry.book.author,
+				coverUrl: entry.book.coverUrl,
+				isbn: entry.book.isbn
+			}))}
+		/>
 	{:else if data.sections.length === 0}
 		<p class="dashboard__empty">No books match those filters.</p>
 	{:else if profileViewMode.state.current === 'table'}

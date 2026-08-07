@@ -3,6 +3,9 @@ import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	// Threlte/three.js requirement — without this Vite externalizes `three`
+	// for SSR and Node fails to resolve its ESM/CJS layout at request time.
+	ssr: { noExternal: ['three'] },
 	plugins: [
 		sveltekit({
 			compilerOptions: {

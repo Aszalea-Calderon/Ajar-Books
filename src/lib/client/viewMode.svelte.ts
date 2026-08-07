@@ -1,7 +1,12 @@
-export type ViewMode = 'cards' | 'list' | 'table';
+export type ViewMode = 'cards' | 'list' | 'table' | 'shelf';
 export type ViewScope = 'search' | 'profile';
 
-const VALID_MODES: ViewMode[] = ['cards', 'list', 'table'];
+// Search shows remote/unowned results (no shelf makes sense there); My
+// Library owns real books, so it's the only scope that offers Shelf.
+const ALLOWED_MODES: Record<ViewScope, ViewMode[]> = {
+	search: ['cards', 'list', 'table'],
+	profile: ['cards', 'list', 'table', 'shelf']
+};
 
 function storageKey(scope: ViewScope) {
 	return `ajar-view-mode-${scope}`;
@@ -21,7 +26,8 @@ function createViewModeStore(scope: ViewScope) {
 
 	function init() {
 		const stored = localStorage.getItem(storageKey(scope));
-		state.current = VALID_MODES.includes(stored as ViewMode) ? (stored as ViewMode) : 'cards';
+		const allowed = ALLOWED_MODES[scope];
+		state.current = allowed.includes(stored as ViewMode) ? (stored as ViewMode) : 'cards';
 	}
 
 	return { state, set, init };

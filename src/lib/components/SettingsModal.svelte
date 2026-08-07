@@ -104,6 +104,12 @@
 		{ id: 'list', label: 'List' },
 		{ id: 'table', label: 'Table' }
 	];
+	// My Library alone also offers Shelf — Search shows remote/unowned
+	// results, which a 3D shelf of "your books" doesn't make sense for.
+	const profileViewModeOptions: { id: ViewMode; label: string }[] = [
+		...viewModeOptions,
+		{ id: 'shelf', label: 'Shelf' }
+	];
 
 	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
 
@@ -254,7 +260,7 @@
 				</div>
 				<p class="settings-hint">My Library</p>
 				<div class="pill-row">
-					{#each viewModeOptions as v (v.id)}
+					{#each profileViewModeOptions as v (v.id)}
 						<button
 							type="button"
 							class="status-control__pill"
