@@ -1,13 +1,81 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { enhance } from '$app/forms';
+	import { parseLocalDateInput } from '$lib/date';
 	import LogProgressModal from '$lib/components/LogProgressModal.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import CalendarGrid from '$lib/components/CalendarGrid.svelte';
+	import DayDetailModal from '$lib/components/DayDetailModal.svelte';
+	import GoalModal from '$lib/components/GoalModal.svelte';
+	import StreakCard from '$lib/components/StreakCard.svelte';
+	import MonthPicker from '$lib/components/MonthPicker.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let selectedUserBookId = $state<string | null>(null);
 	let logModalOpen = $state(false);
+
+	let selectedDate = $state<string | null>(null);
+	let dayModalOpen = $state(false);
+	let goalModalOpen = $state(false);
+
+	function openDay(date: string) {
+		selectedDate = date;
+		dayModalOpen = true;
+	}
+
+	let selectedEntries = $derived(
+		selectedDate ? (data.calendarMonth.activity.get(selectedDate) ?? []) : []
+	);
+
+	function monthParam(year: number, month: number) {
+		const d = new Date(year, month, 1);
+		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+	}
+	let prevMonthHref = $derived(
+		`?month=${monthParam(data.calendarMonth.year, data.calendarMonth.month - 1)}`
+	);
+	let nextMonthHref = $derived(
+		`?month=${monthParam(data.calendarMonth.year, data.calendarMonth.month + 1)}`
+	);
+	let calendarMonthLabel = $derived(
+		new Date(data.calendarMonth.year, data.calendarMonth.month, 1).toLocaleDateString(undefined, {
+			month: 'long',
+			year: 'numeric'
+		})
+	);
+
+	// Trailing 6 real months ending at today (not the currently-viewed month)
+	// — a fixed, predictable set of direct-jump pills. MonthPicker's own
+	// prev/next arrows (reusing prevMonthHref/nextMonthHref above) cover
+	// reaching further back than the window, same range Prev/Next always had.
+	let monthPills = $derived.by(() => {
+		const anchor = parseLocalDateInput(data.calendarMonth.today) ?? new Date();
+		return Array.from({ length: 6 }, (_, i) => {
+			const d = new Date(anchor.getFullYear(), anchor.getMonth() - (5 - i), 1);
+			return {
+				year: d.getFullYear(),
+				month: d.getMonth(),
+				label: d.toLocaleDateString(undefined, { month: 'short' }),
+				href: `?month=${monthParam(d.getFullYear(), d.getMonth())}`,
+				isActive:
+					d.getFullYear() === data.calendarMonth.year && d.getMonth() === data.calendarMonth.month
+			};
+		});
+	});
+
+	const PERIOD_LABELS = { week: 'This week', month: 'This month', year: 'This year' };
+
+	function goalLabel(goal: (typeof data.goals)[number]) {
+		return `${PERIOD_LABELS[goal.period]} · ${goal.metric}`;
+	}
+
+	function goalPaceText(goal: (typeof data.goals)[number]) {
+		if (goal.pace.status === 'reached') return 'Goal reached!';
+		if (goal.pace.status === 'on-track') return 'On track';
+		return `${goal.pace.behindAmount} ${goal.metric} behind pace`;
+	}
 
 	let hero = $derived(
 		data.currentlyReading.find((row) => row.userBook.id === selectedUserBookId) ??
@@ -130,17 +198,76 @@
 	</section>
 
 	<section class="dashboard__panel dashboard__panel--streak">
-		<h2>Reading Streak</h2>
-		<p class="dashboard__empty">
-			Your streak calendar will show up here once you log some reading.
-		</p>
+		<StreakCard
+			currentStreak={data.streak}
+			weeklyStreak={data.weeklyStreak}
+			isNewRecord={data.isNewRecord}
+		/>
 	</section>
 
-	<section class="dashboard__panel dashboard__panel--goal">
-		<h2>Reading Goal</h2>
-		<p class="dashboard__empty">Set a reading goal to track your progress here.</p>
-	</section>
+	<div class="dashboard__row dashboard__row--goal-calendar">
+		<section class="dashboard__panel dashboard__panel--goal">
+			<h2>Reading Goal</h2>
+			{#if data.goals.length === 0}
+				<p class="dashboard__empty">Set a reading goal to track your progress here.</p>
+			{:else}
+				<div class="goal-list">
+					{#each data.goals as goal (goal.id)}
+						<div class="goal-progress">
+							<div class="goal-progress__main">
+								<ProgressBar current={goal.current} total={goal.target} unit={goal.metric} />
+								<div class="goal-progress__footer">
+									<p class="goal-progress__label">{goalLabel(goal)}</p>
+									<p
+										class="goal-progress__pace"
+										class:goal-progress__pace--behind={goal.pace.status === 'behind'}
+									>
+										{goalPaceText(goal)}
+									</p>
+								</div>
+							</div>
+							<form method="POST" action="?/deleteGoal" use:enhance>
+								<input type="hidden" name="id" value={goal.id} />
+								<button type="submit" class="goal-progress__remove">Remove</button>
+							</form>
+						</div>
+					{/each}
+				</div>
+			{/if}
+			<button type="button" class="dashboard__cta" onclick={() => (goalModalOpen = true)}>
+				+ Set a Goal
+			</button>
+		</section>
+
+		<section class="dashboard__panel dashboard__panel--calendar">
+			<div class="calendar-panel__header">
+				<h2>{calendarMonthLabel}</h2>
+			</div>
+			<MonthPicker
+				months={monthPills}
+				prevHref={prevMonthHref}
+				nextHref={nextMonthHref}
+				hasNext={data.calendarMonth.hasNextMonth}
+			/>
+			<CalendarGrid
+				year={data.calendarMonth.year}
+				month={data.calendarMonth.month}
+				activity={data.calendarMonth.activity}
+				today={data.calendarMonth.today}
+				onDayClick={openDay}
+			/>
+		</section>
+	</div>
 </div>
+
+<DayDetailModal
+	open={dayModalOpen}
+	onClose={() => (dayModalOpen = false)}
+	date={selectedDate}
+	entries={selectedEntries}
+/>
+
+<GoalModal open={goalModalOpen} onClose={() => (goalModalOpen = false)} action="?/createGoal" />
 
 {#if hero}
 	<LogProgressModal

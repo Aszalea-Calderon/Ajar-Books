@@ -8,7 +8,7 @@
 	}: {
 		current: number;
 		total: number | null;
-		unit: 'pages' | 'minutes';
+		unit: 'pages' | 'minutes' | 'books';
 		variant?: 'bar' | 'segments';
 		label?: string;
 	} = $props();
@@ -25,7 +25,7 @@
 		return `${value}`;
 	}
 
-	let suffix = $derived(unit === 'pages' ? ' pages' : '');
+	let suffix = $derived(unit === 'pages' ? ' pages' : unit === 'books' ? ' books' : '');
 	let percent = $derived(total ? Math.min(100, Math.round((current / total) * 100)) : 0);
 	let filledSegments = $derived(Math.round((percent / 100) * SEGMENT_COUNT));
 	let fractionText = $derived(

@@ -21,3 +21,33 @@ export function parseLocalDateInput(value: string): Date | null {
 	const [, year, month, day] = match;
 	return new Date(Number(year), Number(month) - 1, Number(day));
 }
+
+/**
+ * Returns the [start, end) local-midnight boundary for the week, month, or
+ * year containing `reference`. Weeks start Monday (ISO-style), not Sunday.
+ * `end` is exclusive — a value equal to `end` belongs to the next period.
+ */
+export function getPeriodRange(
+	period: 'week' | 'month' | 'year',
+	reference: Date
+): { start: Date; end: Date } {
+	if (period === 'week') {
+		// getDay(): 0=Sun..6=Sat. Days since the most recent Monday.
+		const daysSinceMonday = (reference.getDay() + 6) % 7;
+		const start = new Date(
+			reference.getFullYear(),
+			reference.getMonth(),
+			reference.getDate() - daysSinceMonday
+		);
+		const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+		return { start, end };
+	}
+	if (period === 'month') {
+		const start = new Date(reference.getFullYear(), reference.getMonth(), 1);
+		const end = new Date(reference.getFullYear(), reference.getMonth() + 1, 1);
+		return { start, end };
+	}
+	const start = new Date(reference.getFullYear(), 0, 1);
+	const end = new Date(reference.getFullYear() + 1, 0, 1);
+	return { start, end };
+}

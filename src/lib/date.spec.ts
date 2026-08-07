@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseLocalDateInput, toLocalDateInputValue } from './date';
+import { getPeriodRange, parseLocalDateInput, toLocalDateInputValue } from './date';
 
 describe('parseLocalDateInput', () => {
 	it('parses a date-only string as local midnight, not UTC midnight', () => {
@@ -25,5 +25,56 @@ describe('parseLocalDateInput', () => {
 		expect(parseLocalDateInput('')).toBeNull();
 		expect(parseLocalDateInput('not-a-date')).toBeNull();
 		expect(parseLocalDateInput('07/26/2026')).toBeNull();
+	});
+});
+
+function ymd(date: Date) {
+	return [date.getFullYear(), date.getMonth(), date.getDate()];
+}
+
+describe('getPeriodRange', () => {
+	it('resolves a week to its Monday start (exclusive end the following Monday)', () => {
+		// 2026-08-05 is a Wednesday.
+		const { start, end } = getPeriodRange('week', new Date(2026, 7, 5));
+		expect(ymd(start)).toEqual([2026, 7, 3]); // Mon Aug 3
+		expect(ymd(end)).toEqual([2026, 7, 10]); // Mon Aug 10
+	});
+
+	it('keeps a Monday reference as its own week start', () => {
+		const { start, end } = getPeriodRange('week', new Date(2026, 7, 3));
+		expect(ymd(start)).toEqual([2026, 7, 3]);
+		expect(ymd(end)).toEqual([2026, 7, 10]);
+	});
+
+	it('lets a week cross a month boundary', () => {
+		// 2026-11-01 is a Sunday, so its week starts Mon Oct 26.
+		const { start, end } = getPeriodRange('week', new Date(2026, 10, 1));
+		expect(ymd(start)).toEqual([2026, 9, 26]); // Mon Oct 26
+		expect(ymd(end)).toEqual([2026, 10, 2]); // Mon Nov 2
+	});
+
+	it('lets a week cross a year boundary', () => {
+		// 2026-01-01 is a Thursday, so its week starts Mon Dec 29, 2025.
+		const { start, end } = getPeriodRange('week', new Date(2026, 0, 1));
+		expect(ymd(start)).toEqual([2025, 11, 29]);
+		expect(ymd(end)).toEqual([2026, 0, 5]);
+	});
+
+	it('resolves a month to its calendar boundaries', () => {
+		const { start, end } = getPeriodRange('month', new Date(2026, 7, 17));
+		expect(ymd(start)).toEqual([2026, 7, 1]);
+		expect(ymd(end)).toEqual([2026, 8, 1]);
+	});
+
+	it('rolls a December month into January of the next year', () => {
+		const { start, end } = getPeriodRange('month', new Date(2026, 11, 25));
+		expect(ymd(start)).toEqual([2026, 11, 1]);
+		expect(ymd(end)).toEqual([2027, 0, 1]);
+	});
+
+	it('resolves a year to its calendar boundaries', () => {
+		const { start, end } = getPeriodRange('year', new Date(2026, 5, 15));
+		expect(ymd(start)).toEqual([2026, 0, 1]);
+		expect(ymd(end)).toEqual([2027, 0, 1]);
 	});
 });

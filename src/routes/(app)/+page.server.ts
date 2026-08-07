@@ -1,10 +1,15 @@
+import { fail } from '@sveltejs/kit';
 import { desc, eq, inArray } from 'drizzle-orm';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
 import { getProgressTotals } from '$lib/server/books/progress';
+import { getMonthActivity, getStreakActiveDates } from '$lib/server/books/calendar';
+import { createGoal, deleteGoal, getGoalsWithProgress } from '$lib/server/goals';
+import { computeCurrentStreak, computeWeeklyStreak, computeLongestStreakEver, isStreakRecord } from '$lib/streak';
+import { toLocalDateInputValue } from '$lib/date';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ url }) => {
 	const rows = await db
 		.select({ book: books, userBook: userBooks })
 		.from(userBooks)
@@ -42,5 +47,72 @@ export const load: PageServerLoad = async () => {
 		return bTime.getTime() - aTime.getTime();
 	});
 
-	return { currentlyReading };
+	const now = new Date();
+
+	// Streak is always relative to today, independent of whichever month the
+	// calendar below is currently showing. One fetch of the full active-dates
+	// history backs all three metrics below, rather than a query each.
+	const streakActiveDates = await getStreakActiveDates();
+	const currentStreak = computeCurrentStreak(streakActiveDates, now);
+	const weeklyStreak = computeWeeklyStreak(streakActiveDates, now);
+	const longestStreakEver = computeLongestStreakEver(streakActiveDates);
+	const isNewRecord = isStreakRecord(currentStreak, longestStreakEver);
+
+	// Calendar month comes from ?month=YYYY-MM (prev/next links), defaulting
+	// to the current month. Falls back silently on a malformed param.
+	const monthParam = url.searchParams.get('month');
+	const monthMatch = monthParam ? /^(\d{4})-(\d{2})$/.exec(monthParam) : null;
+	const year = monthMatch ? Number(monthMatch[1]) : now.getFullYear();
+	const month = monthMatch ? Number(monthMatch[2]) - 1 : now.getMonth();
+
+	const monthStart = new Date(year, month, 1);
+	const monthEnd = new Date(year, month + 1, 1);
+	const monthActivity = await getMonthActivity(monthStart, monthEnd);
+
+	const isCurrentOrFutureMonth =
+		year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth());
+
+	return {
+		currentlyReading,
+		streak: currentStreak,
+		weeklyStreak,
+		isNewRecord,
+		calendarMonth: {
+			year,
+			month,
+			today: toLocalDateInputValue(now),
+			activity: monthActivity,
+			hasNextMonth: !isCurrentOrFutureMonth
+		},
+		goals: await getGoalsWithProgress(now)
+	};
+};
+
+export const actions: Actions = {
+	createGoal: async ({ request }) => {
+		const formData = await request.formData();
+		const period = formData.get('period');
+		const metric = formData.get('metric');
+		const target = Number(formData.get('target'));
+
+		if (period !== 'week' && period !== 'month' && period !== 'year') {
+			return fail(400, { error: 'Invalid timeframe' });
+		}
+		if (metric !== 'books' && metric !== 'pages' && metric !== 'minutes') {
+			return fail(400, { error: 'Invalid metric' });
+		}
+		if (!Number.isFinite(target) || target <= 0) {
+			return fail(400, { error: 'Enter a target greater than 0' });
+		}
+
+		await createGoal({ period, metric, target: Math.round(target) });
+	},
+
+	deleteGoal: async ({ request }) => {
+		const formData = await request.formData();
+		const id = formData.get('id');
+		if (typeof id !== 'string' || !id) return fail(400, { error: 'Missing goal id' });
+
+		await deleteGoal(id);
+	}
 };

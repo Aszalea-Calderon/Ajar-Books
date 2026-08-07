@@ -137,3 +137,21 @@ export const readingLogs = sqliteTable('reading_logs', {
 		.notNull()
 		.$defaultFn(() => new Date())
 });
+
+export const goals = sqliteTable('goals', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	period: text('period', { enum: ['week', 'month', 'year'] }).notNull(),
+	metric: text('metric', { enum: ['books', 'pages', 'minutes'] }).notNull(),
+	target: integer('target').notNull(),
+	// Computed once at creation time from `period` + that day's date
+	// (Monday-start week / calendar month / calendar year) — not a
+	// user-picked range. A goal is scoped to that one period instance and
+	// doesn't roll forward once its window closes.
+	periodStart: integer('period_start', { mode: 'timestamp' }).notNull(),
+	periodEnd: integer('period_end', { mode: 'timestamp' }).notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
+});
