@@ -25,9 +25,6 @@
 	</div>
 	<div class="auth-card">
 		<h1>Create your account</h1>
-		<p class="auth-switch" style="margin-top: 0; margin-bottom: var(--space-6); text-align: left;">
-			This runs once, on first launch — Ajar Books doesn't support open sign-up.
-		</p>
 
 		{#if form?.error}
 			<p class="auth-error">{form.error}</p>
