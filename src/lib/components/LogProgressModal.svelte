@@ -77,22 +77,22 @@
 		>
 			{#if isAudiobook ? totalMinutes : totalPages}
 				<div
-					class="view-toggle log-progress__unit-toggle"
+					class="status-control log-progress__unit-toggle"
 					role="group"
 					aria-label="Log progress as"
 				>
 					<button
 						type="button"
-						class="view-toggle__option"
-						class:view-toggle__option--active={logProgressUnit === 'amount'}
+						class="status-control__pill"
+						class:status-control__pill--active={logProgressUnit === 'amount'}
 						onclick={() => (logProgressUnit = 'amount')}
 					>
 						{isAudiobook ? 'Time' : 'Pages'}
 					</button>
 					<button
 						type="button"
-						class="view-toggle__option"
-						class:view-toggle__option--active={logProgressUnit === 'percent'}
+						class="status-control__pill"
+						class:status-control__pill--active={logProgressUnit === 'percent'}
 						onclick={() => (logProgressUnit = 'percent')}
 					>
 						%
