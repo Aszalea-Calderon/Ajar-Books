@@ -748,6 +748,13 @@
 							{/each}
 						</span>
 					{/each}
+					{#if finishedRating}
+						<span class="star-rating__value"
+							>{Number.isInteger(finishedRating)
+								? finishedRating
+								: finishedRating.toFixed(2).replace(/0$/, '')}</span
+						>
+					{/if}
 				</div>
 				<input id="finishedRatingInput" type="hidden" name="rating" value={finishedRating} />
 			</div>

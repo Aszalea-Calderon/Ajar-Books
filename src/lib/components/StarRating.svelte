@@ -26,4 +26,7 @@
 			{/each}
 		</span>
 	{/each}
+	{#if value}
+		<span class="star-rating__value">{Number.isInteger(value) ? value : value.toFixed(2).replace(/0$/, '')}</span>
+	{/if}
 </form>
