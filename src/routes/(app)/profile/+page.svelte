@@ -45,6 +45,14 @@
 		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
 	}
 
+	// Clears the four filter dropdowns/pills in one action — leaves the
+	// search box (`q`) alone, since that's a separate typed query, not a filter.
+	function resetFilters() {
+		const params = new SvelteURLSearchParams(page.url.search);
+		for (const key of ['status', 'genre', 'mood', 'format']) params.delete(key);
+		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
+	}
+
 	// Debounced separately from updateFilter's other callers (status/genre/
 	// mood/format are single-click dropdowns/pills — a text box firing a
 	// navigation per keystroke would be much choppier).
@@ -132,6 +140,11 @@
 			/>
 		</div>
 		<FilterButton activeCount={activeFilterCount}>
+			{#if activeFilterCount > 0}
+				<button type="button" class="filter-button__reset" onclick={resetFilters}>
+					Reset filters
+				</button>
+			{/if}
 			<div class="filter-button__group">
 				<span class="filter-button__group-label">Status</span>
 				<div class="profile-library__tabs">

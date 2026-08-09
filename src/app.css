@@ -1413,6 +1413,19 @@ button.dashboard__cta {
 	letter-spacing: 0.04em;
 }
 
+.filter-button__reset {
+	align-self: flex-start;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0 0 var(--space-2);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	color: var(--color-primary);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 .view-button {
 	position: relative;
 	flex-shrink: 0;

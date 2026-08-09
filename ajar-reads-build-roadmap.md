@@ -284,7 +284,7 @@ A running list of smaller fixes/polish items. Split into two tiers: a handful of
 
 | Done | Task                                                                                                                                                                                                                         |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ☐    | Let My Library's (and Search's) Filter popover be reset back to defaults in one action, instead of clearing each dropdown/pill individually                                                                                  |
+| ☑    | Let My Library's (and Search's) Filter popover be reset back to defaults in one action, instead of clearing each dropdown/pill individually                                                                                  |
 | ☐    | Bring My Library's filters (genre/mood/format/status) to Search's filter too, for parity — Search currently only has hide-in-library and a client-side genre filter                                                          |
 | ☐    | Turn Settings from a modal into an actual page (its own route/URL) rather than a dialog overlay                                                                                                                              |
 | ☐    | Add a star-rating filter (e.g. My Library's Filter popover) alongside genre/mood/format/status                                                                                                                               |

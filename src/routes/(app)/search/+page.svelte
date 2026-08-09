@@ -149,6 +149,18 @@
 			{/if}
 		</button>
 		<FilterButton activeCount={(hideInLibrary ? 1 : 0) + (genreFilter ? 1 : 0)}>
+			{#if hideInLibrary || genreFilter}
+				<button
+					type="button"
+					class="filter-button__reset"
+					onclick={() => {
+						hideInLibrary = false;
+						genreFilter = '';
+					}}
+				>
+					Reset filters
+				</button>
+			{/if}
 			<div class="filter-button__group">
 				<span class="filter-button__group-label">Library</span>
 				<label class="search-toolbar__filter">
