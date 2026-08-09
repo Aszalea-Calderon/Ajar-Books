@@ -146,7 +146,7 @@
 				class:settings-modal__nav-item--active={section === 'themes'}
 				onclick={() => (section = 'themes')}
 			>
-				Themes
+				Display
 			</button>
 			<button
 				type="button"
