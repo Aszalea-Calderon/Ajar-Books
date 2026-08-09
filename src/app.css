@@ -6,9 +6,15 @@
   --color-primary is the single brand/accent color: every piece of UI chrome
   (buttons, links, the active nav pill, focus rings, the avatar) reads from
   it, so changing it here is enough to re-theme all of them at once.
-  --color-accent-* is a separate, intentionally multi-hue palette reserved
-  for future data visualization (genre/mood/setting tags, charts) — it does
-  not track --color-primary and isn't used anywhere yet.
+  --color-accent-* is a separate, decorative multi-hue palette already in use
+  (hero gradients, star ratings, success hints) — it does not track
+  --color-primary. It is NOT dataviz-safe: it was never checked for
+  colorblind-safe separation, and swapping its values would also reskin those
+  existing UI spots, so Phase 5's charts use their own --color-viz-* tokens
+  below instead (validated via the dataviz skill's palette validator against
+  each theme's real surface — categorical CVD/contrast checks pass for every
+  pairing this app's charts actually use; see ajar-reads-build-roadmap.md
+  Phase 5 for which chart uses which slots).
 */
 :root {
 	/* Base default theme */
@@ -26,6 +32,11 @@
 	--color-accent-blue: #8fb3d6;
 	--color-accent-gold: #d9b464;
 	--color-accent-green: #8fb08a;
+
+	--color-viz-purple: #8047e1;
+	--color-viz-blue: #0094f3;
+	--color-viz-gold: #b88a01;
+	--color-viz-green: #21b000;
 
 	--color-danger: #e5484d;
 
@@ -66,6 +77,11 @@
 	--color-accent-blue: #4d7ba6;
 	--color-accent-gold: #b9873a;
 	--color-accent-green: #5f8f58;
+
+	--color-viz-purple: #5e18b8;
+	--color-viz-blue: #0094f3;
+	--color-viz-gold: #c68706;
+	--color-viz-green: #24a906;
 
 	--color-danger: #c22e3a;
 }
@@ -3043,4 +3059,269 @@ button.dashboard__cta {
 .shelf-view__orientation-btn--active {
 	background: var(--color-primary);
 	color: var(--color-primary-text);
+}
+
+.insights {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+	max-width: 56rem;
+	margin: 0 auto;
+	padding: var(--space-6) var(--space-4);
+}
+
+.insights h1 {
+	margin: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Insights charts (Phase 5) — see the dataviz-skill notes on --color-viz-*
+   at the top of this file. Shared conventions: bars capped at 24px thick,
+   4px rounded data-end / square baseline, a 2px surface gap between
+   touching segments, text always in a text token (never the fill color),
+   and a hover/focus tooltip on every mark (the mark itself is the hit
+   target, per the dataviz skill's interaction spec).
+   ------------------------------------------------------------------- */
+
+.insights-empty {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.chart-tooltip {
+	position: absolute;
+	top: 50%;
+	left: 100%;
+	transform: translateY(-50%);
+	margin-left: var(--space-2);
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	padding: var(--space-1) var(--space-2);
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+	white-space: nowrap;
+	pointer-events: none;
+	z-index: 5;
+}
+
+.chart-tooltip--above {
+	top: -0.5rem;
+	left: 50%;
+	transform: translate(-50%, -100%);
+	margin-left: 0;
+}
+
+/* Genre breakdown — horizontal ranked bar list, single sequential hue
+   (magnitude only; each row's identity is already its own label, not a
+   distinct color, so no legend). */
+
+.genre-chart__rows {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	max-height: 22rem;
+	overflow-y: auto;
+}
+
+.genre-chart__row {
+	position: relative;
+	display: grid;
+	grid-template-columns: 9rem 1fr 2.5rem;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.genre-chart__label {
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.genre-chart__track {
+	background: var(--color-surface-raised);
+	border-radius: var(--radius-sm);
+	height: 20px;
+	overflow: hidden;
+}
+
+.genre-chart__bar {
+	height: 100%;
+	background: var(--color-primary);
+	border-radius: 0 4px 4px 0;
+	min-width: 4px;
+}
+
+.genre-chart__value {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Fiction/nonfiction split — a single 2(-3)-segment stacked bar, not a
+   pie: exactly the "part-to-whole, few categories" case the dataviz skill
+   calls out as a pie anti-pattern. Fixed hue order (fiction/nonfiction
+   never swap slots regardless of which is bigger). */
+
+.fiction-split__track {
+	display: flex;
+	height: 24px;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	gap: 2px;
+	background: var(--color-surface-raised);
+}
+
+.fiction-split__segment {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 4px;
+}
+
+.fiction-split__segment--unclassified {
+	background: var(--color-border);
+}
+
+.fiction-split__inline-label {
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	color: var(--color-primary-text);
+}
+
+.fiction-split__legend {
+	display: flex;
+	gap: var(--space-4);
+	list-style: none;
+	margin: var(--space-3) 0 0;
+	padding: 0;
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+}
+
+.fiction-split__legend li {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.fiction-split__swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 2px;
+	display: inline-block;
+}
+
+.fiction-split__swatch--unclassified {
+	background: var(--color-border);
+}
+
+/* Books finished per year — vertical bar/column chart, single sequential
+   hue. A year-over-year trend, deliberately not a daily heatmap (the
+   dashboard's streak calendar already covers day-level activity). */
+
+.yearly-chart__bars {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-4);
+	height: 10rem;
+}
+
+.yearly-chart__col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1;
+	height: 100%;
+}
+
+.yearly-chart__bar-wrap {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	flex: 1;
+	width: 100%;
+}
+
+.yearly-chart__bar {
+	width: 100%;
+	max-width: 24px;
+	background: var(--color-primary);
+	border-radius: 4px 4px 0 0;
+	min-height: 4px;
+}
+
+.yearly-chart__value {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+	font-variant-numeric: tabular-nums;
+	margin-bottom: var(--space-1);
+}
+
+.yearly-chart__axis-label {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+}
+
+/* Monthly metrics — three small-multiple mini bar-charts (one per metric),
+   sharing a month axis, each its own single hue. Deliberately NOT one
+   combo chart with three y-axes (the #1 dataviz anti-pattern: two/three
+   differently-scaled measures never share an axis). */
+
+.monthly-panels {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+	gap: var(--space-6);
+}
+
+.monthly-panel__title {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+	font-weight: 600;
+	margin: 0 0 var(--space-3);
+}
+
+.monthly-panel__bars {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-2);
+	height: 7rem;
+}
+
+.monthly-panel__col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	flex: 1;
+	height: 100%;
+}
+
+.monthly-panel__bar-wrap {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	flex: 1;
+	width: 100%;
+}
+
+.monthly-panel__bar {
+	width: 100%;
+	max-width: 20px;
+	margin: 0 auto;
+	border-radius: 4px 4px 0 0;
+	min-height: 2px;
+}
+
+.monthly-panel__axis-label {
+	font-size: 0.7rem;
+	color: var(--color-text-muted);
 }
