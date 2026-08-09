@@ -3,6 +3,7 @@ import { updateSettings } from '$lib/server/settings';
 import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
 import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
+import { backfillMissingMetadata } from '$lib/server/books/backfill';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
@@ -98,5 +99,17 @@ export const actions: Actions = {
 		const tagId = String(data.get('tagId') ?? '');
 		if (!tagId) return;
 		await deleteTagGlobally(tagId);
+	},
+
+	// One-time catch-up for books added before addBookToLibrary's ISBN-lookup
+	// path existed — mainly CSV imports, which never fetched cover/description/
+	// genre at all. Safe to re-run anytime; it only ever fills in what's
+	// still missing. See backfill.ts for why this stays sequential.
+	backfillMetadata: async () => {
+		const outcomes = await backfillMissingMetadata();
+		return {
+			backfillDone: true,
+			backfillCount: outcomes.length
+		};
 	}
 };

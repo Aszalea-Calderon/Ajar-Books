@@ -12,11 +12,14 @@ vi.mock('./search', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('./search')>();
 	return {
 		...actual,
-		getOpenLibraryWorkDetails: vi.fn().mockResolvedValue({ subjects: [], description: null })
+		getOpenLibraryWorkDetails: vi.fn().mockResolvedValue({ subjects: [], description: null }),
+		getOpenLibraryDetailsByIsbn: vi
+			.fn()
+			.mockResolvedValue({ openLibraryId: null, coverUrl: null, subjects: [], description: null })
 	};
 });
 
-const { getOpenLibraryWorkDetails } = await import('./search');
+const { getOpenLibraryWorkDetails, getOpenLibraryDetailsByIsbn } = await import('./search');
 const { addBookToLibrary } = await import('./library');
 
 function result(overrides: Partial<BookSearchResult> = {}): BookSearchResult {
@@ -41,6 +44,9 @@ describe('addBookToLibrary', () => {
 		vi.mocked(getOpenLibraryWorkDetails)
 			.mockReset()
 			.mockResolvedValue({ subjects: [], description: null });
+		vi.mocked(getOpenLibraryDetailsByIsbn)
+			.mockReset()
+			.mockResolvedValue({ openLibraryId: null, coverUrl: null, subjects: [], description: null });
 	});
 
 	it('creates a new Book and UserBook for a never-seen result', async () => {
@@ -121,9 +127,11 @@ describe('addBookToLibrary', () => {
 		expect(book.pageCount).toBe(512);
 	});
 
-	it('uses a description already present on the result (e.g. from Google Books) without fetching one', async () => {
-		// A real Google Books result never has an openLibraryId, so the fetch
-		// (which also supplies genre subjects) never triggers in this case.
+	it('uses a description already present on the result (e.g. from Google Books) without re-fetching it', async () => {
+		// A real Google Books result never has an openLibraryId, so the
+		// work-details fetch (gated on openLibraryId) never triggers — but the
+		// ISBN lookup still runs since genres/cover are still empty, to fill
+		// in what Google Books' result didn't carry.
 		const outcome = await addBookToLibrary(
 			result({
 				openLibraryId: null,
@@ -135,6 +143,31 @@ describe('addBookToLibrary', () => {
 		const [book] = await db.select().from(books).where(eq(books.id, outcome.bookId));
 		expect(book.description).toBe('Google Books description');
 		expect(getOpenLibraryWorkDetails).not.toHaveBeenCalled();
+	});
+
+	it('falls back to an ISBN lookup for cover/description/genre when there is no openLibraryId at all', async () => {
+		vi.mocked(getOpenLibraryDetailsByIsbn).mockResolvedValueOnce({
+			openLibraryId: '/works/OL789W',
+			coverUrl: 'https://covers.openlibrary.org/b/isbn/9780441013593-M.jpg',
+			subjects: ['Science fiction'],
+			description: 'Backfilled via ISBN.'
+		});
+
+		const outcome = await addBookToLibrary(
+			result({ openLibraryId: null, isbn: '9780441013593', description: null })
+		);
+
+		const [book] = await db.select().from(books).where(eq(books.id, outcome.bookId));
+		expect(book.description).toBe('Backfilled via ISBN.');
+		expect(book.coverUrl).toBe('https://covers.openlibrary.org/b/isbn/9780441013593-M.jpg');
+		expect(book.openLibraryId).toBe('/works/OL789W');
+		const genreTags = await getTagsForUserBook(outcome.userBookId, 'genre');
+		expect(genreTags.map((t) => t.name)).toEqual(['Science Fiction']);
+	});
+
+	it('does not attempt an ISBN lookup when there is no isbn either', async () => {
+		await addBookToLibrary(result({ openLibraryId: null, isbn: null }));
+		expect(getOpenLibraryDetailsByIsbn).not.toHaveBeenCalled();
 	});
 
 	it('leaves description null when nothing is available from either source', async () => {

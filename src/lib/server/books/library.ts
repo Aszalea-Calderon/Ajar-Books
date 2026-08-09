@@ -1,7 +1,12 @@
 import { db } from '$lib/server/db';
 import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
 import { eq, inArray, ne, or } from 'drizzle-orm';
-import { getOpenLibraryWorkDetails, sanitizeDescription, type BookSearchResult } from './search';
+import {
+	getOpenLibraryDetailsByIsbn,
+	getOpenLibraryWorkDetails,
+	sanitizeDescription,
+	type BookSearchResult
+} from './search';
 import { normalizeSubjectsToGenres } from './genreMapping';
 import { applyGenreSuggestions, type TagType } from './tags';
 
@@ -31,10 +36,27 @@ export async function addBookToLibrary(result: BookSearchResult) {
 	// that were already fetched during search.
 	let description = result.description;
 	let genresToApply: string[] = result.genres;
+	let coverUrl = result.coverUrl;
+	let openLibraryId = result.openLibraryId;
 
-	if (!existingBook && result.openLibraryId && (!description || genresToApply.length === 0)) {
-		const details = await getOpenLibraryWorkDetails(result.openLibraryId);
+	if (!existingBook && openLibraryId && (!description || genresToApply.length === 0)) {
+		const details = await getOpenLibraryWorkDetails(openLibraryId);
 		description = description ?? details.description;
+		if (genresToApply.length === 0) {
+			genresToApply = normalizeSubjectsToGenres(details.subjects);
+		}
+	} else if (
+		!existingBook &&
+		!openLibraryId &&
+		result.isbn &&
+		(!description || !coverUrl || genresToApply.length === 0)
+	) {
+		// No Open Library id at all — the CSV-import case (applyImportRow.ts
+		// never has one). Same enrichment, just resolved via ISBN first.
+		const details = await getOpenLibraryDetailsByIsbn(result.isbn);
+		description = description ?? details.description;
+		coverUrl = coverUrl ?? details.coverUrl;
+		openLibraryId = details.openLibraryId;
 		if (genresToApply.length === 0) {
 			genresToApply = normalizeSubjectsToGenres(details.subjects);
 		}
@@ -48,8 +70,8 @@ export async function addBookToLibrary(result: BookSearchResult) {
 				.values({
 					title: result.title,
 					author: result.author,
-					coverUrl: result.coverUrl,
-					openLibraryId: result.openLibraryId,
+					coverUrl,
+					openLibraryId,
 					isbn: result.isbn,
 					description: sanitizeDescription(description),
 					pageCount: result.pageCount,

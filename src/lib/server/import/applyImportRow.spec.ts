@@ -5,15 +5,18 @@ import { books, userBooks, tags, userBookTags, readingLogs } from '$lib/server/d
 import type { ImportRow } from '$lib/import/types';
 
 // applyImportRow goes through addBookToLibrary, which calls out to Open
-// Library for genre/description details on a genuinely new book with an
-// openLibraryId — imported rows never have one (only ISBN), so this path
-// never actually triggers, but stub it anyway to keep the suite hermetic
-// and consistent with library.spec.ts's convention.
+// Library for genre/description/cover details on a genuinely new book —
+// imported rows never have an openLibraryId (only ISBN), so they go through
+// the ISBN-lookup path specifically (getOpenLibraryDetailsByIsbn). Stub both
+// to keep the suite hermetic, consistent with library.spec.ts's convention.
 vi.mock('$lib/server/books/search', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('$lib/server/books/search')>();
 	return {
 		...actual,
-		getOpenLibraryWorkDetails: vi.fn().mockResolvedValue({ subjects: [], description: null })
+		getOpenLibraryWorkDetails: vi.fn().mockResolvedValue({ subjects: [], description: null }),
+		getOpenLibraryDetailsByIsbn: vi
+			.fn()
+			.mockResolvedValue({ openLibraryId: null, coverUrl: null, subjects: [], description: null })
 	};
 });
 

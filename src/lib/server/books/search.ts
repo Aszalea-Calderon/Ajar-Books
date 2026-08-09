@@ -284,6 +284,64 @@ export async function getOpenLibraryWorkDetails(
 	}
 }
 
+// Same shape ISBN-10/ISBN-13 validation already used client-side for the 3D
+// shelf's cover fallback ($lib/client/shelf/bookTextures.ts) — kept as its
+// own copy since one's server-side (outbound fetch) and one's client-side
+// (an <img> src), not because the shape differs.
+const ISBN_PATTERN = /^(?:\d{9}[\dXx]|\d{13})$/;
+
+type OpenLibraryEdition = { works?: { key: string }[] };
+
+/**
+ * For books with only an ISBN and no Open Library work id — the common case
+ * for CSV-imported rows, which never carry one (see applyImportRow.ts).
+ * Resolves the edition by ISBN to find its parent work, then reuses
+ * getOpenLibraryWorkDetails for subjects/description. The cover comes
+ * straight from the covers-by-ISBN endpoint (no edition lookup needed for
+ * that part) but is only reported once a HEAD check confirms Open Library
+ * actually has one — `?default=false` makes a missing cover a real 404
+ * instead of silently returning their generic gray placeholder silhouette,
+ * which would otherwise get persisted and mistaken for a real cover.
+ */
+export async function getOpenLibraryDetailsByIsbn(isbn: string): Promise<{
+	openLibraryId: string | null;
+	coverUrl: string | null;
+	subjects: string[];
+	description: string | null;
+}> {
+	if (!ISBN_PATTERN.test(isbn)) {
+		return { openLibraryId: null, coverUrl: null, subjects: [], description: null };
+	}
+
+	const candidateCoverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
+	let coverUrl: string | null = null;
+	try {
+		const coverCheck = await fetchWithTimeout(
+			`${candidateCoverUrl}?default=false`,
+			ENRICHMENT_TIMEOUT_MS
+		);
+		if (coverCheck.ok) coverUrl = candidateCoverUrl;
+	} catch {
+		// no-op — cover just stays unresolved, same best-effort contract as the rest of this file
+	}
+
+	try {
+		const res = await fetchWithTimeout(
+			`https://openlibrary.org/isbn/${isbn}.json`,
+			ENRICHMENT_TIMEOUT_MS
+		);
+		if (!res.ok) return { openLibraryId: null, coverUrl, subjects: [], description: null };
+		const edition: OpenLibraryEdition = await res.json();
+		const workKey = edition.works?.[0]?.key ?? null;
+		if (!workKey) return { openLibraryId: null, coverUrl, subjects: [], description: null };
+
+		const workDetails = await getOpenLibraryWorkDetails(workKey);
+		return { openLibraryId: workKey, coverUrl, ...workDetails };
+	} catch {
+		return { openLibraryId: null, coverUrl, subjects: [], description: null };
+	}
+}
+
 /**
  * Open Library is always searched (no key required). Google Books is only
  * queried when a Google Books API key is configured (Settings, falling back
