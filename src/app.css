@@ -1204,10 +1204,6 @@ button.dashboard__cta {
 	letter-spacing: 0.04em;
 }
 
-.settings-page {
-	max-width: 40rem;
-}
-
 .settings-page__header h1 {
 	margin: 0 0 var(--space-6);
 	font-size: var(--font-size-xl);
@@ -1215,10 +1211,20 @@ button.dashboard__cta {
 
 .settings-page__body {
 	display: grid;
-	grid-template-columns: 9rem 1fr;
+	grid-template-columns: 12rem 1fr;
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-lg);
+}
+
+.settings-page__content {
+	/* The page frame (sidebar + this panel) spans the full page width — the
+	   fix for looking boxed-in/narrow. A single-line text input or a
+	   paragraph stretched to a 1600px+ monitor's full width is a separate,
+	   real readability problem, so the content column itself still caps at
+	   a comfortable line/field length, same as any real settings UI (GitHub,
+	   Stripe, etc. all do this — page chrome is full-bleed, content isn't). */
+	max-width: 36rem;
 }
 
 .theme-options {
