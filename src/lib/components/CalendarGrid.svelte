@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { MonthActivityEntry } from '$lib/server/books/calendar';
+	import { coverSrc } from '$lib/coverPlaceholder';
 
 	let {
 		year,
@@ -70,12 +71,7 @@
 					{#if covers.length > 0}
 						<span class="calendar-grid__day-covers">
 							{#each covers as entry (entry.bookId)}
-								{#if entry.coverUrl}
-									<img class="calendar-grid__day-cover" src={entry.coverUrl} alt="" />
-								{:else}
-									<span class="calendar-grid__day-cover calendar-grid__day-cover--placeholder"
-									></span>
-								{/if}
+								<img class="calendar-grid__day-cover" src={coverSrc(entry.coverUrl, entry.bookId)} alt="" />
 							{/each}
 						</span>
 					{/if}

@@ -88,6 +88,18 @@ export async function hasAnyUser() {
 	return !!row;
 }
 
+/** Returns false for an empty/whitespace-only name or one already taken (the `users.username` unique constraint). */
+export async function updateUsername(userId: string, username: string): Promise<boolean> {
+	const trimmed = username.trim();
+	if (!trimmed) return false;
+	try {
+		await db.update(users).set({ username: trimmed }).where(eq(users.id, userId));
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 // Groups of 4 from a 32-character alphabet that drops visually-confusable
 // characters (0/O, 1/I/L) — meant to be hand-typed from a written-down copy
 // without ambiguity, the same reasoning as Crockford base32.

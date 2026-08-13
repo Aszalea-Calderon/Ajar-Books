@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { toLocalDateInputValue, todayLocalDateString } from '$lib/date';
 	import { trapFocus } from '$lib/trapFocus';
+	import { coverSrc } from '$lib/coverPlaceholder';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import FormatModal from '$lib/components/FormatModal.svelte';
 	import LogProgressModal from '$lib/components/LogProgressModal.svelte';
@@ -174,11 +175,11 @@
 			</button>
 		</form>
 		<div class="book-detail__hero-content">
-			{#if data.book.coverUrl}
-				<img class="book-detail__cover" src={data.book.coverUrl} alt="" />
-			{:else}
-				<div class="book-detail__cover book-detail__cover--placeholder"></div>
-			{/if}
+			<img
+				class="book-detail__cover"
+				src={coverSrc(data.book.coverUrl, data.book.id, data.book.title)}
+				alt=""
+			/>
 			<div>
 				<h2>{data.book.title}</h2>
 				{#if subtitle}
@@ -325,13 +326,11 @@
 												href={resolve('/(app)/books/[id]', { id: book.libraryBookId })}
 												title={book.title}
 											>
-												{#if book.coverUrl}
-													<img class="more-by-author__cover" src={book.coverUrl} alt="" />
-												{:else}
-													<div
-														class="more-by-author__cover more-by-author__cover--placeholder"
-													></div>
-												{/if}
+												<img
+													class="more-by-author__cover"
+													src={coverSrc(book.coverUrl, book.title, book.title)}
+													alt=""
+												/>
 											</a>
 										{:else}
 											<form method="POST" action="?/addFromAuthor" use:enhance>
@@ -356,13 +355,11 @@
 													value={book.result.publicationYear ?? ''}
 												/>
 												<button type="submit" class="more-by-author__book" title="Add {book.title}">
-													{#if book.coverUrl}
-														<img class="more-by-author__cover" src={book.coverUrl} alt="" />
-													{:else}
-														<div
-															class="more-by-author__cover more-by-author__cover--placeholder"
-														></div>
-													{/if}
+													<img
+														class="more-by-author__cover"
+														src={coverSrc(book.coverUrl, book.title, book.title)}
+														alt=""
+													/>
 												</button>
 											</form>
 										{/if}
@@ -388,11 +385,7 @@
 									href={resolve('/(app)/books/[id]', { id: book.id })}
 									title={book.title}
 								>
-									{#if book.coverUrl}
-										<img class="related-books__cover" src={book.coverUrl} alt="" />
-									{:else}
-										<div class="related-books__cover related-books__cover--placeholder"></div>
-									{/if}
+									<img class="related-books__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
 								</a>
 							{/each}
 							{#if data.relatedBooksHasMore && data.tagsByType.genre[0]}
@@ -516,11 +509,7 @@
 									href={resolve('/(app)/books/[id]', { id: book.id })}
 									title={book.title}
 								>
-									{#if book.coverUrl}
-										<img class="also-by-author__cover" src={book.coverUrl} alt="" />
-									{:else}
-										<div class="also-by-author__cover also-by-author__cover--placeholder"></div>
-									{/if}
+									<img class="also-by-author__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
 								</a>
 							{/each}
 						</div>

@@ -173,6 +173,14 @@ export const importJobs = sqliteTable('import_jobs', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
+	// Who to notify on completion — see notifications.ts. Nothing in this
+	// table's own logic branches on it; it exists purely as the addressee
+	// for the "import finished" notification fired when a job reaches 'done'.
+	// Nullable only so `ALTER TABLE ADD COLUMN` doesn't choke on rows that
+	// already existed in a dev/prod database before this column was added
+	// (SQLite requires a default for a NOT NULL column added this way); every
+	// job created going forward always sets it.
+	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
 	status: text('status', {
 		enum: ['running', 'stopping', 'done', 'stopped', 'error']
 	})
@@ -182,6 +190,30 @@ export const importJobs = sqliteTable('import_jobs', {
 	total: integer('total').notNull(),
 	processed: integer('processed').notNull().default(0),
 	results: text('results', { mode: 'json' }).notNull().default('[]'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
+});
+
+// Async/background events worth surfacing persistently instead of a
+// one-off banner that's only visible if you happen to be looking at the
+// right page when it happens — import finishing while you're elsewhere in
+// the app is the motivating case (see job.ts's runJob). Password reset and
+// backfill also post here even though their own flows already show an
+// inline result, so there's still a durable record if you weren't looking
+// at that screen (e.g. the /recover flow — you're not even logged in yet).
+export const notifications = sqliteTable('notifications', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	type: text('type', {
+		enum: ['import_finished', 'password_reset', 'backfill_complete']
+	}).notNull(),
+	message: text('message').notNull(),
+	readAt: integer('read_at', { mode: 'timestamp' }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

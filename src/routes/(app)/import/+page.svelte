@@ -321,6 +321,19 @@
 				></div>
 			</div>
 			<button type="button" class="settings-trigger" onclick={cancelImport}>Stop</button>
+			{#if results.length > 0}
+				<ul class="import-progress__log">
+					{#each results.map((r, i) => [r, i] as const).reverse() as [result, i] (i)}
+						<li>
+							{result.outcome === 'added'
+								? 'Added'
+								: result.outcome === 'merged'
+									? 'Merged'
+									: 'Skipped'}: <strong>{result.title}</strong>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		</div>
 	{:else if step === 'done'}
 		<div class="import-results">

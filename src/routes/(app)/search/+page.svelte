@@ -8,6 +8,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import FilterButton from '$lib/components/FilterButton.svelte';
 	import ViewButton from '$lib/components/ViewButton.svelte';
+	import { coverSrc } from '$lib/coverPlaceholder';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -251,11 +252,7 @@
 							{#each sortedResults as result (resultKey(result))}
 								<tr>
 									<td class="data-table__cover-cell">
-										{#if result.coverUrl}
-											<img class="data-table__cover" src={result.coverUrl} alt="" />
-										{:else}
-											<div class="data-table__cover data-table__cover--placeholder"></div>
-										{/if}
+										<img class="data-table__cover" src={coverSrc(result.coverUrl, resultKey(result), result.title)} alt="" />
 									</td>
 									<td>
 										{#if result.libraryBookId}
@@ -398,11 +395,7 @@
 									class="search-result__preview"
 									href={resolve('/(app)/books/[id]', { id: result.libraryBookId })}
 								>
-									{#if result.coverUrl}
-										<img class="search-result__cover" src={result.coverUrl} alt="" />
-									{:else}
-										<div class="search-result__cover search-result__cover--placeholder"></div>
-									{/if}
+									<img class="search-result__cover" src={coverSrc(result.coverUrl, resultKey(result), result.title)} alt="" />
 									<div class="search-result__info">
 										<p class="search-result__title">{result.title}</p>
 										{#if result.author}
@@ -536,11 +529,7 @@
 									class="search-result__preview"
 									disabled={submittingKey === resultKey(result)}
 								>
-									{#if result.coverUrl}
-										<img class="search-result__cover" src={result.coverUrl} alt="" />
-									{:else}
-										<div class="search-result__cover search-result__cover--placeholder"></div>
-									{/if}
+									<img class="search-result__cover" src={coverSrc(result.coverUrl, resultKey(result), result.title)} alt="" />
 									<div class="search-result__info">
 										<p class="search-result__title">{result.title}</p>
 										{#if result.author}
@@ -619,14 +608,10 @@
 			{#each data.wantToReadByGenre as group (group.genre)}
 				<div class="search-recommendations__group">
 					<h4 class="search-recommendations__genre">{group.genre}</h4>
-					<div class="search-results search-results--cards">
+					<div class="search-results" class:search-results--cards={searchViewMode.state.current === 'cards'}>
 						{#each group.books as book (book.id)}
 							<a class="search-result" href={resolve('/(app)/books/[id]', { id: book.id })}>
-								{#if book.coverUrl}
-									<img class="search-result__cover" src={book.coverUrl} alt="" />
-								{:else}
-									<div class="search-result__cover search-result__cover--placeholder"></div>
-								{/if}
+								<img class="search-result__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
 								<div class="search-result__info">
 									<p class="search-result__title">{book.title}</p>
 									{#if book.author}
@@ -645,13 +630,13 @@
 			{#each data.starterRecommendations as group (group.genre)}
 				<div class="search-recommendations__group">
 					<h4 class="search-recommendations__genre">{group.genre}</h4>
-					<div class="search-results search-results--cards">
+					<div class="search-results" class:search-results--cards={searchViewMode.state.current === 'cards'}>
 						{#each group.books as book (book.title)}
 							<a
 								class="search-result"
 								href={resolve(`/search?q=${encodeURIComponent(`${book.title} ${book.author}`)}`)}
 							>
-								<div class="search-result__cover search-result__cover--placeholder"></div>
+								<img class="search-result__cover" src={coverSrc(undefined, book.title, book.title)} alt="" />
 								<div class="search-result__info">
 									<p class="search-result__title">{book.title}</p>
 									<p class="search-result__author">{book.author}</p>

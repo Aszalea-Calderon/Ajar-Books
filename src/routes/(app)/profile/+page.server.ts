@@ -5,7 +5,8 @@ import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
 import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 import { backfillMissingMetadata } from '$lib/server/books/backfill';
-import { generateRecoveryKey } from '$lib/server/auth';
+import { generateRecoveryKey, updateUsername } from '$lib/server/auth';
+import { createNotification } from '$lib/server/notifications';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
@@ -20,6 +21,10 @@ export const load: PageServerLoad = async ({ url }) => {
 	const genreFilter = url.searchParams.get('genre') ?? '';
 	const moodFilter = url.searchParams.get('mood') ?? '';
 	const formatFilter = url.searchParams.get('format') ?? '';
+	// A minimum-stars threshold ("4+ stars"), not an exact match — the rating
+	// itself supports quarter-star increments, but bucketing the filter by
+	// whole stars is the usual "N and up" pattern and keeps the dropdown short.
+	const ratingFilter = url.searchParams.get('rating') ?? '';
 	const queryFilter = (url.searchParams.get('q') ?? '').trim().toLowerCase();
 
 	const allBooks = await getLibraryBooks();
@@ -29,6 +34,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (genreFilter && !entry.tags.genre.includes(genreFilter)) return false;
 		if (moodFilter && !entry.tags.mood.includes(moodFilter)) return false;
 		if (formatFilter && entry.userBook.format !== formatFilter) return false;
+		if (ratingFilter && (entry.userBook.rating ?? 0) < Number(ratingFilter)) return false;
 		if (
 			queryFilter &&
 			!entry.book.title.toLowerCase().includes(queryFilter) &&
@@ -66,10 +72,18 @@ export const load: PageServerLoad = async ({ url }) => {
 			genre: genreFilter,
 			mood: moodFilter,
 			format: formatFilter,
+			rating: ratingFilter,
 			q: url.searchParams.get('q') ?? ''
 		},
 		filterOptions: { genres, moods },
-		isFiltered: !!(statusFilter || genreFilter || moodFilter || formatFilter || queryFilter),
+		isFiltered: !!(
+			statusFilter ||
+			genreFilter ||
+			moodFilter ||
+			formatFilter ||
+			ratingFilter ||
+			queryFilter
+		),
 		totalBookCount: allBooks.length
 	};
 };
@@ -107,12 +121,33 @@ export const actions: Actions = {
 	// path existed — mainly CSV imports, which never fetched cover/description/
 	// genre at all. Safe to re-run anytime; it only ever fills in what's
 	// still missing. See backfill.ts for why this stays sequential.
-	backfillMetadata: async () => {
+	backfillMetadata: async ({ locals }) => {
+		if (!locals.user) return fail(401);
 		const outcomes = await backfillMissingMetadata();
+		// Skip the notification when there was nothing to do — "0 books
+		// updated" isn't worth a persistent record, and the inline result
+		// below already says so for whoever's watching this run.
+		if (outcomes.length > 0) {
+			await createNotification(
+				locals.user.id,
+				'backfill_complete',
+				`Backfill complete — updated ${outcomes.length} book${outcomes.length === 1 ? '' : 's'}.`
+			);
+		}
 		return {
 			backfillDone: true,
 			backfillCount: outcomes.length
 		};
+	},
+
+	updateUsername: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		const username = String((await request.formData()).get('username') ?? '');
+		const ok = await updateUsername(locals.user.id, username);
+		if (!ok) {
+			return fail(400, { usernameError: "That username is empty or already taken." });
+		}
+		return { usernameUpdated: true };
 	},
 
 	// Overwrites (invalidates) any previous key. The plaintext is only ever

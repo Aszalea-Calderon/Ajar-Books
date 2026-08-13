@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { importJobs } from '$lib/server/db/schema';
 import { applyImportRow, type ImportRowResult } from './applyImportRow';
 import type { ImportRow } from '$lib/import/types';
+import { createNotification } from '$lib/server/notifications';
 
 export type ImportJob = {
 	id: string;
@@ -62,6 +63,15 @@ async function runJob(jobId: string): Promise<void> {
 	}
 
 	await db.update(importJobs).set({ status: 'done' }).where(eq(importJobs.id, jobId));
+
+	if (job.userId) {
+		const added = results.filter((r) => r.outcome === 'added').length;
+		const merged = results.filter((r) => r.outcome === 'merged').length;
+		const errors = results.filter((r) => r.outcome === 'error').length;
+		const parts = [`${added} added`, `${merged} merged`];
+		if (errors > 0) parts.push(`${errors} error${errors === 1 ? '' : 's'}`);
+		await createNotification(job.userId, 'import_finished', `Import finished — ${parts.join(', ')}.`);
+	}
 }
 
 /**
@@ -96,10 +106,10 @@ export async function deleteImportJob(jobId: string): Promise<void> {
 	await db.delete(importJobs).where(eq(importJobs.id, jobId));
 }
 
-export async function createImportJob(rows: ImportRow[]): Promise<string> {
+export async function createImportJob(rows: ImportRow[], userId: string): Promise<string> {
 	const [job] = await db
 		.insert(importJobs)
-		.values({ rows, total: rows.length, results: [] })
+		.values({ rows, total: rows.length, results: [], userId })
 		.returning();
 	runJob(job.id); // deliberately not awaited — see runJob's own comment
 	return job.id;

@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { generateRecoveryKey, resetPasswordWithRecoveryKey } from '$lib/server/auth';
 import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
+import { createNotification } from '$lib/server/notifications';
 
 export const actions: Actions = {
 	default: async ({ request, getClientAddress }) => {
@@ -35,6 +36,15 @@ export const actions: Actions = {
 		}
 
 		clearAttempts(ip);
+
+		// A durable record of this, not just the inline confirmation below —
+		// this flow runs while logged out, so the account owner (if this
+		// wasn't them) only ever sees it once they next log in.
+		await createNotification(
+			userId,
+			'password_reset',
+			'Your password was reset using a recovery key.'
+		);
 
 		// Issue the next key right here instead of sending them off to Settings
 		// to remember to do it later — the old key is already spent, so this is

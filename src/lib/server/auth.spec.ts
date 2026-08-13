@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import {
@@ -6,6 +7,7 @@ import {
 	hashPassword,
 	hasRecoveryKey,
 	resetPasswordWithRecoveryKey,
+	updateUsername,
 	verifyPassword
 } from './auth';
 
@@ -101,5 +103,48 @@ describe('recovery key', () => {
 
 		const result = await resetPasswordWithRecoveryKey(firstKey, 'brand-new-password');
 		expect(result).toBeNull();
+	});
+});
+
+describe('updateUsername', () => {
+	beforeEach(async () => {
+		await db.delete(users);
+	});
+
+	it('updates the username', async () => {
+		const user = await seedUser();
+		const ok = await updateUsername(user.id, 'newname');
+
+		expect(ok).toBe(true);
+		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(updated.username).toBe('newname');
+	});
+
+	it('trims surrounding whitespace', async () => {
+		const user = await seedUser();
+		await updateUsername(user.id, '  spacedname  ');
+
+		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(updated.username).toBe('spacedname');
+	});
+
+	it('rejects an empty or whitespace-only name, leaving the old one in place', async () => {
+		const user = await seedUser();
+		const ok = await updateUsername(user.id, '   ');
+
+		expect(ok).toBe(false);
+		const [unchanged] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(unchanged.username).toBe('testuser');
+	});
+
+	it('rejects a name already taken by another account', async () => {
+		const user = await seedUser();
+		await db.insert(users).values({ username: 'taken', passwordHash: hashPassword('x') });
+
+		const ok = await updateUsername(user.id, 'taken');
+
+		expect(ok).toBe(false);
+		const [unchanged] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(unchanged.username).toBe('testuser');
 	});
 });

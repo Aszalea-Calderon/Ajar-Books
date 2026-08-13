@@ -424,6 +424,93 @@ button {
 	color: var(--color-danger);
 }
 
+.app-nav__bell {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.app-nav__bell-button {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: 50%;
+	color: var(--color-text-muted);
+	cursor: pointer;
+}
+
+.app-nav__bell-button:hover {
+	background: var(--color-surface-raised);
+	color: var(--color-text);
+}
+
+.app-nav__bell-badge {
+	position: absolute;
+	top: -2px;
+	right: -2px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.1rem;
+	height: 1.1rem;
+	padding: 0 3px;
+	background: var(--color-danger);
+	border-radius: 999px;
+	color: white;
+	font-size: 0.65rem;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.app-nav__notifications {
+	position: absolute;
+	top: calc(100% + var(--space-2));
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	width: 20rem;
+	max-height: 24rem;
+	overflow-y: auto;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+	z-index: 10;
+}
+
+.app-nav__notifications-empty {
+	margin: 0;
+	padding: var(--space-4);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.app-nav__notification {
+	padding: var(--space-3) var(--space-4);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.app-nav__notification:last-child {
+	border-bottom: none;
+}
+
+.app-nav__notification-message {
+	margin: 0 0 var(--space-1);
+	color: var(--color-text);
+	font-size: var(--font-size-sm);
+}
+
+.app-nav__notification-time {
+	color: var(--color-text-muted);
+	font-size: 0.75rem;
+}
+
 .app-main {
 	flex: 1;
 	padding: var(--space-8);
@@ -725,10 +812,6 @@ button.dashboard__cta {
 
 .calendar-grid__day-cover:first-child {
 	margin-left: 0;
-}
-
-.calendar-grid__day-cover--placeholder {
-	background: var(--color-border);
 }
 
 .goal-list {
@@ -1281,10 +1364,6 @@ button.dashboard__cta {
 	flex-shrink: 0;
 }
 
-.search-result__cover--placeholder {
-	background: var(--color-surface-raised);
-}
-
 .search-result__cover-wrap {
 	position: relative;
 	flex-shrink: 0;
@@ -1794,10 +1873,6 @@ button.dashboard__cta {
 	display: block;
 }
 
-.data-table__cover--placeholder {
-	background: var(--color-surface-raised);
-}
-
 .data-table__favorite {
 	color: #f5b942;
 	margin-left: var(--space-1);
@@ -1916,6 +1991,27 @@ button.dashboard__cta {
 	color: var(--color-text);
 }
 
+/* Newest-first, capped height — a 300+ row import shouldn't grow the page
+   without bound while it's running. */
+.import-progress__log {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: var(--space-4) 0 0;
+	padding: var(--space-3);
+	max-height: 12rem;
+	overflow-y: auto;
+	background: var(--color-surface-raised);
+	border-radius: var(--radius-md);
+	list-style: none;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.import-progress__log strong {
+	color: var(--color-text);
+}
+
 .search-result__label {
 	display: inline-flex;
 	align-items: center;
@@ -2024,10 +2120,6 @@ button.dashboard__cta {
 	border-radius: var(--radius-sm);
 	flex-shrink: 0;
 	border: 2px solid rgb(255 255 255 / 0.4);
-}
-
-.book-detail__cover--placeholder {
-	background: rgb(255 255 255 / 0.2);
 }
 
 .book-detail__hero-content h2 {
@@ -2374,10 +2466,6 @@ button.dashboard__cta {
 	display: block;
 }
 
-.more-by-author__cover--placeholder {
-	background: var(--color-surface-raised);
-}
-
 .more-by-author__view-more {
 	margin-left: auto;
 	padding-left: var(--space-3);
@@ -2419,10 +2507,6 @@ button.dashboard__cta {
 	display: block;
 }
 
-.also-by-author__cover--placeholder {
-	background: var(--color-surface-raised);
-}
-
 .related-books {
 	margin-top: var(--space-4);
 }
@@ -2447,10 +2531,6 @@ button.dashboard__cta {
 	object-fit: cover;
 	border-radius: var(--radius-sm);
 	display: block;
-}
-
-.related-books__cover--placeholder {
-	background: var(--color-surface-raised);
 }
 
 .related-books__view-more {
@@ -2631,11 +2711,6 @@ button.dashboard__cta {
 	flex-shrink: 0;
 }
 
-.currently-reading__cover--placeholder {
-	background: var(--color-surface-raised);
-	border: 1px solid var(--color-border);
-}
-
 .currently-reading__info {
 	flex: 1;
 	min-width: 0;
@@ -2717,10 +2792,6 @@ button.dashboard__cta {
 	flex-shrink: 0;
 }
 
-.currently-reading-chip__cover--placeholder {
-	background: var(--color-border);
-}
-
 .currently-reading-chip__info {
 	display: flex;
 	flex-direction: column;
@@ -2773,11 +2844,6 @@ button.dashboard__cta {
 	opacity: 0.85;
 }
 
-.dashboard__panel--hero .currently-reading__cover--placeholder {
-	background: rgb(255 255 255 / 0.2);
-	border: 1px solid rgb(255 255 255 / 0.4);
-}
-
 .dashboard__panel--hero .currently-reading__track {
 	background: rgb(0 0 0 / 0.15);
 	border: 1px solid rgb(255 255 255 / 0.35);
@@ -2798,10 +2864,6 @@ button.dashboard__cta {
 	border-color: rgb(255 255 255 / 0.6);
 }
 
-.dashboard__panel--hero .currently-reading-chip__cover--placeholder {
-	background: rgb(255 255 255 / 0.2);
-}
-
 .dashboard__panel--hero .currently-reading-chip__done {
 	color: var(--color-primary-text);
 	opacity: 0.75;
@@ -2816,6 +2878,11 @@ button.dashboard__cta {
 .settings-hint--success {
 	margin: var(--space-2) 0 0;
 	color: var(--color-accent-green);
+}
+
+.settings-hint--error {
+	margin: var(--space-2) 0 0;
+	color: var(--color-danger);
 }
 
 .manage-tags__type-label {

@@ -9,6 +9,7 @@
 	import GoalModal from '$lib/components/GoalModal.svelte';
 	import StreakCard from '$lib/components/StreakCard.svelte';
 	import MonthPicker from '$lib/components/MonthPicker.svelte';
+	import { coverSrc } from '$lib/coverPlaceholder';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -130,11 +131,11 @@
 					class="currently-reading__link"
 					href={resolve('/(app)/books/[id]', { id: hero.book.id })}
 				>
-					{#if hero.book.coverUrl}
-						<img class="currently-reading__cover" src={hero.book.coverUrl} alt="" />
-					{:else}
-						<div class="currently-reading__cover currently-reading__cover--placeholder"></div>
-					{/if}
+					<img
+						class="currently-reading__cover"
+						src={coverSrc(hero.book.coverUrl, hero.book.id, hero.book.title)}
+						alt=""
+					/>
 					<div class="currently-reading__info">
 						<p class="currently-reading__eyebrow">Up next today</p>
 						<p class="currently-reading__title">{hero.book.title}</p>
@@ -166,13 +167,11 @@
 						class:currently-reading-chip--active={row.userBook.id === hero.userBook.id}
 						onclick={() => (selectedUserBookId = row.userBook.id)}
 					>
-						{#if row.book.coverUrl}
-							<img class="currently-reading-chip__cover" src={row.book.coverUrl} alt="" />
-						{:else}
-							<div
-								class="currently-reading-chip__cover currently-reading-chip__cover--placeholder"
-							></div>
-						{/if}
+						<img
+							class="currently-reading-chip__cover"
+							src={coverSrc(row.book.coverUrl, row.book.id, row.book.title)}
+							alt=""
+						/>
 						<span class="currently-reading-chip__info">
 							<span class="currently-reading-chip__title">{row.book.title}</span>
 							{#if done !== null}

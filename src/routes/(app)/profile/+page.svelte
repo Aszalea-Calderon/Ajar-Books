@@ -8,6 +8,7 @@
 	import FilterButton from '$lib/components/FilterButton.svelte';
 	import ViewButton from '$lib/components/ViewButton.svelte';
 	import ShelfView from '$lib/components/shelf/ShelfView.svelte';
+	import { coverSrc } from '$lib/coverPlaceholder';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -21,9 +22,13 @@
 	];
 
 	let activeFilterCount = $derived(
-		[data.filters.status, data.filters.genre, data.filters.mood, data.filters.format].filter(
-			Boolean
-		).length
+		[
+			data.filters.status,
+			data.filters.genre,
+			data.filters.mood,
+			data.filters.format,
+			data.filters.rating
+		].filter(Boolean).length
 	);
 
 	// Collapsed-by-status, not expanded-by-status — a freshly loaded page (or
@@ -45,11 +50,11 @@
 		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
 	}
 
-	// Clears the four filter dropdowns/pills in one action — leaves the
+	// Clears the five filter dropdowns/pills in one action — leaves the
 	// search box (`q`) alone, since that's a separate typed query, not a filter.
 	function resetFilters() {
 		const params = new SvelteURLSearchParams(page.url.search);
-		for (const key of ['status', 'genre', 'mood', 'format']) params.delete(key);
+		for (const key of ['status', 'genre', 'mood', 'format', 'rating']) params.delete(key);
 		goto(resolve(`/profile?${params.toString()}`), { keepFocus: true, noScroll: true });
 	}
 
@@ -198,6 +203,21 @@
 					onChange={(v) => updateFilter('format', v)}
 				/>
 			</div>
+			<div class="filter-button__group">
+				<span class="filter-button__group-label">Rating</span>
+				<Dropdown
+					value={data.filters.rating}
+					options={[
+						{ value: '', label: 'Any rating' },
+						{ value: '4', label: '4 stars & up' },
+						{ value: '3', label: '3 stars & up' },
+						{ value: '2', label: '2 stars & up' },
+						{ value: '1', label: '1 star & up' }
+					]}
+					ariaLabel="Filter by rating"
+					onChange={(v) => updateFilter('rating', v)}
+				/>
+			</div>
 		</FilterButton>
 		<ViewButton
 			mode={profileViewMode.state.current}
@@ -272,11 +292,7 @@
 					{#each sortedBooks as entry (entry.userBook.id)}
 						<tr>
 							<td class="data-table__cover-cell">
-								{#if entry.book.coverUrl}
-									<img class="data-table__cover" src={entry.book.coverUrl} alt="" />
-								{:else}
-									<div class="data-table__cover data-table__cover--placeholder"></div>
-								{/if}
+								<img class="data-table__cover" src={coverSrc(entry.book.coverUrl, entry.book.id, entry.book.title)} alt="" />
 							</td>
 							<td>
 								<a href={resolve('/(app)/books/[id]', { id: entry.book.id })}>{entry.book.title}</a>
@@ -333,11 +349,7 @@
 							{#each section.books as entry (entry.userBook.id)}
 								<a class="search-result" href={resolve('/(app)/books/[id]', { id: entry.book.id })}>
 									<div class="search-result__cover-wrap">
-										{#if entry.book.coverUrl}
-											<img class="search-result__cover" src={entry.book.coverUrl} alt="" />
-										{:else}
-											<div class="search-result__cover search-result__cover--placeholder"></div>
-										{/if}
+										<img class="search-result__cover" src={coverSrc(entry.book.coverUrl, entry.book.id, entry.book.title)} alt="" />
 										{#if entry.userBook.rating && profileViewMode.state.current !== 'list'}
 											<span class="search-result__rating-badge">★ {entry.userBook.rating}</span>
 										{/if}
