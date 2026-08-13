@@ -155,3 +155,28 @@ export const goals = sqliteTable('goals', {
 		.notNull()
 		.$defaultFn(() => new Date())
 });
+
+// Server-driven so the import survives a closed tab or a page navigation —
+// the old client-driven batch loop lost all progress the moment the browser
+// tab went away (confirmed: a real 397-row import lost to a laptop sleep,
+// 2026-08-09). `rows` holds every parsed+mapped row up front so the server
+// can keep working through them on its own; `results` accumulates as each
+// one completes. Single-tenant app, so there's realistically ever at most
+// one active row at a time, but nothing here assumes that structurally.
+export const importJobs = sqliteTable('import_jobs', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	status: text('status', {
+		enum: ['running', 'stopping', 'done', 'stopped', 'error']
+	})
+		.notNull()
+		.default('running'),
+	rows: text('rows', { mode: 'json' }).notNull(),
+	total: integer('total').notNull(),
+	processed: integer('processed').notNull().default(0),
+	results: text('results', { mode: 'json' }).notNull().default('[]'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
+});

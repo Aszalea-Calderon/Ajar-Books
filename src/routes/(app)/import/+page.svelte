@@ -8,8 +8,13 @@
 		guessGenericFieldMap,
 		type GenericFieldMap
 	} from '$lib/import/generic';
+	import { onDestroy, onMount } from 'svelte';
 	import type { ImportRow, ImportSource, ImportStatus } from '$lib/import/types';
 	import type { ImportRowResult } from '$lib/server/import/applyImportRow';
+	import type { ImportJob } from '$lib/server/import/job';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	type Step = 'upload' | 'preview' | 'importing' | 'done';
 
@@ -93,50 +98,89 @@
 	}
 
 	// --- Importing ---
-	const BATCH_SIZE = 25;
+	// Driven server-side (see $lib/server/import/job.ts) so it keeps going
+	// even if this tab closes or the computer sleeps — this page's only job
+	// is to kick it off and poll for progress, including right after
+	// mounting if one was already running (see onMount below).
+	const POLL_MS = 800;
+	let jobId = $state<string | null>(null);
+	let jobTotal = $state(0);
 	let importedCount = $state(0);
 	let results = $state<ImportRowResult[]>([]);
-	let importCancelled = $state(false);
+	let pollHandle: ReturnType<typeof setInterval> | undefined;
 
 	let addedCount = $derived(results.filter((r) => r.outcome === 'added').length);
 	let mergedCount = $derived(results.filter((r) => r.outcome === 'merged').length);
 	let errorResults = $derived(results.filter((r) => r.outcome === 'error'));
 
+	function applyJobState(job: ImportJob) {
+		jobId = job.id;
+		jobTotal = job.total;
+		importedCount = job.processed;
+		results = job.results;
+		if (job.status === 'running' || job.status === 'stopping') {
+			step = 'importing';
+			startPolling(job.id);
+		} else {
+			step = 'done';
+			stopPolling();
+		}
+	}
+
+	function startPolling(id: string) {
+		stopPolling();
+		pollHandle = setInterval(async () => {
+			const res = await fetch(resolve('/(app)/import/jobs/[id]', { id }));
+			if (!res.ok) return;
+			const job: ImportJob = await res.json();
+			applyJobState(job);
+		}, POLL_MS);
+	}
+
+	function stopPolling() {
+		if (pollHandle) clearInterval(pollHandle);
+		pollHandle = undefined;
+	}
+
+	onMount(() => {
+		if (data.latestJob) applyJobState(data.latestJob);
+	});
+	onDestroy(stopPolling);
+
 	async function startImport() {
+		const toImport = mappedRows.filter((r) => r.title.trim());
 		step = 'importing';
 		importedCount = 0;
+		jobTotal = toImport.length;
 		results = [];
-		importCancelled = false;
 
-		const toImport = mappedRows.filter((r) => r.title.trim());
-
-		for (let i = 0; i < toImport.length; i += BATCH_SIZE) {
-			if (importCancelled) break;
-			const batch = toImport.slice(i, i + BATCH_SIZE);
-			const response = await fetch(resolve('/(app)/import/batch'), {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ rows: batch })
-			});
-			const data = await response.json();
-			results = [...results, ...data.results];
-			importedCount += batch.length;
-		}
-
-		step = 'done';
+		const response = await fetch(resolve('/(app)/import/jobs'), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ rows: toImport })
+		});
+		const { jobId: newJobId } = await response.json();
+		jobId = newJobId;
+		startPolling(newJobId);
 	}
 
-	function cancelImport() {
-		importCancelled = true;
+	async function cancelImport() {
+		if (!jobId) return;
+		await fetch(resolve('/(app)/import/jobs/[id]/stop', { id: jobId }), { method: 'POST' });
 	}
 
-	function startOver() {
+	async function startOver() {
+		// Explicit dismissal — otherwise getLatestImportJob would keep
+		// surfacing these finished results on every future visit to /import.
+		if (jobId) await fetch(resolve('/(app)/import/jobs/[id]', { id: jobId }), { method: 'DELETE' });
 		step = 'upload';
 		headers = [];
 		rawRows = [];
 		fileName = '';
 		results = [];
 		importedCount = 0;
+		jobId = null;
+		stopPolling();
 	}
 </script>
 
@@ -268,12 +312,12 @@
 	{:else if step === 'importing'}
 		<div class="import-progress">
 			<p>
-				Importing… {importedCount} of {mappedRows.filter((r) => r.title.trim()).length}
+				Importing… {importedCount} of {jobTotal}
 			</p>
 			<div class="progress-bar__track">
 				<div
 					class="progress-bar__fill"
-					style="width: {(importedCount / Math.max(1, validRowCount)) * 100}%"
+					style="width: {(importedCount / Math.max(1, jobTotal)) * 100}%"
 				></div>
 			</div>
 			<button type="button" class="settings-trigger" onclick={cancelImport}>Stop</button>
