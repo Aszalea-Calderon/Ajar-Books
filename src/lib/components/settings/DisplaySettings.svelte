@@ -20,6 +20,7 @@
 	import { textScaleState, setTextScale } from '$lib/client/textScale.svelte';
 	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
+	import DisplayPreview from './display/DisplayPreview.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
 	let {
@@ -66,6 +67,8 @@
 	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
 </script>
 
+<div class="display-settings">
+<div class="display-settings__controls">
 <h3>Theme</h3>
 <div class="theme-options">
 	{#each themes as t (t.id)}
@@ -300,3 +303,7 @@
 </div>
 
 <CustomThemesSection {customThemes} {onRequestConfirm} />
+</div>
+
+<DisplayPreview />
+</div>

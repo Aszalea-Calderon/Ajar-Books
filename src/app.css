@@ -1275,14 +1275,67 @@ button.dashboard__cta {
 	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
 }
 
-.settings-page__content {
-	/* The page frame (sidebar + this panel) spans the full page width — the
-	   fix for looking boxed-in/narrow. A single-line text input or a
-	   paragraph stretched to a 1600px+ monitor's full width is a separate,
-	   real readability problem, so the content column itself still caps at
-	   a comfortable line/field length, same as any real settings UI (GitHub,
-	   Stripe, etc. all do this — page chrome is full-bleed, content isn't). */
+/* The page frame (sidebar + panel) spans the full page width — the fix for
+   looking boxed-in/narrow. A single-line text input or a paragraph
+   stretched to a 1600px+ monitor's full width is a separate, real
+   readability problem, so forms still cap at a comfortable field length,
+   same as any real settings UI (GitHub, Stripe, etc. all do this — page
+   chrome is full-bleed, content isn't). Scoped to direct-child forms
+   (Search/Integrations/Tags/Data, none of which wrap their own content) so
+   Display's two-column layout below — which needs the width — isn't
+   caught by it; nothing there is a direct child <form>. */
+.settings-page__content > form {
 	max-width: 36rem;
+}
+
+.display-settings {
+	display: grid;
+	grid-template-columns: minmax(0, 36rem) 16rem;
+	gap: var(--space-8);
+	align-items: start;
+}
+
+.display-settings__controls {
+	min-width: 0;
+}
+
+.display-preview {
+	position: sticky;
+	top: var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+}
+
+.display-preview__heading {
+	margin: 0;
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.display-preview__swatch {
+	background: var(--color-primary);
+}
+
+.display-preview__button {
+	margin-top: 0;
+}
+
+@media (max-width: 48rem) {
+	.display-settings {
+		grid-template-columns: 1fr;
+	}
+
+	.display-preview {
+		position: static;
+	}
 }
 
 .theme-options {
