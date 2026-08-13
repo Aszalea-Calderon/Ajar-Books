@@ -10,6 +10,7 @@
 	import { initBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
 	import { initCardStyle } from '$lib/client/cardStyle.svelte';
 	import { initGlassy } from '$lib/client/glassy.svelte';
+	import { initDensity } from '$lib/client/density.svelte';
 
 	let { children } = $props();
 
@@ -22,6 +23,7 @@
 		initBackgroundTexture();
 		initCardStyle();
 		initGlassy();
+		initDensity();
 	});
 </script>
 

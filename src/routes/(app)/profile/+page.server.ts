@@ -229,7 +229,11 @@ export const actions: Actions = {
 			cardRadiusScale: Number(data.get('cardRadiusScale') ?? '1'),
 			cardOpacity: Number(data.get('cardOpacity') ?? '1'),
 			controlRadiusScale: Number(data.get('controlRadiusScale') ?? '1'),
-			glassy: data.get('glassy') === 'true'
+			glassy: data.get('glassy') === 'true',
+			density: String(data.get('density') ?? 'comfortable') as
+				| 'compact'
+				| 'comfortable'
+				| 'spacious'
 		});
 
 		if (!saved) {

@@ -14,6 +14,7 @@ export type CustomThemeInput = {
 	cardOpacity: number;
 	controlRadiusScale: number;
 	glassy: boolean;
+	density: 'compact' | 'comfortable' | 'spacious';
 };
 
 export async function listCustomThemes(): Promise<CustomTheme[]> {

@@ -14,6 +14,7 @@ function themeInput(overrides: Partial<Parameters<typeof saveCustomTheme>[0]> = 
 		cardOpacity: 0.9,
 		controlRadiusScale: 0.5,
 		glassy: true,
+		density: 'spacious' as const,
 		...overrides
 	};
 }

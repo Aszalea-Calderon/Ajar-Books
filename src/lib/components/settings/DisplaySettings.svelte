@@ -14,6 +14,7 @@
 		setControlRadiusScale
 	} from '$lib/client/cardStyle.svelte';
 	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
+	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
@@ -28,6 +29,12 @@
 	const themes: { id: Theme; label: string }[] = [
 		{ id: 'dark', label: 'Dark' },
 		{ id: 'light', label: 'Light' }
+	];
+
+	const densities: { id: Density; label: string }[] = [
+		{ id: 'compact', label: 'Compact' },
+		{ id: 'comfortable', label: 'Comfortable' },
+		{ id: 'spacious', label: 'Spacious' }
 	];
 
 	const fonts: { id: Font; label: string }[] = [
@@ -54,6 +61,23 @@
 		>
 			<span class="theme-swatch theme-swatch--{t.id}"></span>
 			{t.label}
+		</button>
+	{/each}
+</div>
+
+<h3>Spacing Density</h3>
+<p class="settings-hint">
+	How tight or loose padding and gaps feel across the whole app — not just cards, everything.
+</p>
+<div class="theme-options">
+	{#each densities as d (d.id)}
+		<button
+			type="button"
+			class="theme-option"
+			class:theme-option--selected={densityState.current === d.id}
+			onclick={() => setDensity(d.id)}
+		>
+			{d.label}
 		</button>
 	{/each}
 </div>

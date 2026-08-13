@@ -217,6 +217,9 @@ export const customThemes = sqliteTable(
 		cardOpacity: real('card_opacity').notNull(),
 		controlRadiusScale: real('control_radius_scale').notNull().default(1),
 		glassy: integer('glassy', { mode: 'boolean' }).notNull().default(false),
+		density: text('density', { enum: ['compact', 'comfortable', 'spacious'] })
+			.notNull()
+			.default('comfortable'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())

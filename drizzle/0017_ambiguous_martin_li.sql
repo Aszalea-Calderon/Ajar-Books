@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `density` text DEFAULT 'comfortable' NOT NULL;
