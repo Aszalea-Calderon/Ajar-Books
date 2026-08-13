@@ -7,7 +7,6 @@
 		setBackgroundTexture,
 		type BackgroundTexture
 	} from '$lib/client/backgroundTexture.svelte';
-	import { searchViewMode, profileViewMode, type ViewMode } from '$lib/client/viewMode.svelte';
 	import { cardStyleState, setCardRadiusScale, setCardOpacity } from '$lib/client/cardStyle.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
@@ -33,21 +32,6 @@
 	const backgroundTextures: { id: BackgroundTexture; label: string }[] = [
 		{ id: 'dotted', label: 'Dotted' },
 		{ id: 'none', label: 'None' }
-	];
-
-	// Search and My Library each keep their own view-mode preference (see
-	// viewMode.svelte.ts) — someone might want one dense (table) and the
-	// other visual (cards).
-	const viewModeOptions: { id: ViewMode; label: string }[] = [
-		{ id: 'cards', label: 'Cards' },
-		{ id: 'list', label: 'List' },
-		{ id: 'table', label: 'Table' }
-	];
-	// My Library alone also offers Shelf — Search shows remote/unowned
-	// results, which a 3D shelf of "your books" doesn't make sense for.
-	const profileViewModeOptions: { id: ViewMode; label: string }[] = [
-		...viewModeOptions,
-		{ id: 'shelf', label: 'Shelf' }
 	];
 
 	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
@@ -104,8 +88,9 @@
 
 <h3>Card Style</h3>
 <p class="settings-hint">
-	Corner rounding and opacity for cards and panels (book cards, dashboard panels, book detail
-	sections) — not buttons or inputs, just the surfaces you browse.
+	Corner rounding and background opacity for cards and panels (book cards, dashboard panels, book
+	detail sections) — not buttons or inputs, just the surfaces you browse. Opacity only fades the
+	background, never the text on top of it.
 </p>
 <div class="card-style-sliders">
 	<label class="card-style-slider">
@@ -124,7 +109,7 @@
 	</label>
 	<label class="card-style-slider">
 		<span class="card-style-slider__label">
-			Opacity
+			Background opacity
 			<span class="card-style-slider__value">{Math.round(cardStyleState.opacity * 100)}%</span>
 		</span>
 		<input
@@ -149,38 +134,6 @@
 		>
 			<span class="font-preview font-preview--{f.id}">Aa</span>
 			{f.label}
-		</button>
-	{/each}
-</div>
-
-<h3>Default View</h3>
-<p class="settings-hint">
-	Search and My Library each remember their own view — pick a starting point for each, or just
-	switch it in-page any time.
-</p>
-<p class="settings-hint">Search Results</p>
-<div class="pill-row">
-	{#each viewModeOptions as v (v.id)}
-		<button
-			type="button"
-			class="status-control__pill"
-			class:status-control__pill--active={searchViewMode.state.current === v.id}
-			onclick={() => searchViewMode.set(v.id)}
-		>
-			{v.label}
-		</button>
-	{/each}
-</div>
-<p class="settings-hint">My Library</p>
-<div class="pill-row">
-	{#each profileViewModeOptions as v (v.id)}
-		<button
-			type="button"
-			class="status-control__pill"
-			class:status-control__pill--active={profileViewMode.state.current === v.id}
-			onclick={() => profileViewMode.set(v.id)}
-		>
-			{v.label}
 		</button>
 	{/each}
 </div>
