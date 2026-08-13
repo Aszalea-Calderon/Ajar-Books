@@ -9,6 +9,7 @@
 		type GenericFieldMap
 	} from '$lib/import/generic';
 	import { onDestroy, onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import type { ImportRow, ImportSource, ImportStatus } from '$lib/import/types';
 	import type { ImportRowResult } from '$lib/server/import/applyImportRow';
 	import type { ImportJob } from '$lib/server/import/job';
@@ -52,7 +53,67 @@
 		}
 	});
 
-	let validRowCount = $derived(mappedRows.filter((r) => r.title.trim()).length);
+	// Same key shape used for the preview table's #each, the already-in-
+	// library lookup, and per-row exclusion — a row's identity for all three.
+	function rowKey(row: Pick<ImportRow, 'title' | 'isbn'>) {
+		return row.title + (row.isbn ?? '');
+	}
+
+	let importableRows = $derived(mappedRows.filter((r) => r.title.trim()));
+
+	// Excluding a row is reversible (toggled back on, not removed from the
+	// list) and tied to the loaded file, not to the source/mapping pills —
+	// tweaking those shouldn't silently discard exclusions someone already
+	// made. Reset explicitly in loadFile/backToUpload/startOver instead of
+	// reactively off mappedRows.
+	let excludedKeys = new SvelteSet<string>();
+
+	let includedRows = $derived(importableRows.filter((r) => !excludedKeys.has(rowKey(r))));
+	let validRowCount = $derived(includedRows.length);
+	let excludedCount = $derived(importableRows.length - includedRows.length);
+
+	function toggleExcluded(key: string) {
+		if (excludedKeys.has(key)) excludedKeys.delete(key);
+		else excludedKeys.add(key);
+	}
+
+	// Client-side only — every row is already loaded, this just slices what's
+	// rendered. "Load more" (not page numbers) to match Profile/Search's own
+	// pagination pattern.
+	const PREVIEW_PAGE_SIZE = 10;
+	let previewVisibleCount = $state(PREVIEW_PAGE_SIZE);
+
+	// Which importable rows already match a book in the library (merge
+	// rather than a fresh add) — checked server-side against the same rule
+	// applyImportRow itself uses. Re-fetched whenever the row set changes
+	// (a new file, or the source/mapping selection reinterpreting columns).
+	let alreadyInLibraryKeys = new SvelteSet<string>();
+	let checkingLibraryMatches = $state(false);
+
+	$effect(() => {
+		const rows = importableRows;
+		if (rows.length === 0) {
+			alreadyInLibraryKeys.clear();
+			return;
+		}
+		checkingLibraryMatches = true;
+		fetch(resolve('/(app)/import/check'), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ rows })
+		})
+			.then((res) => (res.ok ? res.json() : null))
+			.then((body: { matches: boolean[] } | null) => {
+				if (!body) return;
+				alreadyInLibraryKeys.clear();
+				rows.forEach((row, i) => {
+					if (body.matches[i]) alreadyInLibraryKeys.add(rowKey(row));
+				});
+			})
+			.finally(() => {
+				checkingLibraryMatches = false;
+			});
+	});
 
 	async function loadFile(file: File) {
 		parseError = '';
@@ -69,6 +130,8 @@
 		rawRows = parsed.rows;
 		source = detectSource(headers);
 		genericMap = source === 'generic' ? guessGenericFieldMap(headers) : emptyGenericFieldMap();
+		excludedKeys.clear();
+		previewVisibleCount = PREVIEW_PAGE_SIZE;
 		step = 'preview';
 	}
 
@@ -95,6 +158,8 @@
 		headers = [];
 		rawRows = [];
 		fileName = '';
+		excludedKeys.clear();
+		previewVisibleCount = PREVIEW_PAGE_SIZE;
 	}
 
 	// --- Importing ---
@@ -148,7 +213,7 @@
 	onDestroy(stopPolling);
 
 	async function startImport() {
-		const toImport = mappedRows.filter((r) => r.title.trim());
+		const toImport = includedRows;
 		step = 'importing';
 		importedCount = 0;
 		jobTotal = toImport.length;
@@ -180,6 +245,8 @@
 		results = [];
 		importedCount = 0;
 		jobId = null;
+		excludedKeys.clear();
+		previewVisibleCount = PREVIEW_PAGE_SIZE;
 		stopPolling();
 	}
 </script>
@@ -268,7 +335,11 @@
 			{/if}
 
 			<h3>Preview</h3>
-			<p class="settings-hint">First 10 of {validRowCount} importable rows.</p>
+			<p class="settings-hint">
+				Showing {Math.min(previewVisibleCount, importableRows.length)} of {importableRows.length} rows
+				— {validRowCount} will be imported{#if excludedCount > 0},
+					{excludedCount} excluded{/if}.
+			</p>
 			<div class="data-table-wrap">
 				<table class="data-table">
 					<thead>
@@ -279,24 +350,52 @@
 							<th>Status</th>
 							<th>Rating</th>
 							<th>Genres</th>
+							<th>Library</th>
 						</tr>
 					</thead>
 					<tbody>
-						{#each mappedRows
-							.filter((r) => r.title.trim())
-							.slice(0, 10) as row (row.title + (row.isbn ?? ''))}
-							<tr>
-								<td></td>
+						{#each importableRows.slice(0, previewVisibleCount) as row (rowKey(row))}
+							{@const key = rowKey(row)}
+							{@const excluded = excludedKeys.has(key)}
+							<tr class:import-preview__row--excluded={excluded}>
+								<td>
+									<button
+										type="button"
+										class="import-preview__row-toggle"
+										aria-label={excluded ? `Include ${row.title}` : `Exclude ${row.title}`}
+										title={excluded ? 'Include this row' : 'Exclude this row'}
+										onclick={() => toggleExcluded(key)}
+									>
+										{excluded ? '↺' : '×'}
+									</button>
+								</td>
 								<td>{row.title}</td>
 								<td>{row.author ?? '—'}</td>
 								<td>{row.status ?? '—'}</td>
 								<td>{row.rating ?? '—'}</td>
 								<td>{row.genres.join(', ') || '—'}</td>
+								<td>
+									{#if alreadyInLibraryKeys.has(key)}
+										<span class="tag-chip tag-chip--static">Already have it</span>
+									{/if}
+								</td>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			</div>
+			{#if checkingLibraryMatches}
+				<p class="settings-hint">Checking your library for matches…</p>
+			{/if}
+			{#if importableRows.length > previewVisibleCount}
+				<button
+					type="button"
+					class="profile-library__load-more"
+					onclick={() => (previewVisibleCount += PREVIEW_PAGE_SIZE)}
+				>
+					Show more
+				</button>
+			{/if}
 
 			<div class="import-preview__actions">
 				<button

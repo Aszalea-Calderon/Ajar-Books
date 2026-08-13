@@ -2042,6 +2042,32 @@ button.dashboard__cta {
 	gap: var(--space-3);
 }
 
+.import-preview__row-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-base);
+	line-height: 1;
+	cursor: pointer;
+}
+
+.import-preview__row-toggle:hover {
+	background: var(--color-surface-raised);
+	color: var(--color-text);
+}
+
+.import-preview__row--excluded {
+	opacity: 0.5;
+	text-decoration: line-through;
+}
+
 .import-progress {
 	display: flex;
 	flex-direction: column;
