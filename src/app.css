@@ -1550,7 +1550,6 @@ button.dashboard__cta {
 	gap: var(--space-4);
 }
 
-.profile-library__tabs,
 .pill-row {
 	display: flex;
 	flex-wrap: wrap;

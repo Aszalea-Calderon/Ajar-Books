@@ -13,8 +13,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const STATUS_TABS = [
-		{ value: '', label: 'All' },
+	const STATUS_OPTIONS = [
+		{ value: '', label: 'All statuses' },
 		{ value: 'reading', label: 'Currently Reading' },
 		{ value: 'want_to_read', label: 'Want to Read' },
 		{ value: 'finished', label: 'Finished' },
@@ -152,18 +152,12 @@
 			{/if}
 			<div class="filter-button__group">
 				<span class="filter-button__group-label">Status</span>
-				<div class="profile-library__tabs">
-					{#each STATUS_TABS as tab (tab.value)}
-						<button
-							type="button"
-							class="status-control__pill"
-							class:status-control__pill--active={data.filters.status === tab.value}
-							onclick={() => updateFilter('status', tab.value)}
-						>
-							{tab.label}
-						</button>
-					{/each}
-				</div>
+				<Dropdown
+					value={data.filters.status}
+					options={STATUS_OPTIONS}
+					ariaLabel="Filter by status"
+					onChange={(v) => updateFilter('status', v)}
+				/>
 			</div>
 			<div class="filter-button__group">
 				<span class="filter-button__group-label">Genre</span>
