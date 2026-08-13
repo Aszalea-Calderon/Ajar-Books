@@ -85,6 +85,13 @@
       "when": 1786580802816,
       "tag": "0011_solid_virginia_dare",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1786581562519,
+      "tag": "0012_easy_freak",
+      "breakpoints": true
     }
   ]
 }

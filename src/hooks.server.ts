@@ -2,7 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { getSessionCookie, hasAnyUser, validateSessionToken } from '$lib/server/auth';
 
-const PUBLIC_PATHS = new Set(['/login', '/setup']);
+const PUBLIC_PATHS = new Set(['/login', '/setup', '/recover']);
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const token = getSessionCookie(event.cookies);

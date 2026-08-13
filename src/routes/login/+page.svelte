@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import PasswordField from '$lib/components/PasswordField.svelte';
 	import type { ActionData } from './$types';
 
@@ -51,5 +52,8 @@
 			/>
 			<button class="auth-submit" type="submit" disabled={!username || !password}> Sign in </button>
 		</form>
+		<p class="settings-hint">
+			<a href={resolve('/recover')}>Forgot your password?</a>
+		</p>
 	</div>
 </div>

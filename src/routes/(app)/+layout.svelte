@@ -108,4 +108,5 @@
 	googleBooksApiKey={data.googleBooksApiKey}
 	languagePriority={data.languagePriority}
 	manageableTags={data.manageableTags}
+	hasRecoveryKey={data.hasRecoveryKey}
 />

@@ -87,3 +87,66 @@ export async function hasAnyUser() {
 	const [row] = await db.select({ id: users.id }).from(users).limit(1);
 	return !!row;
 }
+
+// Groups of 4 from a 32-character alphabet that drops visually-confusable
+// characters (0/O, 1/I/L) — meant to be hand-typed from a written-down copy
+// without ambiguity, the same reasoning as Crockford base32.
+const RECOVERY_KEY_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const RECOVERY_KEY_GROUPS = 4;
+const RECOVERY_KEY_GROUP_LENGTH = 4;
+
+function generateRecoveryKeyPlaintext(): string {
+	const groups: string[] = [];
+	for (let g = 0; g < RECOVERY_KEY_GROUPS; g++) {
+		let group = '';
+		const bytes = randomBytes(RECOVERY_KEY_GROUP_LENGTH);
+		for (let i = 0; i < RECOVERY_KEY_GROUP_LENGTH; i++) {
+			group += RECOVERY_KEY_ALPHABET[bytes[i] % RECOVERY_KEY_ALPHABET.length];
+		}
+		groups.push(group);
+	}
+	return groups.join('-');
+}
+
+/**
+ * Generates a fresh recovery key for this app's one user, stores only its
+ * hash, and returns the plaintext — the one and only time it's ever visible
+ * again after this call returns. Overwrites (invalidates) any previous key.
+ */
+export async function generateRecoveryKey(userId: string): Promise<string> {
+	const plaintext = generateRecoveryKeyPlaintext();
+	await db
+		.update(users)
+		.set({ recoveryKeyHash: hashPassword(plaintext) })
+		.where(eq(users.id, userId));
+	return plaintext;
+}
+
+export async function hasRecoveryKey(userId: string): Promise<boolean> {
+	const [user] = await db.select({ recoveryKeyHash: users.recoveryKeyHash }).from(users).where(eq(users.id, userId));
+	return !!user?.recoveryKeyHash;
+}
+
+/**
+ * Verifies a recovery key against the single user account and, if it
+ * matches, sets the new password and clears the key (single-use — see the
+ * schema comment on users.recoveryKeyHash for why). Normalizes the input
+ * key the same way it was generated (uppercase, dash-grouped) so a user
+ * retyping it isn't tripped up by case.
+ */
+export async function resetPasswordWithRecoveryKey(
+	key: string,
+	newPassword: string
+): Promise<boolean> {
+	const [user] = await db.select().from(users);
+	if (!user?.recoveryKeyHash) return false;
+
+	const normalized = key.trim().toUpperCase();
+	if (!verifyPassword(normalized, user.recoveryKeyHash)) return false;
+
+	await db
+		.update(users)
+		.set({ passwordHash: hashPassword(newPassword), recoveryKeyHash: null })
+		.where(eq(users.id, user.id));
+	return true;
+}

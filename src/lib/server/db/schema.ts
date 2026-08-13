@@ -6,6 +6,12 @@ export const users = sqliteTable('users', {
 		.$defaultFn(() => crypto.randomUUID()),
 	username: text('username').notNull().unique(),
 	passwordHash: text('password_hash').notNull(),
+	// A randomly-generated recovery key, hashed the same way as the password
+	// (never stored in plaintext) — null until one's generated in Settings.
+	// Single-use: cleared the moment it's used to reset a password, so a
+	// leaked-and-used key can't be replayed; Settings prompts to generate a
+	// fresh one once it's gone.
+	recoveryKeyHash: text('recovery_key_hash'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

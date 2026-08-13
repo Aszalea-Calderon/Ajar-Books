@@ -1,6 +1,7 @@
 import type { LayoutServerLoad } from './$types';
 import { getSettings } from '$lib/server/settings';
 import { getAllTagsWithUsage, type TagType } from '$lib/server/books/tags';
+import { hasRecoveryKey } from '$lib/server/auth';
 
 const TAG_TYPES: TagType[] = ['genre', 'mood', 'setting'];
 
@@ -17,6 +18,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		user: locals.user,
 		googleBooksApiKey: settings.googleBooksApiKey,
 		languagePriority: settings.languagePriority,
-		manageableTags
+		manageableTags,
+		hasRecoveryKey: locals.user ? await hasRecoveryKey(locals.user.id) : false
 	};
 };

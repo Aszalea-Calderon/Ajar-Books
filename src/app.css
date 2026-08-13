@@ -3346,3 +3346,16 @@ button.dashboard__cta {
 	font-size: 0.7rem;
 	color: var(--color-text-muted);
 }
+
+.recovery-key-display {
+	font-family: monospace;
+	font-size: var(--font-size-lg);
+	letter-spacing: 0.05em;
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	padding: var(--space-3) var(--space-4);
+	margin: var(--space-2) 0 var(--space-4);
+	user-select: all;
+	text-align: center;
+}

@@ -1,9 +1,11 @@
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { updateSettings } from '$lib/server/settings';
 import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
 import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 import { backfillMissingMetadata } from '$lib/server/books/backfill';
+import { generateRecoveryKey } from '$lib/server/auth';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
@@ -111,5 +113,13 @@ export const actions: Actions = {
 			backfillDone: true,
 			backfillCount: outcomes.length
 		};
+	},
+
+	// Overwrites (invalidates) any previous key. The plaintext is only ever
+	// in this one response — nothing persists it beyond the hash.
+	generateRecoveryKey: async ({ locals }) => {
+		if (!locals.user) return fail(401);
+		const key = await generateRecoveryKey(locals.user.id);
+		return { recoveryKey: key };
 	}
 };
