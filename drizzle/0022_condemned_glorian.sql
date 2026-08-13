@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` DROP COLUMN `card_border`;

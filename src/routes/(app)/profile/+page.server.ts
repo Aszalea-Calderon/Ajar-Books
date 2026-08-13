@@ -236,7 +236,7 @@ export const actions: Actions = {
 				| 'spacious',
 			cardShadow: String(data.get('cardShadow') ?? 'flat') as 'flat' | 'subtle' | 'pronounced',
 			coverRadiusScale: Number(data.get('coverRadiusScale') ?? '1'),
-			cardBorder: String(data.get('cardBorder') ?? 'thin') as 'none' | 'thin' | 'bold',
+			cardBorderWidth: Number(data.get('cardBorderWidth') ?? '1'),
 			textScale: Number(data.get('textScale') ?? '1')
 		});
 

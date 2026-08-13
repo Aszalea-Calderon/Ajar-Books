@@ -16,7 +16,7 @@
 	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
 	import { cardShadowState, setCardShadow, type CardShadow } from '$lib/client/cardShadow.svelte';
 	import { coverStyleState, setCoverRadiusScale } from '$lib/client/coverStyle.svelte';
-	import { cardBorderState, setCardBorder, type CardBorder } from '$lib/client/cardBorder.svelte';
+	import { cardBorderState, setCardBorderWidth } from '$lib/client/cardBorder.svelte';
 	import { textScaleState, setTextScale } from '$lib/client/textScale.svelte';
 	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
@@ -46,12 +46,6 @@
 		{ id: 'flat', label: 'Flat' },
 		{ id: 'subtle', label: 'Subtle' },
 		{ id: 'pronounced', label: 'Pronounced' }
-	];
-
-	const cardBorders: { id: CardBorder; label: string }[] = [
-		{ id: 'none', label: 'None' },
-		{ id: 'thin', label: 'Thin' },
-		{ id: 'bold', label: 'Bold' }
 	];
 
 	const fonts: { id: Font; label: string }[] = [
@@ -121,6 +115,21 @@
 			oninput={(event) => setTextScale(Number(event.currentTarget.value))}
 		/>
 	</label>
+</div>
+
+<h3>Font</h3>
+<div class="theme-options">
+	{#each fonts as f (f.id)}
+		<button
+			type="button"
+			class="theme-option"
+			class:theme-option--selected={fontState.current === f.id}
+			onclick={() => setFont(f.id)}
+		>
+			<span class="font-preview font-preview--{f.id}">Aa</span>
+			{f.label}
+		</button>
+	{/each}
 </div>
 
 <h3>Accent Color</h3>
@@ -248,18 +257,21 @@
 	{/each}
 </div>
 
-<p class="settings-hint">Border — how visible the edge of a card is.</p>
-<div class="theme-options">
-	{#each cardBorders as b (b.id)}
-		<button
-			type="button"
-			class="theme-option"
-			class:theme-option--selected={cardBorderState.current === b.id}
-			onclick={() => setCardBorder(b.id)}
-		>
-			{b.label}
-		</button>
-	{/each}
+<div class="card-style-sliders">
+	<label class="card-style-slider">
+		<span class="card-style-slider__label">
+			Border — how visible the edge of a card is
+			<span class="card-style-slider__value">{cardBorderState.widthPx}px</span>
+		</span>
+		<input
+			type="range"
+			min="0"
+			max="4"
+			step="0.5"
+			value={cardBorderState.widthPx}
+			oninput={(event) => setCardBorderWidth(Number(event.currentTarget.value))}
+		/>
+	</label>
 </div>
 
 <h3>Action Buttons</h3>
@@ -285,21 +297,6 @@
 			oninput={(event) => setControlRadiusScale(Number(event.currentTarget.value))}
 		/>
 	</label>
-</div>
-
-<h3>Font</h3>
-<div class="theme-options">
-	{#each fonts as f (f.id)}
-		<button
-			type="button"
-			class="theme-option"
-			class:theme-option--selected={fontState.current === f.id}
-			onclick={() => setFont(f.id)}
-		>
-			<span class="font-preview font-preview--{f.id}">Aa</span>
-			{f.label}
-		</button>
-	{/each}
 </div>
 
 <CustomThemesSection {customThemes} {onRequestConfirm} />

@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `card_border_width` real DEFAULT 1 NOT NULL;

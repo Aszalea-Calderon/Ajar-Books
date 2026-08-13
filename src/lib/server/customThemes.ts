@@ -17,7 +17,7 @@ export type CustomThemeInput = {
 	density: 'compact' | 'comfortable' | 'spacious';
 	cardShadow: 'flat' | 'subtle' | 'pronounced';
 	coverRadiusScale: number;
-	cardBorder: 'none' | 'thin' | 'bold';
+	cardBorderWidth: number;
 	textScale: number;
 };
 
