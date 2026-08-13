@@ -2,15 +2,20 @@ import { fail, redirect } from '@sveltejs/kit';
 import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { searchBooks, type BookSearchResult } from '$lib/server/books/search';
-import { addBookToLibrary } from '$lib/server/books/library';
+import { addBookToLibrary, getUsedTagNames } from '$lib/server/books/library';
 import { setStatus, untoggleWantToRead } from '$lib/server/books/progress';
 import { db } from '$lib/server/db';
 import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
 
 // Cross-references live search results against books already in the local
 // library (by Open Library id or ISBN) so the UI can show "already in
-// library" instead of a duplicate add button, and whether the bookmark
-// toggle should render as already-checked.
+// library" instead of a duplicate add button, whether the bookmark toggle
+// should render as already-checked, and — for the Mood/Format/Status filters
+// below — that library entry's own status, format, and mood tags. A result
+// with no library match (or one added but never given a status, still
+// sitting at the transient 'added' marker) simply has null/empty values for
+// these and only ever matches the filters' "Any" option, the same as the
+// data honestly not existing yet.
 async function attachLibraryIds(results: BookSearchResult[]) {
 	const matchConditions = results
 		.flatMap((r) => [
@@ -21,11 +26,28 @@ async function attachLibraryIds(results: BookSearchResult[]) {
 
 	const existing = matchConditions.length
 		? await db
-				.select({ book: books, status: userBooks.status })
+				.select({ book: books, userBook: userBooks })
 				.from(books)
 				.leftJoin(userBooks, eq(userBooks.bookId, books.id))
 				.where(or(...matchConditions))
 		: [];
+
+	const userBookIds = existing
+		.map((e) => e.userBook?.id)
+		.filter((id): id is string => id != null);
+	const moodRows = userBookIds.length
+		? await db
+				.select({ userBookId: userBookTags.userBookId, name: tags.name })
+				.from(userBookTags)
+				.innerJoin(tags, eq(userBookTags.tagId, tags.id))
+				.where(and(eq(tags.type, 'mood'), inArray(userBookTags.userBookId, userBookIds)))
+		: [];
+	const moodsByUserBook = new Map<string, string[]>();
+	for (const row of moodRows) {
+		const list = moodsByUserBook.get(row.userBookId) ?? [];
+		list.push(row.name);
+		moodsByUserBook.set(row.userBookId, list);
+	}
 
 	return results.map((r) => {
 		const match = existing.find(
@@ -36,7 +58,10 @@ async function attachLibraryIds(results: BookSearchResult[]) {
 		return {
 			...r,
 			libraryBookId: match?.book.id ?? null,
-			isWantToRead: match?.status === 'want_to_read'
+			isWantToRead: match?.userBook?.status === 'want_to_read',
+			status: match?.userBook?.status ?? null,
+			format: match?.userBook?.format ?? null,
+			moods: match?.userBook ? (moodsByUserBook.get(match.userBook.id) ?? []) : []
 		};
 	});
 }
@@ -144,6 +169,12 @@ async function hasAnyBooks() {
 
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q')?.trim() ?? '';
+	// Same list Profile's Mood filter uses (getUsedTagNames), so the two
+	// filters offer identical options — real parity, not just a same-shaped
+	// dropdown. Fetched regardless of query since the filter bar itself is
+	// always visible, not just after a search.
+	const moods = await getUsedTagNames('mood');
+
 	if (!query) {
 		const wantToReadByGenre = await getWantToReadByGenre();
 		const starterRecommendations =
@@ -153,7 +184,8 @@ export const load: PageServerLoad = async ({ url }) => {
 			results: [],
 			hasMore: false,
 			wantToReadByGenre,
-			starterRecommendations
+			starterRecommendations,
+			filterOptions: { moods }
 		};
 	}
 
@@ -165,7 +197,8 @@ export const load: PageServerLoad = async ({ url }) => {
 			results: resultsWithLibraryId,
 			hasMore,
 			wantToReadByGenre: [],
-			starterRecommendations: []
+			starterRecommendations: [],
+			filterOptions: { moods }
 		};
 	} catch {
 		// Open Library/Google Books are third-party services outside our
@@ -177,6 +210,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			hasMore: false,
 			wantToReadByGenre: [],
 			starterRecommendations: [],
+			filterOptions: { moods },
 			searchFailed: true
 		};
 	}

@@ -16,6 +16,9 @@
 	let submittingKey = $state<string | null>(null);
 	let hideInLibrary = $state(false);
 	let genreFilter = $state('');
+	let moodFilter = $state('');
+	let formatFilter = $state('');
+	let statusFilter = $state('');
 
 	// Accumulates across "Load more" clicks — reset below whenever a genuinely
 	// new search comes in from the server (data.results changing). The
@@ -32,6 +35,9 @@
 		hasMore = data.hasMore;
 		currentPage = 1;
 		genreFilter = '';
+		moodFilter = '';
+		formatFilter = '';
+		statusFilter = '';
 	});
 
 	let isSearching = $derived(!!navigating.to && navigating.to.url.pathname === '/search');
@@ -45,10 +51,17 @@
 		[...new Set(allResults.flatMap((r) => r.genres))].sort((a, b) => a.localeCompare(b))
 	);
 
+	// Mood/Format/Status only ever have real values for results that match an
+	// existing library entry (see attachLibraryIds) — a result that isn't in
+	// the library, or is but never had a status chosen, simply won't match
+	// any specific filter value here, same as it not having that data yet.
 	let visibleResults = $derived(
 		allResults
 			.filter((r) => !hideInLibrary || !r.libraryBookId)
 			.filter((r) => !genreFilter || r.genres.includes(genreFilter))
+			.filter((r) => !moodFilter || r.moods.includes(moodFilter))
+			.filter((r) => !formatFilter || r.format === formatFilter)
+			.filter((r) => !statusFilter || r.status === statusFilter)
 	);
 
 	function resultKey(result: { openLibraryId: string | null; isbn: string | null; title: string }) {
@@ -149,14 +162,23 @@
 				Search
 			{/if}
 		</button>
-		<FilterButton activeCount={(hideInLibrary ? 1 : 0) + (genreFilter ? 1 : 0)}>
-			{#if hideInLibrary || genreFilter}
+		<FilterButton
+			activeCount={(hideInLibrary ? 1 : 0) +
+				(genreFilter ? 1 : 0) +
+				(moodFilter ? 1 : 0) +
+				(formatFilter ? 1 : 0) +
+				(statusFilter ? 1 : 0)}
+		>
+			{#if hideInLibrary || genreFilter || moodFilter || formatFilter || statusFilter}
 				<button
 					type="button"
 					class="filter-button__reset"
 					onclick={() => {
 						hideInLibrary = false;
 						genreFilter = '';
+						moodFilter = '';
+						formatFilter = '';
+						statusFilter = '';
 					}}
 				>
 					Reset filters
@@ -179,6 +201,47 @@
 					]}
 					ariaLabel="Filter by genre"
 					onChange={(v) => (genreFilter = v)}
+				/>
+			</div>
+			<div class="filter-button__group">
+				<span class="filter-button__group-label">Mood</span>
+				<Dropdown
+					value={moodFilter}
+					options={[
+						{ value: '', label: 'All moods' },
+						...data.filterOptions.moods.map((mood) => ({ value: mood, label: mood }))
+					]}
+					ariaLabel="Filter by mood"
+					onChange={(v) => (moodFilter = v)}
+				/>
+			</div>
+			<div class="filter-button__group">
+				<span class="filter-button__group-label">Format</span>
+				<Dropdown
+					value={formatFilter}
+					options={[
+						{ value: '', label: 'All formats' },
+						{ value: 'physical', label: 'Physical' },
+						{ value: 'ebook', label: 'Ebook' },
+						{ value: 'audiobook', label: 'Audiobook' }
+					]}
+					ariaLabel="Filter by format"
+					onChange={(v) => (formatFilter = v)}
+				/>
+			</div>
+			<div class="filter-button__group">
+				<span class="filter-button__group-label">Status</span>
+				<Dropdown
+					value={statusFilter}
+					options={[
+						{ value: '', label: 'All statuses' },
+						{ value: 'reading', label: 'Currently Reading' },
+						{ value: 'want_to_read', label: 'Want to Read' },
+						{ value: 'finished', label: 'Finished' },
+						{ value: 'dnf', label: 'Did Not Finish' }
+					]}
+					ariaLabel="Filter by status"
+					onChange={(v) => (statusFilter = v)}
 				/>
 			</div>
 		</FilterButton>
