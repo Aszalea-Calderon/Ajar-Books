@@ -134,6 +134,13 @@
       "when": 1786635904152,
       "tag": "0018_medical_argent",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1786636355568,
+      "tag": "0019_last_shadow_king",
+      "breakpoints": true
     }
   ]
 }

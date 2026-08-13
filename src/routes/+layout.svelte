@@ -12,6 +12,7 @@
 	import { initGlassy } from '$lib/client/glassy.svelte';
 	import { initDensity } from '$lib/client/density.svelte';
 	import { initCardShadow } from '$lib/client/cardShadow.svelte';
+	import { initCoverStyle } from '$lib/client/coverStyle.svelte';
 
 	let { children } = $props();
 
@@ -26,6 +27,7 @@
 		initGlassy();
 		initDensity();
 		initCardShadow();
+		initCoverStyle();
 	});
 </script>
 

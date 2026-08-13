@@ -13,6 +13,7 @@
 	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
 	import { densityState, setDensity } from '$lib/client/density.svelte';
 	import { cardShadowState, setCardShadow } from '$lib/client/cardShadow.svelte';
+	import { coverStyleState, setCoverRadiusScale } from '$lib/client/coverStyle.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
 	let {
@@ -43,6 +44,7 @@
 		setGlassy(saved.glassy);
 		setDensity(saved.density);
 		setCardShadow(saved.cardShadow);
+		setCoverRadiusScale(saved.coverRadiusScale);
 	}
 </script>
 
@@ -116,6 +118,7 @@
 	<input type="hidden" name="glassy" value={glassyState.enabled} />
 	<input type="hidden" name="density" value={densityState.current} />
 	<input type="hidden" name="cardShadow" value={cardShadowState.current} />
+	<input type="hidden" name="coverRadiusScale" value={coverStyleState.radiusScale} />
 	<div class="auth-field">
 		<label for="customThemeName">Save current look as</label>
 		<input

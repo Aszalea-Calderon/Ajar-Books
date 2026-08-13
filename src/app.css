@@ -76,6 +76,10 @@
 	--card-opacity: 1;
 	--control-radius-scale: 1;
 	--card-shadow: none;
+	/* Book cover images specifically — independent of both card-radius-scale
+	   (the card containing a cover) and control-radius-scale (buttons), so a
+	   cover can stay square-cornered on a rounded card or vice versa. */
+	--cover-radius-scale: 1;
 
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
@@ -1557,7 +1561,7 @@ button.dashboard__cta {
 	width: 3rem;
 	height: 4.5rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	flex-shrink: 0;
 }
 
@@ -2065,7 +2069,7 @@ button.dashboard__cta {
 	width: 2rem;
 	height: 3rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	display: block;
 }
 
@@ -2339,7 +2343,7 @@ button.dashboard__cta {
 	width: 6rem;
 	height: 9rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	flex-shrink: 0;
 	border: 2px solid rgb(255 255 255 / 0.4);
 }
@@ -2685,7 +2689,7 @@ button.dashboard__cta {
 	width: 4.5rem;
 	height: 6.75rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	display: block;
 }
 
@@ -2726,7 +2730,7 @@ button.dashboard__cta {
 	width: 2.75rem;
 	height: 4.125rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	display: block;
 }
 
@@ -2752,7 +2756,7 @@ button.dashboard__cta {
 	width: 4.5rem;
 	height: 6.75rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	display: block;
 }
 
@@ -2930,7 +2934,7 @@ button.dashboard__cta {
 	width: 5rem;
 	height: 7.5rem;
 	object-fit: cover;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--cover-radius-scale));
 	flex-shrink: 0;
 }
 

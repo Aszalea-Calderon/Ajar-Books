@@ -223,6 +223,7 @@ export const customThemes = sqliteTable(
 		cardShadow: text('card_shadow', { enum: ['flat', 'subtle', 'pronounced'] })
 			.notNull()
 			.default('flat'),
+		coverRadiusScale: real('cover_radius_scale').notNull().default(1),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())

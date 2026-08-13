@@ -15,6 +15,7 @@
 	} from '$lib/client/cardStyle.svelte';
 	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
 	import { cardShadowState, setCardShadow, type CardShadow } from '$lib/client/cardShadow.svelte';
+	import { coverStyleState, setCoverRadiusScale } from '$lib/client/coverStyle.svelte';
 	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
@@ -127,7 +128,8 @@
 <p class="settings-hint">
 	Corner rounding and background opacity for cards and panels (book cards, dashboard panels, book
 	detail sections) — just the surfaces you browse, not buttons. Opacity only fades the
-	background, never the text on top of it.
+	background, never the text on top of it. Book cover images have their own separate rounding
+	knob, so covers can stay square on rounded cards or vice versa.
 </p>
 <div class="card-style-sliders">
 	<label class="card-style-slider">
@@ -156,6 +158,22 @@
 			step="0.05"
 			value={cardStyleState.opacity}
 			oninput={(event) => setCardOpacity(Number(event.currentTarget.value))}
+		/>
+	</label>
+	<label class="card-style-slider">
+		<span class="card-style-slider__label">
+			Book cover rounding
+			<span class="card-style-slider__value"
+				>{Math.round(coverStyleState.radiusScale * 100)}%</span
+			>
+		</span>
+		<input
+			type="range"
+			min="0"
+			max="2"
+			step="0.05"
+			value={coverStyleState.radiusScale}
+			oninput={(event) => setCoverRadiusScale(Number(event.currentTarget.value))}
 		/>
 	</label>
 </div>

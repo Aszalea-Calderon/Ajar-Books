@@ -16,6 +16,7 @@ export type CustomThemeInput = {
 	glassy: boolean;
 	density: 'compact' | 'comfortable' | 'spacious';
 	cardShadow: 'flat' | 'subtle' | 'pronounced';
+	coverRadiusScale: number;
 };
 
 export async function listCustomThemes(): Promise<CustomTheme[]> {
