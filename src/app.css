@@ -42,6 +42,17 @@
 
 	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 	--font-dyslexic: 'OpenDyslexic', var(--font-sans);
+	/* Settings > Display > Font — a curated set, not the whole Google Fonts
+	   catalog: Inter/Atkinson Hyperlegible/Nunito for a change of sans, and
+	   Merriweather/Lora as serif options that fit a reading app's subject
+	   matter particularly well. Each font's actual @font-face rules are
+	   imported per-weight in +layout.svelte (@fontsource packages); these
+	   tokens just declare the family + fallback chain. */
+	--font-inter: 'Inter', var(--font-sans);
+	--font-atkinson: 'Atkinson Hyperlegible', var(--font-sans);
+	--font-merriweather: 'Merriweather', Georgia, serif;
+	--font-lora: 'Lora', Georgia, serif;
+	--font-nunito: 'Nunito', var(--font-sans);
 	--font-body: var(--font-sans);
 
 	/* Settings > Display > Spacing Density — scales every --space-* token at
@@ -144,6 +155,26 @@
 
 :root[data-font='dyslexic'] {
 	--font-body: var(--font-dyslexic);
+}
+
+:root[data-font='inter'] {
+	--font-body: var(--font-inter);
+}
+
+:root[data-font='atkinson'] {
+	--font-body: var(--font-atkinson);
+}
+
+:root[data-font='merriweather'] {
+	--font-body: var(--font-merriweather);
+}
+
+:root[data-font='lora'] {
+	--font-body: var(--font-lora);
+}
+
+:root[data-font='nunito'] {
+	--font-body: var(--font-nunito);
 }
 
 * {
@@ -1340,6 +1371,7 @@ button.dashboard__cta {
 
 .theme-options {
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--space-4);
 }
 
@@ -1440,6 +1472,26 @@ button.dashboard__cta {
 
 .font-preview--dyslexic {
 	font-family: var(--font-dyslexic);
+}
+
+.font-preview--inter {
+	font-family: var(--font-inter);
+}
+
+.font-preview--atkinson {
+	font-family: var(--font-atkinson);
+}
+
+.font-preview--merriweather {
+	font-family: var(--font-merriweather);
+}
+
+.font-preview--lora {
+	font-family: var(--font-lora);
+}
+
+.font-preview--nunito {
+	font-family: var(--font-nunito);
 }
 
 /* Search page */

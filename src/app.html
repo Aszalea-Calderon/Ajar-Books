@@ -14,7 +14,8 @@
 						document.documentElement.dataset.theme = theme;
 					}
 					var font = localStorage.getItem('ajar-font');
-					if (font === 'dyslexic') {
+					var validFonts = ['dyslexic', 'inter', 'atkinson', 'merriweather', 'lora', 'nunito'];
+					if (font && validFonts.indexOf(font) !== -1) {
 						document.documentElement.dataset.font = font;
 					}
 					var accent = localStorage.getItem('ajar-accent');

@@ -225,7 +225,14 @@ export const actions: Actions = {
 			theme: String(data.get('theme') ?? 'dark') as 'dark' | 'light',
 			accentColor: accentColorRaw || null,
 			backgroundTexture: String(data.get('backgroundTexture') ?? 'dotted') as 'dotted' | 'none',
-			font: String(data.get('font') ?? 'default') as 'default' | 'dyslexic',
+			font: String(data.get('font') ?? 'default') as
+				| 'default'
+				| 'dyslexic'
+				| 'inter'
+				| 'atkinson'
+				| 'merriweather'
+				| 'lora'
+				| 'nunito',
 			cardRadiusScale: Number(data.get('cardRadiusScale') ?? '1'),
 			cardOpacity: Number(data.get('cardOpacity') ?? '1'),
 			controlRadiusScale: Number(data.get('controlRadiusScale') ?? '1'),

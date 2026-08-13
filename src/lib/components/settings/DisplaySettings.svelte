@@ -50,6 +50,11 @@
 
 	const fonts: { id: Font; label: string }[] = [
 		{ id: 'default', label: 'Default' },
+		{ id: 'inter', label: 'Inter' },
+		{ id: 'nunito', label: 'Nunito' },
+		{ id: 'atkinson', label: 'Atkinson Hyperlegible' },
+		{ id: 'merriweather', label: 'Merriweather' },
+		{ id: 'lora', label: 'Lora' },
 		{ id: 'dyslexic', label: 'Dyslexia-friendly' }
 	];
 

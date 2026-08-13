@@ -212,7 +212,9 @@ export const customThemes = sqliteTable(
 		theme: text('theme', { enum: ['dark', 'light'] }).notNull(),
 		accentColor: text('accent_color'),
 		backgroundTexture: text('background_texture', { enum: ['dotted', 'none'] }).notNull(),
-		font: text('font', { enum: ['default', 'dyslexic'] }).notNull(),
+		font: text('font', {
+			enum: ['default', 'dyslexic', 'inter', 'atkinson', 'merriweather', 'lora', 'nunito']
+		}).notNull(),
 		cardRadiusScale: real('card_radius_scale').notNull(),
 		cardOpacity: real('card_opacity').notNull(),
 		controlRadiusScale: real('control_radius_scale').notNull().default(1),

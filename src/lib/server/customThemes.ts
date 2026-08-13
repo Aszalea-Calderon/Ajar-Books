@@ -9,7 +9,7 @@ export type CustomThemeInput = {
 	theme: 'dark' | 'light';
 	accentColor: string | null;
 	backgroundTexture: 'dotted' | 'none';
-	font: 'default' | 'dyslexic';
+	font: 'default' | 'dyslexic' | 'inter' | 'atkinson' | 'merriweather' | 'lora' | 'nunito';
 	cardRadiusScale: number;
 	cardOpacity: number;
 	controlRadiusScale: number;

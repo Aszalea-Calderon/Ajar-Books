@@ -1,4 +1,9 @@
-export type Font = 'default' | 'dyslexic';
+// Same override-a-data-attribute pattern as theme/backgroundTexture — see
+// app.css's [data-font='...'] selectors for the actual --font-body swaps,
+// and +layout.svelte for where each font's CSS files get imported.
+export type Font = 'default' | 'dyslexic' | 'inter' | 'atkinson' | 'merriweather' | 'lora' | 'nunito';
+
+const VALID_FONTS: Font[] = ['default', 'dyslexic', 'inter', 'atkinson', 'merriweather', 'lora', 'nunito'];
 
 const STORAGE_KEY = 'ajar-font';
 
@@ -15,6 +20,6 @@ export function setFont(next: Font) {
 }
 
 export function initFont() {
-	const stored = localStorage.getItem(STORAGE_KEY);
-	fontState.current = stored === 'dyslexic' ? 'dyslexic' : 'default';
+	const stored = localStorage.getItem(STORAGE_KEY) as Font | null;
+	fontState.current = stored && VALID_FONTS.includes(stored) ? stored : 'default';
 }
