@@ -56,13 +56,19 @@
 	--radius-md: 0.75rem;
 	--radius-lg: 1.25rem;
 
-	/* User-overridable knobs (Settings > Display > Card Style) — applied to
-	   card/panel surfaces specifically (dashboard panels, book cards, book
-	   detail panels), not buttons/inputs/modals, which stay fixed on the
-	   radius tokens above and full opacity. Default 1 means "no override",
-	   same convention as accent color's null-means-default. */
+	/* User-overridable knobs (Settings > Display > Card Style) — card-radius-
+	   scale/card-opacity apply to card/panel surfaces specifically (dashboard
+	   panels, book cards, book detail panels); control-radius-scale applies
+	   separately to primary action buttons (auth-submit, settings-trigger,
+	   dropdown/filter/view triggers, theme-option swatches, confirm-modal
+	   buttons), so the two can be tuned independently — square buttons on
+	   rounded cards, or vice versa. Small icon-only utility buttons (delete,
+	   dismiss, bookmark-toggle) and text inputs/modals stay on the fixed
+	   tokens above. Default 1 means "no override", same convention as accent
+	   color's null-means-default. */
 	--card-radius-scale: 1;
 	--card-opacity: 1;
+	--control-radius-scale: 1;
 
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
@@ -294,7 +300,7 @@ button {
 	background: var(--color-primary);
 	color: var(--color-primary-text);
 	border: none;
-	border-radius: var(--radius-md);
+	border-radius: calc(var(--radius-md) * var(--control-radius-scale));
 	font-weight: 600;
 	cursor: pointer;
 }
@@ -1005,7 +1011,7 @@ button.dashboard__cta {
 	padding: var(--space-2) var(--space-4);
 	background: none;
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--control-radius-scale));
 	color: var(--color-text);
 	font-size: var(--font-size-sm);
 	text-decoration: none;
@@ -1081,7 +1087,7 @@ button.dashboard__cta {
 	padding: var(--space-2) var(--space-4);
 	background: none;
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
+	border-radius: calc(var(--radius-md) * var(--control-radius-scale));
 	color: var(--color-text);
 	font-weight: 600;
 }
@@ -1095,7 +1101,7 @@ button.dashboard__cta {
 	background: var(--color-primary);
 	color: var(--color-primary-text);
 	border: none;
-	border-radius: var(--radius-md);
+	border-radius: calc(var(--radius-md) * var(--control-radius-scale));
 	font-weight: 600;
 }
 
@@ -1285,7 +1291,7 @@ button.dashboard__cta {
 	padding: var(--space-3);
 	background: none;
 	border: 2px solid var(--color-border);
-	border-radius: var(--radius-md);
+	border-radius: calc(var(--radius-md) * var(--control-radius-scale));
 	color: var(--color-text-muted);
 	font-size: var(--font-size-sm);
 }
@@ -1384,7 +1390,7 @@ button.dashboard__cta {
 	background: var(--color-primary);
 	color: var(--color-primary-text);
 	border: none;
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--control-radius-scale));
 	font-weight: 600;
 	text-decoration: none;
 }
@@ -1614,7 +1620,7 @@ button.dashboard__cta {
 	padding: var(--space-3) var(--space-4);
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--control-radius-scale));
 	color: var(--color-text);
 	font-size: var(--font-size-sm);
 	font-weight: 600;
@@ -1696,7 +1702,7 @@ button.dashboard__cta {
 	width: 2.75rem;
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--control-radius-scale));
 	color: var(--color-text);
 	cursor: pointer;
 }
@@ -1758,7 +1764,7 @@ button.dashboard__cta {
 	padding: var(--space-2) var(--space-3);
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--control-radius-scale));
 	color: var(--color-text);
 	font-size: var(--font-size-sm);
 }
@@ -1909,7 +1915,7 @@ button.dashboard__cta {
 	padding: var(--space-2) var(--space-4);
 	background: none;
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: calc(var(--radius-sm) * var(--control-radius-scale));
 	color: var(--color-text-muted);
 	font-size: var(--font-size-sm);
 	font-weight: 600;

@@ -12,6 +12,7 @@ function themeInput(overrides: Partial<Parameters<typeof saveCustomTheme>[0]> = 
 		font: 'default' as const,
 		cardRadiusScale: 1.5,
 		cardOpacity: 0.9,
+		controlRadiusScale: 0.5,
 		...overrides
 	};
 }

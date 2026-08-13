@@ -7,7 +7,12 @@
 		setBackgroundTexture,
 		type BackgroundTexture
 	} from '$lib/client/backgroundTexture.svelte';
-	import { cardStyleState, setCardRadiusScale, setCardOpacity } from '$lib/client/cardStyle.svelte';
+	import {
+		cardStyleState,
+		setCardRadiusScale,
+		setCardOpacity,
+		setControlRadiusScale
+	} from '$lib/client/cardStyle.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
@@ -89,7 +94,7 @@
 <h3>Card Style</h3>
 <p class="settings-hint">
 	Corner rounding and background opacity for cards and panels (book cards, dashboard panels, book
-	detail sections) — not buttons or inputs, just the surfaces you browse. Opacity only fades the
+	detail sections) — just the surfaces you browse, not buttons. Opacity only fades the
 	background, never the text on top of it.
 </p>
 <div class="card-style-sliders">
@@ -119,6 +124,31 @@
 			step="0.05"
 			value={cardStyleState.opacity}
 			oninput={(event) => setCardOpacity(Number(event.currentTarget.value))}
+		/>
+	</label>
+</div>
+
+<h3>Action Buttons</h3>
+<p class="settings-hint">
+	Corner rounding for primary buttons (Save, Import, filter/view/sort triggers, theme swatches) —
+	independent of Card Style above, so buttons can stay sharp on rounded cards or vice versa. Small
+	icon-only buttons (delete, dismiss) keep their own fixed style.
+</p>
+<div class="card-style-sliders">
+	<label class="card-style-slider">
+		<span class="card-style-slider__label">
+			Corner rounding
+			<span class="card-style-slider__value"
+				>{Math.round(cardStyleState.controlRadiusScale * 100)}%</span
+			>
+		</span>
+		<input
+			type="range"
+			min="0"
+			max="2"
+			step="0.05"
+			value={cardStyleState.controlRadiusScale}
+			oninput={(event) => setControlRadiusScale(Number(event.currentTarget.value))}
 		/>
 	</label>
 </div>

@@ -12,6 +12,7 @@ export type CustomThemeInput = {
 	font: 'default' | 'dyslexic';
 	cardRadiusScale: number;
 	cardOpacity: number;
+	controlRadiusScale: number;
 };
 
 export async function listCustomThemes(): Promise<CustomTheme[]> {

@@ -215,6 +215,7 @@ export const customThemes = sqliteTable(
 		font: text('font', { enum: ['default', 'dyslexic'] }).notNull(),
 		cardRadiusScale: real('card_radius_scale').notNull(),
 		cardOpacity: real('card_opacity').notNull(),
+		controlRadiusScale: real('control_radius_scale').notNull().default(1),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())

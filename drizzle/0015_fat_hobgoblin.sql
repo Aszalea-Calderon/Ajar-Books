@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `control_radius_scale` real DEFAULT 1 NOT NULL;

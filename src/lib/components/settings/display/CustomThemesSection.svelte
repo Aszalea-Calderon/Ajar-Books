@@ -4,7 +4,12 @@
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
 	import { backgroundTextureState, setBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
 	import { fontState, setFont } from '$lib/client/font.svelte';
-	import { cardStyleState, setCardRadiusScale, setCardOpacity } from '$lib/client/cardStyle.svelte';
+	import {
+		cardStyleState,
+		setCardRadiusScale,
+		setCardOpacity,
+		setControlRadiusScale
+	} from '$lib/client/cardStyle.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
 	let {
@@ -31,13 +36,14 @@
 		setFont(saved.font);
 		setCardRadiusScale(saved.cardRadiusScale);
 		setCardOpacity(saved.cardOpacity);
+		setControlRadiusScale(saved.controlRadiusScale);
 	}
 </script>
 
 <h3>Custom Themes</h3>
 <p class="settings-hint">
-	Save the current Theme/Accent/Background/Font/Card Style combination under a name, and switch
-	between as many as you like.
+	Save the current Theme/Accent/Background/Font/Card Style/Action Button combination under a name,
+	and switch between as many as you like.
 </p>
 
 {#if customThemes.length > 0}
@@ -100,6 +106,7 @@
 	<input type="hidden" name="font" value={fontState.current} />
 	<input type="hidden" name="cardRadiusScale" value={cardStyleState.radiusScale} />
 	<input type="hidden" name="cardOpacity" value={cardStyleState.opacity} />
+	<input type="hidden" name="controlRadiusScale" value={cardStyleState.controlRadiusScale} />
 	<div class="auth-field">
 		<label for="customThemeName">Save current look as</label>
 		<input
