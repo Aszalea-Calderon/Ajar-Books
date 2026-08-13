@@ -25,10 +25,9 @@
 	// user) — this page needs no load of its own.
 	let { data }: { data: PageData } = $props();
 
-	type SettingsSection = 'themes' | 'fonts' | 'search' | 'integrations' | 'tags' | 'data';
+	type SettingsSection = 'themes' | 'search' | 'integrations' | 'tags' | 'data';
 	const SECTIONS: { id: SettingsSection; label: string }[] = [
 		{ id: 'themes', label: 'Display' },
-		{ id: 'fonts', label: 'Fonts' },
 		{ id: 'search', label: 'Search' },
 		{ id: 'integrations', label: 'Integrations' },
 		{ id: 'tags', label: 'Tags' },
@@ -210,6 +209,21 @@
 					{/each}
 				</div>
 
+				<h3>Font</h3>
+				<div class="theme-options">
+					{#each fonts as f (f.id)}
+						<button
+							type="button"
+							class="theme-option"
+							class:theme-option--selected={fontState.current === f.id}
+							onclick={() => setFont(f.id)}
+						>
+							<span class="font-preview font-preview--{f.id}">Aa</span>
+							{f.label}
+						</button>
+					{/each}
+				</div>
+
 				<h3>Default View</h3>
 				<p class="settings-hint">
 					Search and My Library each remember their own view — pick a starting point for each, or
@@ -238,21 +252,6 @@
 							onclick={() => profileViewMode.set(v.id)}
 						>
 							{v.label}
-						</button>
-					{/each}
-				</div>
-			{:else if section === 'fonts'}
-				<h3>Font</h3>
-				<div class="theme-options">
-					{#each fonts as f (f.id)}
-						<button
-							type="button"
-							class="theme-option"
-							class:theme-option--selected={fontState.current === f.id}
-							onclick={() => setFont(f.id)}
-						>
-							<span class="font-preview font-preview--{f.id}">Aa</span>
-							{f.label}
 						</button>
 					{/each}
 				</div>
