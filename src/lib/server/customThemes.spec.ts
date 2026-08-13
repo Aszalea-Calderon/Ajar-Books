@@ -17,6 +17,7 @@ function themeInput(overrides: Partial<Parameters<typeof saveCustomTheme>[0]> = 
 		density: 'spacious' as const,
 		cardShadow: 'pronounced' as const,
 		coverRadiusScale: 0.25,
+		cardBorder: 'bold' as const,
 		...overrides
 	};
 }

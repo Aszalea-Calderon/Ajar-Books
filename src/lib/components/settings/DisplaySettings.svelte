@@ -16,6 +16,7 @@
 	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
 	import { cardShadowState, setCardShadow, type CardShadow } from '$lib/client/cardShadow.svelte';
 	import { coverStyleState, setCoverRadiusScale } from '$lib/client/coverStyle.svelte';
+	import { cardBorderState, setCardBorder, type CardBorder } from '$lib/client/cardBorder.svelte';
 	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
@@ -43,6 +44,12 @@
 		{ id: 'flat', label: 'Flat' },
 		{ id: 'subtle', label: 'Subtle' },
 		{ id: 'pronounced', label: 'Pronounced' }
+	];
+
+	const cardBorders: { id: CardBorder; label: string }[] = [
+		{ id: 'none', label: 'None' },
+		{ id: 'thin', label: 'Thin' },
+		{ id: 'bold', label: 'Bold' }
 	];
 
 	const fonts: { id: Font; label: string }[] = [
@@ -211,6 +218,20 @@
 			onclick={() => setCardShadow(s.id)}
 		>
 			{s.label}
+		</button>
+	{/each}
+</div>
+
+<p class="settings-hint">Border — how visible the edge of a card is.</p>
+<div class="theme-options">
+	{#each cardBorders as b (b.id)}
+		<button
+			type="button"
+			class="theme-option"
+			class:theme-option--selected={cardBorderState.current === b.id}
+			onclick={() => setCardBorder(b.id)}
+		>
+			{b.label}
 		</button>
 	{/each}
 </div>

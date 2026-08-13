@@ -80,6 +80,8 @@
 	   (the card containing a cover) and control-radius-scale (buttons), so a
 	   cover can stay square-cornered on a rounded card or vice versa. */
 	--cover-radius-scale: 1;
+	/* None/Thin(default)/Bold for the same curated card/panel selectors. */
+	--card-border-width: 1px;
 
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
@@ -655,7 +657,7 @@ button {
 .dashboard__panel {
 	background: color-mix(in srgb, var(--color-surface) calc(var(--card-opacity) * 100%), transparent);
 	box-shadow: var(--card-shadow);
-	border: 1px solid var(--color-border);
+	border: var(--card-border-width) solid var(--color-border);
 	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
 	padding: var(--space-6);
 }
@@ -1265,7 +1267,7 @@ button.dashboard__cta {
 	grid-template-columns: 12rem 1fr;
 	background: color-mix(in srgb, var(--color-surface) calc(var(--card-opacity) * 100%), transparent);
 	box-shadow: var(--card-shadow);
-	border: 1px solid var(--color-border);
+	border: var(--card-border-width) solid var(--color-border);
 	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
 }
 
@@ -1488,7 +1490,7 @@ button.dashboard__cta {
 	padding: var(--space-3);
 	background: color-mix(in srgb, var(--color-surface) calc(var(--card-opacity) * 100%), transparent);
 	box-shadow: var(--card-shadow);
-	border: 1px solid var(--color-border);
+	border: var(--card-border-width) solid var(--color-border);
 	border-radius: calc(var(--radius-md) * var(--card-radius-scale));
 	text-decoration: none;
 	color: inherit;
@@ -2623,7 +2625,7 @@ button.dashboard__cta {
 .book-detail__panel {
 	background: color-mix(in srgb, var(--color-surface) calc(var(--card-opacity) * 100%), transparent);
 	box-shadow: var(--card-shadow);
-	border: 1px solid var(--color-border);
+	border: var(--card-border-width) solid var(--color-border);
 	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
 	padding: var(--space-6);
 }

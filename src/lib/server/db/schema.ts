@@ -224,6 +224,9 @@ export const customThemes = sqliteTable(
 			.notNull()
 			.default('flat'),
 		coverRadiusScale: real('cover_radius_scale').notNull().default(1),
+		cardBorder: text('card_border', { enum: ['none', 'thin', 'bold'] })
+			.notNull()
+			.default('thin'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())

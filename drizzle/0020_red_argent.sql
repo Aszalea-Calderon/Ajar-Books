@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `card_border` text DEFAULT 'thin' NOT NULL;
