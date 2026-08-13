@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { trapFocus } from '$lib/trapFocus';
-	import ConfirmModal from './ConfirmModal.svelte';
-	import Dropdown from './Dropdown.svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+	import Dropdown from '$lib/components/Dropdown.svelte';
 	import { themeState, setTheme, type Theme } from '$lib/client/theme.svelte';
 	import { fontState, setFont, type Font } from '$lib/client/font.svelte';
 	import { accentState, setAccent, resetAccent } from '$lib/client/accent.svelte';
@@ -14,25 +16,41 @@
 		type BackgroundTexture
 	} from '$lib/client/backgroundTexture.svelte';
 	import { searchViewMode, profileViewMode, type ViewMode } from '$lib/client/viewMode.svelte';
-	import { settingsModalState } from '$lib/client/settingsModal.svelte';
 	import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 	import type { TagType, TagWithUsage } from '$lib/server/books/tags';
+	import type { PageData } from './$types';
 
-	let {
-		googleBooksApiKey,
-		languagePriority,
-		manageableTags,
-		hasRecoveryKey,
-		username
-	}: {
-		googleBooksApiKey: string | null;
-		languagePriority: string;
-		manageableTags: Record<TagType, TagWithUsage[]>;
-		hasRecoveryKey: boolean;
-		username: string;
-	} = $props();
+	// Same data every (app) page already gets from the shared layout load
+	// (googleBooksApiKey, languagePriority, manageableTags, hasRecoveryKey,
+	// user) — this page needs no load of its own.
+	let { data }: { data: PageData } = $props();
 
-	let dialogEl: HTMLDialogElement;
+	type SettingsSection = 'themes' | 'fonts' | 'search' | 'integrations' | 'tags' | 'data';
+	const SECTIONS: { id: SettingsSection; label: string }[] = [
+		{ id: 'themes', label: 'Display' },
+		{ id: 'fonts', label: 'Fonts' },
+		{ id: 'search', label: 'Search' },
+		{ id: 'integrations', label: 'Integrations' },
+		{ id: 'tags', label: 'Tags' },
+		{ id: 'data', label: 'Data' }
+	];
+
+	// Deep-linkable via ?section=data (the recovery-key reminder banner uses
+	// this), same query-param pattern Profile/Search use for their own
+	// filters — a real URL per section, not just in-memory tab state.
+	let section = $state<SettingsSection>(
+		untrack(
+			() => (page.url.searchParams.get('section') as SettingsSection | null) ?? 'themes'
+		)
+	);
+
+	function selectSection(next: SettingsSection) {
+		section = next;
+		const params = new SvelteURLSearchParams(page.url.search);
+		params.set('section', next);
+		goto(resolve(`/settings?${params.toString()}`), { keepFocus: true, noScroll: true });
+	}
+
 	let justSaved = $state(false);
 	let backfillRunning = $state(false);
 	let backfillResult = $state<number | null>(null);
@@ -68,7 +86,7 @@
 		pendingConfirm = null;
 	}
 
-	let selectedLanguage = $state(untrack(() => languagePriority));
+	let selectedLanguage = $state(untrack(() => data.languagePriority));
 	let languageFormEl = $state<HTMLFormElement>();
 
 	async function handleLanguageChange(value: string) {
@@ -79,15 +97,6 @@
 		await tick();
 		languageFormEl?.requestSubmit();
 	}
-
-	$effect(() => {
-		if (!dialogEl) return;
-		if (settingsModalState.open && !dialogEl.open) {
-			dialogEl.showModal();
-		} else if (!settingsModalState.open && dialogEl.open) {
-			dialogEl.close();
-		}
-	});
 
 	const themes: { id: Theme; label: string }[] = [
 		{ id: 'dark', label: 'Dark' },
@@ -120,83 +129,31 @@
 	];
 
 	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
-
-	function closeOnBackdropClick(event: MouseEvent) {
-		if (event.target === dialogEl) settingsModalState.open = false;
-	}
 </script>
 
-<dialog
-	bind:this={dialogEl}
-	class="settings-modal"
-	onclose={() => (settingsModalState.open = false)}
-	onclick={closeOnBackdropClick}
-	use:trapFocus
->
-	<div class="settings-modal__header">
-		<h2>Settings</h2>
-		<button
-			type="button"
-			class="settings-modal__close"
-			aria-label="Close settings"
-			onclick={() => (settingsModalState.open = false)}
-		>
-			×
-		</button>
+<svelte:head>
+	<title>Settings — Ajar Books</title>
+</svelte:head>
+
+<div class="settings-page">
+	<div class="settings-page__header">
+		<h1>Settings</h1>
 	</div>
-	<div class="settings-modal__body">
-		<nav class="settings-modal__nav">
-			<button
-				type="button"
-				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={settingsModalState.section === 'themes'}
-				onclick={() => (settingsModalState.section = 'themes')}
-			>
-				Display
-			</button>
-			<button
-				type="button"
-				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={settingsModalState.section === 'fonts'}
-				onclick={() => (settingsModalState.section = 'fonts')}
-			>
-				Fonts
-			</button>
-			<button
-				type="button"
-				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={settingsModalState.section === 'search'}
-				onclick={() => (settingsModalState.section = 'search')}
-			>
-				Search
-			</button>
-			<button
-				type="button"
-				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={settingsModalState.section === 'integrations'}
-				onclick={() => (settingsModalState.section = 'integrations')}
-			>
-				Integrations
-			</button>
-			<button
-				type="button"
-				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={settingsModalState.section === 'tags'}
-				onclick={() => (settingsModalState.section = 'tags')}
-			>
-				Tags
-			</button>
-			<button
-				type="button"
-				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={settingsModalState.section === 'data'}
-				onclick={() => (settingsModalState.section = 'data')}
-			>
-				Data
-			</button>
+	<div class="settings-page__body">
+		<nav class="settings-page__nav">
+			{#each SECTIONS as s (s.id)}
+				<button
+					type="button"
+					class="settings-page__nav-item"
+					class:settings-page__nav-item--active={section === s.id}
+					onclick={() => selectSection(s.id)}
+				>
+					{s.label}
+				</button>
+			{/each}
 		</nav>
-		<div class="settings-modal__content">
-			{#if settingsModalState.section === 'themes'}
+		<div class="settings-page__content">
+			{#if section === 'themes'}
 				<h3>Theme</h3>
 				<div class="theme-options">
 					{#each themes as t (t.id)}
@@ -279,7 +236,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else if settingsModalState.section === 'fonts'}
+			{:else if section === 'fonts'}
 				<h3>Font</h3>
 				<div class="theme-options">
 					{#each fonts as f (f.id)}
@@ -294,7 +251,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else if settingsModalState.section === 'search'}
+			{:else if section === 'search'}
 				<h3>Language Priority</h3>
 				<p class="settings-hint">
 					When a book has editions in multiple languages, search results prefer this language — it
@@ -326,7 +283,7 @@
 						<p class="settings-hint settings-hint--success">Saved.</p>
 					{/if}
 				</form>
-			{:else if settingsModalState.section === 'integrations'}
+			{:else if section === 'integrations'}
 				<h3>Google Books API Key</h3>
 				<p class="settings-hint">
 					Optional — widens search results and improves cover art. Get a free key from the <a
@@ -352,7 +309,7 @@
 							id="googleBooksApiKey"
 							name="googleBooksApiKey"
 							type="text"
-							value={googleBooksApiKey ?? ''}
+							value={data.googleBooksApiKey ?? ''}
 							placeholder="Not set"
 							oninput={() => (justSaved = false)}
 						/>
@@ -362,7 +319,7 @@
 						<p class="settings-hint settings-hint--success">Saved.</p>
 					{/if}
 				</form>
-			{:else if settingsModalState.section === 'tags'}
+			{:else if section === 'tags'}
 				<h3>Manage Tags</h3>
 				<p class="settings-hint">
 					Rename or delete genre, mood, and setting tags across your whole library. Renaming a tag
@@ -370,11 +327,11 @@
 				</p>
 				{#each TAG_SECTIONS as tagSection (tagSection.type)}
 					<h4 class="manage-tags__type-label">{tagSection.label}</h4>
-					{#if manageableTags[tagSection.type].length === 0}
+					{#if data.manageableTags[tagSection.type].length === 0}
 						<p class="settings-hint">No {tagSection.label.toLowerCase()} tags yet.</p>
 					{:else}
 						<ul class="manage-tags__list">
-							{#each manageableTags[tagSection.type] as tag (tag.id)}
+							{#each data.manageableTags[tagSection.type] as tag (tag.id)}
 								<li class="manage-tags__row">
 									<form method="POST" action="/profile?/renameTag" use:enhance>
 										<input type="hidden" name="tagId" value={tag.id} />
@@ -489,7 +446,7 @@
 							id="username"
 							name="username"
 							type="text"
-							value={username}
+							value={data.user?.username ?? ''}
 							oninput={() => {
 								usernameSaved = false;
 								usernameError = null;
@@ -515,7 +472,7 @@
 						Your new recovery key — save it somewhere safe now, it won't be shown again:
 					</p>
 					<p class="recovery-key-display">{generatedRecoveryKey}</p>
-				{:else if hasRecoveryKey}
+				{:else if data.hasRecoveryKey}
 					<p class="settings-hint">A recovery key is set.</p>
 				{:else}
 					<p class="settings-hint">No recovery key set yet.</p>
@@ -537,7 +494,7 @@
 					<button class="settings-trigger" type="submit" disabled={recoveryKeyRunning}>
 						{recoveryKeyRunning
 							? 'Generating…'
-							: hasRecoveryKey || generatedRecoveryKey
+							: data.hasRecoveryKey || generatedRecoveryKey
 								? 'Generate a new key'
 								: 'Generate recovery key'}
 					</button>
@@ -545,7 +502,7 @@
 			{/if}
 		</div>
 	</div>
-</dialog>
+</div>
 
 <ConfirmModal
 	open={!!pendingConfirm}

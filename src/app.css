@@ -1117,7 +1117,8 @@ button.dashboard__cta {
 	min-height: 14rem;
 }
 
-.settings-modal__nav {
+.settings-modal__nav,
+.settings-page__nav {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-1);
@@ -1125,7 +1126,8 @@ button.dashboard__cta {
 	border-right: 1px solid var(--color-border);
 }
 
-.settings-modal__nav-item {
+.settings-modal__nav-item,
+.settings-page__nav-item {
 	display: block;
 	width: 100%;
 	text-align: left;
@@ -1137,27 +1139,48 @@ button.dashboard__cta {
 	color: var(--color-text-muted);
 }
 
-.settings-modal__nav-item:hover {
+.settings-modal__nav-item:hover,
+.settings-page__nav-item:hover {
 	color: var(--color-text);
 }
 
-.settings-modal__nav-item--active {
+.settings-modal__nav-item--active,
+.settings-page__nav-item--active {
 	background: var(--color-surface-raised);
 	color: var(--color-text);
 	font-weight: 600;
 }
 
-.settings-modal__content {
+.settings-modal__content,
+.settings-page__content {
 	padding: var(--space-6);
 }
 
-.settings-modal__content h3 {
+.settings-modal__content h3,
+.settings-page__content h3 {
 	margin: 0 0 var(--space-4);
 	font-size: var(--font-size-base);
 	color: var(--color-text-muted);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
+}
+
+.settings-page {
+	max-width: 40rem;
+}
+
+.settings-page__header h1 {
+	margin: 0 0 var(--space-6);
+	font-size: var(--font-size-xl);
+}
+
+.settings-page__body {
+	display: grid;
+	grid-template-columns: 9rem 1fr;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
 }
 
 .theme-options {

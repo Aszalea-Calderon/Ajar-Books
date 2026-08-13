@@ -3,8 +3,6 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { clickOutside } from '$lib/clickOutside';
-	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import { settingsModalState, openSettingsTo } from '$lib/client/settingsModal.svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
@@ -203,17 +201,14 @@
 					>
 						My Library
 					</a>
-					<button
-						type="button"
+					<a
 						class="app-nav__account-option"
 						role="menuitem"
-						onclick={() => {
-							openSettingsTo('themes');
-							accountMenuOpen = false;
-						}}
+						href={resolve('/settings')}
+						onclick={() => (accountMenuOpen = false)}
 					>
 						Settings
-					</button>
+					</a>
 					<form method="POST" action="/logout">
 						<button
 							class="app-nav__account-option app-nav__account-option--danger"
@@ -234,9 +229,7 @@
 				You don't have a recovery key set up — if you ever forget your password, there's no way
 				back in without one.
 			</p>
-			<button type="button" class="settings-trigger" onclick={() => openSettingsTo('data')}>
-				Set one up now
-			</button>
+			<a class="settings-trigger" href={resolve(`/settings?section=data`)}> Set one up now </a>
 		</div>
 	{/if}
 
@@ -244,11 +237,3 @@
 		{@render children()}
 	</main>
 </div>
-
-<SettingsModal
-	googleBooksApiKey={data.googleBooksApiKey}
-	languagePriority={data.languagePriority}
-	manageableTags={data.manageableTags}
-	hasRecoveryKey={data.hasRecoveryKey}
-	username={data.user?.username ?? ''}
-/>
