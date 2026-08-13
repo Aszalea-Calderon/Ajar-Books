@@ -1007,6 +1007,21 @@ button.dashboard__cta {
 	border-color: var(--color-text-muted);
 }
 
+.settings-trigger--danger {
+	color: var(--color-danger);
+	border-color: var(--color-danger);
+}
+
+.settings-trigger--danger:hover {
+	background: var(--color-danger);
+	color: white;
+}
+
+.settings-trigger:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
 .profile__actions {
 	display: flex;
 	justify-content: center;
@@ -1083,6 +1098,29 @@ button.dashboard__cta {
 .confirm-modal__confirm--danger {
 	background: var(--color-danger);
 	color: white;
+}
+
+.confirm-modal__confirm:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.confirm-modal__typed-label {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0 0 var(--space-6);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.confirm-modal__typed-input {
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text);
+	font: inherit;
 }
 
 .settings-modal__header {

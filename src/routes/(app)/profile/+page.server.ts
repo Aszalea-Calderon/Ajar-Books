@@ -7,6 +7,7 @@ import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 import { backfillMissingMetadata } from '$lib/server/books/backfill';
 import { generateRecoveryKey, updateUsername } from '$lib/server/auth';
 import { createNotification } from '$lib/server/notifications';
+import { deleteAllLibraryData } from '$lib/server/deleteAllData';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
@@ -156,5 +157,16 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 		const key = await generateRecoveryKey(locals.user.id);
 		return { recoveryKey: key };
+	},
+
+	// The account itself (login, recovery key, settings) is untouched — only
+	// library data goes. Confirmation UX (typed "DELETE") lives entirely in
+	// the Settings page; this action trusts it was already gated by the time
+	// the request lands here, same as every other destructive action in this
+	// app has no server-side re-confirmation step of its own.
+	deleteAllData: async ({ locals }) => {
+		if (!locals.user) return fail(401);
+		await deleteAllLibraryData();
+		return { dataDeleted: true };
 	}
 };
