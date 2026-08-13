@@ -3,7 +3,9 @@ import { db } from '$lib/server/db';
 import { notifications, users } from '$lib/server/db/schema';
 import { hashPassword } from '$lib/server/auth';
 import {
+	clearNotifications,
 	createNotification,
+	deleteNotification,
 	getUnreadCount,
 	listNotifications,
 	markAllRead
@@ -59,5 +61,41 @@ describe('notifications', () => {
 
 		expect(await listNotifications(userB.id)).toEqual([]);
 		expect(await getUnreadCount(userB.id)).toBe(0);
+	});
+
+	it('deleteNotification removes just the one notification', async () => {
+		const user = await seedUser();
+		await createNotification(user.id, 'password_reset', 'first');
+		await createNotification(user.id, 'backfill_complete', 'second');
+		const [target] = await listNotifications(user.id);
+
+		await deleteNotification(user.id, target.id);
+
+		const remaining = await listNotifications(user.id);
+		expect(remaining).toHaveLength(1);
+		expect(remaining[0].id).not.toBe(target.id);
+	});
+
+	it('deleteNotification is scoped to the owning user', async () => {
+		const userA = await seedUser('alice');
+		const userB = await seedUser('bob');
+		await createNotification(userA.id, 'password_reset', "Alice's notification");
+		const [notification] = await listNotifications(userA.id);
+
+		await deleteNotification(userB.id, notification.id);
+
+		expect(await listNotifications(userA.id)).toHaveLength(1);
+	});
+
+	it('clearNotifications removes everything for that user only', async () => {
+		const userA = await seedUser('alice');
+		const userB = await seedUser('bob');
+		await createNotification(userA.id, 'password_reset', "Alice's notification");
+		await createNotification(userB.id, 'password_reset', "Bob's notification");
+
+		await clearNotifications(userA.id);
+
+		expect(await listNotifications(userA.id)).toEqual([]);
+		expect(await listNotifications(userB.id)).toHaveLength(1);
 	});
 });

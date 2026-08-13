@@ -63,3 +63,16 @@ export async function markAllRead(userId: string): Promise<void> {
 		.set({ readAt: new Date() })
 		.where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
 }
+
+// Scoped to userId so one account can't delete another's notification by
+// guessing/enumerating ids — the route handler doesn't check ownership
+// itself, this is the actual guard.
+export async function deleteNotification(userId: string, id: string): Promise<void> {
+	await db
+		.delete(notifications)
+		.where(and(eq(notifications.id, id), eq(notifications.userId, userId)));
+}
+
+export async function clearNotifications(userId: string): Promise<void> {
+	await db.delete(notifications).where(eq(notifications.userId, userId));
+}

@@ -52,6 +52,21 @@
 		}
 	}
 
+	// Optimistic: removed from local state immediately, not on the next poll —
+	// the request itself still runs, this just avoids a visible lag.
+	async function dismissNotification(id: string) {
+		const wasUnread = notifications.find((n) => n.id === id)?.readAt == null;
+		notifications = notifications.filter((n) => n.id !== id);
+		if (wasUnread) unreadCount = Math.max(0, unreadCount - 1);
+		await fetch(resolve('/(app)/notifications/[id]', { id }), { method: 'DELETE' });
+	}
+
+	async function clearAllNotifications() {
+		notifications = [];
+		unreadCount = 0;
+		await fetch(resolve('/(app)/notifications'), { method: 'DELETE' });
+	}
+
 	onMount(() => {
 		const handle = setInterval(refreshNotifications, NOTIFICATION_POLL_MS);
 		return () => clearInterval(handle);
@@ -116,17 +131,36 @@
 					{#if notifications.length === 0}
 						<p class="app-nav__notifications-empty">Nothing yet.</p>
 					{:else}
+						<div class="app-nav__notifications-header">
+							<button
+								type="button"
+								class="app-nav__notifications-clear"
+								onclick={clearAllNotifications}
+							>
+								Clear all
+							</button>
+						</div>
 						{#each notifications as notification (notification.id)}
 							<div class="app-nav__notification">
-								<p class="app-nav__notification-message">{notification.message}</p>
-								<span class="app-nav__notification-time">
-									{new Date(notification.createdAt).toLocaleString(undefined, {
-										month: 'short',
-										day: 'numeric',
-										hour: 'numeric',
-										minute: '2-digit'
-									})}
-								</span>
+								<div class="app-nav__notification-body">
+									<p class="app-nav__notification-message">{notification.message}</p>
+									<span class="app-nav__notification-time">
+										{new Date(notification.createdAt).toLocaleString(undefined, {
+											month: 'short',
+											day: 'numeric',
+											hour: 'numeric',
+											minute: '2-digit'
+										})}
+									</span>
+								</div>
+								<button
+									type="button"
+									class="app-nav__notification-dismiss"
+									aria-label="Dismiss notification"
+									onclick={() => dismissNotification(notification.id)}
+								>
+									×
+								</button>
 							</div>
 						{/each}
 					{/if}
