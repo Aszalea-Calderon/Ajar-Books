@@ -1,6 +1,13 @@
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { getSessionCookie, hasAnyUser, validateSessionToken } from '$lib/server/auth';
+import { scheduleBackups } from '$lib/server/backup';
+
+// Module-scope, not inside `handle` — this must run exactly once per
+// process. scheduleBackups() itself is idempotent (see its own
+// globalThis-guard) as a backstop against Vite's dev-mode module
+// re-evaluation, but there's no reason to even call it more than once here.
+scheduleBackups();
 
 const PUBLIC_PATHS = new Set(['/login', '/setup', '/recover']);
 

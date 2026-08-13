@@ -17,6 +17,7 @@ if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 const databaseUrl = process.env.VITEST ? ':memory:' : env.DATABASE_URL;
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
+type Cached = { db: Db; client: Database.Database };
 
 // Vite's dev-mode SSR module invalidation can re-execute this module's
 // top-level side effects — opening a fresh `better-sqlite3` connection and
@@ -25,9 +26,9 @@ type Db = ReturnType<typeof drizzle<typeof schema>>;
 // module re-evaluation the way this module's own top-level scope doesn't,
 // so caching the instance there guarantees exactly one connection and one
 // migration run per real process lifetime — in dev or prod.
-const globalForDb = globalThis as typeof globalThis & { __ajarDb?: Db };
+const globalForDb = globalThis as typeof globalThis & { __ajarDb?: Cached };
 
-function createDb(): Db {
+function createDb(): Cached {
 	const client = new Database(databaseUrl);
 	// Deliberately NOT WAL mode. WAL requires every connection touching this
 	// file to correctly coordinate through a shared -shm index, and that
@@ -63,7 +64,23 @@ function createDb(): Db {
 	// ends with an up-to-date schema without a separate migrate step.
 	migrate(instance, { migrationsFolder: 'drizzle' });
 
-	return instance;
+	return { db: instance, client };
 }
 
-export const db = globalForDb.__ajarDb ?? (globalForDb.__ajarDb = createDb());
+const cached = globalForDb.__ajarDb ?? (globalForDb.__ajarDb = createDb());
+
+export const db = cached.db;
+
+// The resolved path this connection actually opened — ':memory:' under
+// Vitest, otherwise whatever DATABASE_URL pointed at. Exposed so backup.ts
+// can decide where a sibling backups/ directory belongs without
+// re-deriving the same VITEST-detection logic a second place.
+export const databasePath = databaseUrl;
+
+// Uses SQLite's online backup API (safe to run against a live connection —
+// it reads a transactionally-consistent snapshot even if a write lands
+// mid-copy) rather than a raw `fs.copyFile`, which could grab a torn file.
+// See backup.ts for the scheduling/retention this backs.
+export function backupDatabase(destinationPath: string) {
+	return cached.client.backup(destinationPath);
+}

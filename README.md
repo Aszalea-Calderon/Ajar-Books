@@ -56,8 +56,14 @@ Copy `.env.example` to `.env` and set:
 
 - No analytics, no telemetry
 - Book search/metadata is pulled from [Open Library](https://openlibrary.org/), a third-party service, by default — no account or API key needed. Optional additional sources (Google Books, Ollama) only get called if you configure a key/URL yourself
-- All data lives in a single SQLite file — back it up by copying it
+- All data lives in a single SQLite file
 - One-click data export (JSON) is available from your Profile page at any time
+
+## Backups
+
+The app takes care of this automatically: every 24 hours (starting shortly after the server comes up), it writes a timestamped snapshot into a `backups/` folder next to the live database — `data/backups/` under Docker Compose, since `data/` is the bind-mounted volume, so backups land on the host disk too, not just inside the container. It keeps the 7 most recent and prunes older ones on its own. Snapshots are taken through SQLite's own online-backup API rather than a plain file copy, so it's safe to run against the live connection even mid-write.
+
+That's a safety net against corrupting or losing the live file (see [docs/adr/0002](docs/adr/0002-separate-dev-and-docker-databases.md) for why that's not hypothetical) — it isn't off-host or off-disk redundancy. If you want protection against losing the whole machine/disk, periodically copy `data/backups/` (or the live `data/ajar-books.db` file) somewhere else yourself — a second disk, cloud storage, wherever. Either is a plain file, safe to copy at rest; just avoid copying `data/ajar-books.db` itself while the container is running (copy from `data/backups/` instead, or stop the container first) so you're never reading it mid-write.
 
 ## Roadmap
 
