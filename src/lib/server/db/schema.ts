@@ -195,6 +195,33 @@ export const importJobs = sqliteTable('import_jobs', {
 		.$defaultFn(() => new Date())
 });
 
+// A saved snapshot of every Display knob (Settings > Display) under one
+// name, so a user can switch between multiple looks instead of only ever
+// tweaking the one live state — see cardStyle.svelte.ts/accent.svelte.ts/etc.
+// for the live client-side state this is a named snapshot of. Applying one
+// is purely client-side (no server round trip beyond loading this list);
+// this table exists so the saved set is available account-wide rather than
+// stuck in one browser's localStorage.
+export const customThemes = sqliteTable(
+	'custom_themes',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text('name').notNull(),
+		theme: text('theme', { enum: ['dark', 'light'] }).notNull(),
+		accentColor: text('accent_color'),
+		backgroundTexture: text('background_texture', { enum: ['dotted', 'none'] }).notNull(),
+		font: text('font', { enum: ['default', 'dyslexic'] }).notNull(),
+		cardRadiusScale: real('card_radius_scale').notNull(),
+		cardOpacity: real('card_opacity').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(table) => [unique().on(table.name)]
+);
+
 // Async/background events worth surfacing persistently instead of a
 // one-off banner that's only visible if you happen to be looking at the
 // right page when it happens — import finishing while you're elsewhere in

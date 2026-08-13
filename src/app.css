@@ -56,6 +56,14 @@
 	--radius-md: 0.75rem;
 	--radius-lg: 1.25rem;
 
+	/* User-overridable knobs (Settings > Display > Card Style) — applied to
+	   card/panel surfaces specifically (dashboard panels, book cards, book
+	   detail panels), not buttons/inputs/modals, which stay fixed on the
+	   radius tokens above and full opacity. Default 1 means "no override",
+	   same convention as accent color's null-means-default. */
+	--card-radius-scale: 1;
+	--card-opacity: 1;
+
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
 	--font-size-lg: 1.25rem;
@@ -605,7 +613,8 @@ button {
 .dashboard__panel {
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-lg);
+	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
+	opacity: var(--card-opacity);
 	padding: var(--space-6);
 }
 
@@ -1214,7 +1223,8 @@ button.dashboard__cta {
 	grid-template-columns: 12rem 1fr;
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-lg);
+	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
+	opacity: var(--card-opacity);
 }
 
 .settings-page__content {
@@ -1234,8 +1244,39 @@ button.dashboard__cta {
 
 .theme-options + h3,
 .accent-picker + h3,
-.settings-trigger + h3 {
+.settings-trigger + h3,
+.card-style-sliders + h3 {
 	margin-top: var(--space-8);
+}
+
+.card-style-sliders {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	max-width: 24rem;
+}
+
+.card-style-slider {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.card-style-slider__label {
+	display: flex;
+	justify-content: space-between;
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+}
+
+.card-style-slider__value {
+	color: var(--color-text);
+	font-weight: 600;
+}
+
+.card-style-slider input[type='range'] {
+	width: 100%;
+	accent-color: var(--color-primary);
 }
 
 .theme-option {
@@ -1405,7 +1446,8 @@ button.dashboard__cta {
 	padding: var(--space-3);
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
+	border-radius: calc(var(--radius-md) * var(--card-radius-scale));
+	opacity: var(--card-opacity);
 	text-decoration: none;
 	color: inherit;
 }
@@ -2539,7 +2581,8 @@ button.dashboard__cta {
 .book-detail__panel {
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-lg);
+	border-radius: calc(var(--radius-lg) * var(--card-radius-scale));
+	opacity: var(--card-opacity);
 	padding: var(--space-6);
 }
 
@@ -3092,6 +3135,51 @@ button.dashboard__cta {
 .manage-tags__delete:hover {
 	color: var(--color-danger);
 	border-color: var(--color-danger);
+}
+
+.custom-theme-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0 0 var(--space-6);
+	padding: 0;
+	list-style: none;
+	max-width: 24rem;
+}
+
+.custom-theme-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.custom-theme-row__swatch {
+	flex-shrink: 0;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	border: 1px solid var(--color-border);
+	padding: 0;
+	cursor: pointer;
+}
+
+.custom-theme-row__name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: left;
+	background: none;
+	border: none;
+	padding: 0;
+	color: var(--color-text);
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+}
+
+.custom-theme-row__name:hover {
+	text-decoration: underline;
 }
 
 .accent-picker {

@@ -9,6 +9,7 @@ import { generateRecoveryKey, updatePassword, updateUsername } from '$lib/server
 import { createNotification } from '$lib/server/notifications';
 import { deleteAllLibraryData } from '$lib/server/deleteAllData';
 import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
+import { deleteCustomTheme, saveCustomTheme } from '$lib/server/customThemes';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
@@ -206,5 +207,39 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 		await deleteAllLibraryData();
 		return { dataDeleted: true };
+	},
+
+	// A named snapshot of the live client-side Display state (see
+	// DisplaySettings.svelte) — the form's hidden fields carry whatever the
+	// browser's current theme/accent/background/font/card-style knobs are
+	// set to at save time, so this action itself has no idea what "current"
+	// means, it just persists whatever it's handed.
+	saveCustomTheme: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		const data = await request.formData();
+		const name = String(data.get('name') ?? '');
+		const accentColorRaw = String(data.get('accentColor') ?? '');
+
+		const saved = await saveCustomTheme({
+			name,
+			theme: String(data.get('theme') ?? 'dark') as 'dark' | 'light',
+			accentColor: accentColorRaw || null,
+			backgroundTexture: String(data.get('backgroundTexture') ?? 'dotted') as 'dotted' | 'none',
+			font: String(data.get('font') ?? 'default') as 'default' | 'dyslexic',
+			cardRadiusScale: Number(data.get('cardRadiusScale') ?? '1'),
+			cardOpacity: Number(data.get('cardOpacity') ?? '1')
+		});
+
+		if (!saved) {
+			return fail(400, { customThemeError: 'That name is empty or already taken.' });
+		}
+		return { customThemeSaved: true };
+	},
+
+	deleteCustomTheme: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		const id = String((await request.formData()).get('id') ?? '');
+		if (!id) return fail(400);
+		await deleteCustomTheme(id);
 	}
 };

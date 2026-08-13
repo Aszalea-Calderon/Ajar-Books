@@ -90,7 +90,7 @@
 		</nav>
 		<div class="settings-page__content">
 			{#if section === 'themes'}
-				<DisplaySettings />
+				<DisplaySettings customThemes={data.customThemes} onRequestConfirm={requestConfirm} />
 			{:else if section === 'search'}
 				<SearchSettings languagePriority={data.languagePriority} />
 			{:else if section === 'integrations'}

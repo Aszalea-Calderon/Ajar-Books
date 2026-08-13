@@ -8,6 +8,7 @@
 	import { initAccent } from '$lib/client/accent.svelte';
 	import { searchViewMode, profileViewMode } from '$lib/client/viewMode.svelte';
 	import { initBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
+	import { initCardStyle } from '$lib/client/cardStyle.svelte';
 
 	let { children } = $props();
 
@@ -18,6 +19,7 @@
 		searchViewMode.init();
 		profileViewMode.init();
 		initBackgroundTexture();
+		initCardStyle();
 	});
 </script>
 

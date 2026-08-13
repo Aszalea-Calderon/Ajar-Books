@@ -3,6 +3,7 @@ import { getSettings } from '$lib/server/settings';
 import { getAllTagsWithUsage, type TagType } from '$lib/server/books/tags';
 import { hasRecoveryKey } from '$lib/server/auth';
 import { getUnreadCount, listNotifications } from '$lib/server/notifications';
+import { listCustomThemes } from '$lib/server/customThemes';
 
 const TAG_TYPES: TagType[] = ['genre', 'mood', 'setting'];
 
@@ -15,13 +16,14 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		)
 	) as Record<TagType, Awaited<ReturnType<typeof getAllTagsWithUsage>>>;
 
-	const [hasRecovery, notifications, unreadCount] = locals.user
+	const [hasRecovery, notifications, unreadCount, customThemes] = locals.user
 		? await Promise.all([
 				hasRecoveryKey(locals.user.id),
 				listNotifications(locals.user.id),
-				getUnreadCount(locals.user.id)
+				getUnreadCount(locals.user.id),
+				listCustomThemes()
 			])
-		: [false, [], 0];
+		: [false, [], 0, []];
 
 	return {
 		user: locals.user,
@@ -30,6 +32,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		manageableTags,
 		hasRecoveryKey: hasRecovery,
 		notifications,
-		unreadNotificationCount: unreadCount
+		unreadNotificationCount: unreadCount,
+		customThemes
 	};
 };
