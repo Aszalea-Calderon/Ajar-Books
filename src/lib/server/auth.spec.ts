@@ -7,6 +7,7 @@ import {
 	hashPassword,
 	hasRecoveryKey,
 	resetPasswordWithRecoveryKey,
+	updatePassword,
 	updateUsername,
 	verifyPassword
 } from './auth';
@@ -146,5 +147,39 @@ describe('updateUsername', () => {
 		expect(ok).toBe(false);
 		const [unchanged] = await db.select().from(users).where(eq(users.id, user.id));
 		expect(unchanged.username).toBe('testuser');
+	});
+});
+
+describe('updatePassword', () => {
+	beforeEach(async () => {
+		await db.delete(users);
+	});
+
+	it('changes the password when the current one is correct', async () => {
+		const user = await seedUser();
+		const result = await updatePassword(user.id, 'original-password', 'new-password-123');
+
+		expect(result).toBe('ok');
+		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(verifyPassword('new-password-123', updated.passwordHash)).toBe(true);
+		expect(verifyPassword('original-password', updated.passwordHash)).toBe(false);
+	});
+
+	it('rejects the wrong current password, leaving the old one in place', async () => {
+		const user = await seedUser();
+		const result = await updatePassword(user.id, 'not-the-real-password', 'new-password-123');
+
+		expect(result).toBe('wrong-current');
+		const [unchanged] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(verifyPassword('original-password', unchanged.passwordHash)).toBe(true);
+	});
+
+	it('rejects a new password under 8 characters, leaving the old one in place', async () => {
+		const user = await seedUser();
+		const result = await updatePassword(user.id, 'original-password', 'short');
+
+		expect(result).toBe('too-short');
+		const [unchanged] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(verifyPassword('original-password', unchanged.passwordHash)).toBe(true);
 	});
 });

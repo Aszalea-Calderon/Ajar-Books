@@ -5,9 +5,10 @@ import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
 import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 import { backfillMissingMetadata } from '$lib/server/books/backfill';
-import { generateRecoveryKey, updateUsername } from '$lib/server/auth';
+import { generateRecoveryKey, updatePassword, updateUsername } from '$lib/server/auth';
 import { createNotification } from '$lib/server/notifications';
 import { deleteAllLibraryData } from '$lib/server/deleteAllData';
+import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
 
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
 const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
@@ -149,6 +150,43 @@ export const actions: Actions = {
 			return fail(400, { usernameError: "That username is empty or already taken." });
 		}
 		return { usernameUpdated: true };
+	},
+
+	// Rate-limited the same as /login — a still-valid session cookie left
+	// signed in on a shared/borrowed device shouldn't be enough to brute-force
+	// the real password out from behind the "current password" gate.
+	updatePassword: async ({ request, locals, getClientAddress }) => {
+		if (!locals.user) return fail(401);
+		const ip = getClientAddress();
+
+		const rateLimit = checkRateLimit(ip);
+		if (!rateLimit.allowed) {
+			const minutes = Math.ceil((rateLimit.retryAfterSeconds ?? 0) / 60);
+			return fail(429, {
+				passwordError: `Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`
+			});
+		}
+
+		const data = await request.formData();
+		const currentPassword = String(data.get('currentPassword') ?? '');
+		const newPassword = String(data.get('newPassword') ?? '');
+		const confirmNewPassword = String(data.get('confirmNewPassword') ?? '');
+
+		if (newPassword !== confirmNewPassword) {
+			return fail(400, { passwordError: 'Passwords do not match.' });
+		}
+
+		const result = await updatePassword(locals.user.id, currentPassword, newPassword);
+		if (result === 'wrong-current') {
+			recordFailedAttempt(ip);
+			return fail(400, { passwordError: 'Current password is incorrect.' });
+		}
+		if (result === 'too-short') {
+			return fail(400, { passwordError: 'New password must be at least 8 characters.' });
+		}
+
+		clearAttempts(ip);
+		return { passwordUpdated: true };
 	},
 
 	// Overwrites (invalidates) any previous key. The plaintext is only ever

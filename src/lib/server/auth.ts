@@ -100,6 +100,25 @@ export async function updateUsername(userId: string, username: string): Promise<
 	}
 }
 
+export type UpdatePasswordResult = 'ok' | 'wrong-current' | 'too-short';
+
+// Same 8-char minimum as /setup and /recover's PasswordField — gated behind
+// the current password (not just being logged in), since a still-valid
+// session cookie left signed in on a shared/borrowed device shouldn't alone
+// be enough to lock the real owner out.
+export async function updatePassword(
+	userId: string,
+	currentPassword: string,
+	newPassword: string
+): Promise<UpdatePasswordResult> {
+	const [user] = await db.select().from(users).where(eq(users.id, userId));
+	if (!user || !verifyPassword(currentPassword, user.passwordHash)) return 'wrong-current';
+	if (newPassword.length < 8) return 'too-short';
+
+	await db.update(users).set({ passwordHash: hashPassword(newPassword) }).where(eq(users.id, userId));
+	return 'ok';
+}
+
 // Groups of 4 from a 32-character alphabet that drops visually-confusable
 // characters (0/O, 1/I/L) — meant to be hand-typed from a written-down copy
 // without ambiguity, the same reasoning as Crockford base32.
