@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `text_scale` real DEFAULT 1 NOT NULL;

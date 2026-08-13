@@ -14,6 +14,7 @@
 	import { initCardShadow } from '$lib/client/cardShadow.svelte';
 	import { initCoverStyle } from '$lib/client/coverStyle.svelte';
 	import { initCardBorder } from '$lib/client/cardBorder.svelte';
+	import { initTextScale } from '$lib/client/textScale.svelte';
 
 	let { children } = $props();
 
@@ -30,6 +31,7 @@
 		initCardShadow();
 		initCoverStyle();
 		initCardBorder();
+		initTextScale();
 	});
 </script>
 

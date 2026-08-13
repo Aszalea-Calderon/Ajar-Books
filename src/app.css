@@ -83,10 +83,14 @@
 	/* None/Thin(default)/Bold for the same curated card/panel selectors. */
 	--card-border-width: 1px;
 
-	--font-size-sm: 0.875rem;
-	--font-size-base: 1rem;
-	--font-size-lg: 1.25rem;
-	--font-size-xl: 1.75rem;
+	/* Settings > Display > Text Size — scales every --font-size-* token at
+	   its source, same technique as --density-scale above, so it affects
+	   type app-wide with no per-selector changes needed. */
+	--text-scale: 1;
+	--font-size-sm: calc(0.875rem * var(--text-scale));
+	--font-size-base: calc(1rem * var(--text-scale));
+	--font-size-lg: calc(1.25rem * var(--text-scale));
+	--font-size-xl: calc(1.75rem * var(--text-scale));
 }
 
 /* Glassy effect (Settings > Display > Card Style) — a separate toggle from

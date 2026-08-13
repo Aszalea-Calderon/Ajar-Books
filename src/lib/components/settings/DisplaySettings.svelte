@@ -17,6 +17,7 @@
 	import { cardShadowState, setCardShadow, type CardShadow } from '$lib/client/cardShadow.svelte';
 	import { coverStyleState, setCoverRadiusScale } from '$lib/client/coverStyle.svelte';
 	import { cardBorderState, setCardBorder, type CardBorder } from '$lib/client/cardBorder.svelte';
+	import { textScaleState, setTextScale } from '$lib/client/textScale.svelte';
 	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
@@ -95,6 +96,28 @@
 			{d.label}
 		</button>
 	{/each}
+</div>
+
+<h3>Text Size</h3>
+<p class="settings-hint">
+	Scales all text across the app — separate from the Font picker below, which changes the
+	typeface, not the size.
+</p>
+<div class="card-style-sliders">
+	<label class="card-style-slider">
+		<span class="card-style-slider__label">
+			Text size
+			<span class="card-style-slider__value">{Math.round(textScaleState.scale * 100)}%</span>
+		</span>
+		<input
+			type="range"
+			min="0.85"
+			max="1.3"
+			step="0.05"
+			value={textScaleState.scale}
+			oninput={(event) => setTextScale(Number(event.currentTarget.value))}
+		/>
+	</label>
 </div>
 
 <h3>Accent Color</h3>

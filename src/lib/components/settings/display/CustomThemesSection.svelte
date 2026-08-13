@@ -15,6 +15,7 @@
 	import { cardShadowState, setCardShadow } from '$lib/client/cardShadow.svelte';
 	import { coverStyleState, setCoverRadiusScale } from '$lib/client/coverStyle.svelte';
 	import { cardBorderState, setCardBorder } from '$lib/client/cardBorder.svelte';
+	import { textScaleState, setTextScale } from '$lib/client/textScale.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
 	let {
@@ -47,6 +48,7 @@
 		setCardShadow(saved.cardShadow);
 		setCoverRadiusScale(saved.coverRadiusScale);
 		setCardBorder(saved.cardBorder);
+		setTextScale(saved.textScale);
 	}
 </script>
 
@@ -122,6 +124,7 @@
 	<input type="hidden" name="cardShadow" value={cardShadowState.current} />
 	<input type="hidden" name="coverRadiusScale" value={coverStyleState.radiusScale} />
 	<input type="hidden" name="cardBorder" value={cardBorderState.current} />
+	<input type="hidden" name="textScale" value={textScaleState.scale} />
 	<div class="auth-field">
 		<label for="customThemeName">Save current look as</label>
 		<input

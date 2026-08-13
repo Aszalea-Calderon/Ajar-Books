@@ -18,6 +18,7 @@ export type CustomThemeInput = {
 	cardShadow: 'flat' | 'subtle' | 'pronounced';
 	coverRadiusScale: number;
 	cardBorder: 'none' | 'thin' | 'bold';
+	textScale: number;
 };
 
 export async function listCustomThemes(): Promise<CustomTheme[]> {

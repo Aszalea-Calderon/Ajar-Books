@@ -236,7 +236,8 @@ export const actions: Actions = {
 				| 'spacious',
 			cardShadow: String(data.get('cardShadow') ?? 'flat') as 'flat' | 'subtle' | 'pronounced',
 			coverRadiusScale: Number(data.get('coverRadiusScale') ?? '1'),
-			cardBorder: String(data.get('cardBorder') ?? 'thin') as 'none' | 'thin' | 'bold'
+			cardBorder: String(data.get('cardBorder') ?? 'thin') as 'none' | 'thin' | 'bold',
+			textScale: Number(data.get('textScale') ?? '1')
 		});
 
 		if (!saved) {
