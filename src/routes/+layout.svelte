@@ -9,6 +9,7 @@
 	import { searchViewMode, profileViewMode } from '$lib/client/viewMode.svelte';
 	import { initBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
 	import { initCardStyle } from '$lib/client/cardStyle.svelte';
+	import { initGlassy } from '$lib/client/glassy.svelte';
 
 	let { children } = $props();
 
@@ -20,6 +21,7 @@
 		profileViewMode.init();
 		initBackgroundTexture();
 		initCardStyle();
+		initGlassy();
 	});
 </script>
 

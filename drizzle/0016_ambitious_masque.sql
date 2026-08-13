@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `glassy` integer DEFAULT false NOT NULL;

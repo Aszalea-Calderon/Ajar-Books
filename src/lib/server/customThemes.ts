@@ -13,6 +13,7 @@ export type CustomThemeInput = {
 	cardRadiusScale: number;
 	cardOpacity: number;
 	controlRadiusScale: number;
+	glassy: boolean;
 };
 
 export async function listCustomThemes(): Promise<CustomTheme[]> {

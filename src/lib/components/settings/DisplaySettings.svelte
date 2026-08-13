@@ -13,6 +13,7 @@
 		setCardOpacity,
 		setControlRadiusScale
 	} from '$lib/client/cardStyle.svelte';
+	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
 
@@ -126,6 +127,29 @@
 			oninput={(event) => setCardOpacity(Number(event.currentTarget.value))}
 		/>
 	</label>
+</div>
+
+<p class="settings-hint">
+	Glassy effect — blurs whatever's behind a card instead of just fading its background. Only
+	visible once Background Opacity above is under 100%.
+</p>
+<div class="theme-options">
+	<button
+		type="button"
+		class="theme-option"
+		class:theme-option--selected={!glassyState.enabled}
+		onclick={() => setGlassy(false)}
+	>
+		Off
+	</button>
+	<button
+		type="button"
+		class="theme-option"
+		class:theme-option--selected={glassyState.enabled}
+		onclick={() => setGlassy(true)}
+	>
+		Glassy
+	</button>
 </div>
 
 <h3>Action Buttons</h3>

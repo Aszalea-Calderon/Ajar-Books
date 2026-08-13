@@ -76,6 +76,20 @@
 	--font-size-xl: 1.75rem;
 }
 
+/* Glassy effect (Settings > Display > Card Style) — a separate toggle from
+   background opacity, not blended into it: opacity alone just fades the
+   background color, this adds a frosted-glass blur of whatever's behind the
+   card. Only visually does anything once opacity is under 100% — a fully
+   opaque background has nothing showing through to blur. Same curated
+   card/panel selector set as card-radius-scale/card-opacity. */
+:root[data-glassy='true'] .dashboard__panel,
+:root[data-glassy='true'] .settings-page__body,
+:root[data-glassy='true'] .search-result,
+:root[data-glassy='true'] .book-detail__panel {
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+}
+
 :root[data-theme='light'] {
 	--color-bg: #f7f8fa;
 	--color-surface: #ffffff;

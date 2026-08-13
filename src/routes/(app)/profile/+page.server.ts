@@ -228,7 +228,8 @@ export const actions: Actions = {
 			font: String(data.get('font') ?? 'default') as 'default' | 'dyslexic',
 			cardRadiusScale: Number(data.get('cardRadiusScale') ?? '1'),
 			cardOpacity: Number(data.get('cardOpacity') ?? '1'),
-			controlRadiusScale: Number(data.get('controlRadiusScale') ?? '1')
+			controlRadiusScale: Number(data.get('controlRadiusScale') ?? '1'),
+			glassy: data.get('glassy') === 'true'
 		});
 
 		if (!saved) {
