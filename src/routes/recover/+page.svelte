@@ -21,55 +21,69 @@
 		Ajar Books
 	</div>
 	<div class="auth-card">
-		<h1>Recover your account</h1>
-		<p class="settings-hint">
-			Enter the recovery key from Settings &gt; Account Recovery, and choose a new password.
-		</p>
+		{#if form?.success}
+			<h1>Password reset</h1>
+			<p class="settings-hint settings-hint--success">
+				Your password was reset. Here's your next recovery key — save it somewhere safe now, it
+				won't be shown again:
+			</p>
+			<p class="recovery-key-display">{form.newRecoveryKey}</p>
+			<p class="settings-hint">
+				The old key you just used is gone — this new one is your only way back in if you forget
+				this password too.
+			</p>
+			<a class="auth-submit" href={resolve('/login')}>Continue to sign in</a>
+		{:else}
+			<h1>Recover your account</h1>
+			<p class="settings-hint">
+				Enter the recovery key from Settings &gt; Account Recovery, and choose a new password.
+			</p>
 
-		{#if form?.error}
-			<p class="auth-error">{form.error}</p>
-		{/if}
+			{#if form?.error}
+				<p class="auth-error">{form.error}</p>
+			{/if}
 
-		<form method="POST" use:enhance>
-			<div class="auth-field">
-				<label for="recoveryKey">Recovery key</label>
-				<input
-					id="recoveryKey"
-					name="recoveryKey"
-					type="text"
-					autocomplete="off"
-					placeholder="XXXX-XXXX-XXXX-XXXX"
-					bind:value={recoveryKey}
+			<form method="POST" use:enhance>
+				<div class="auth-field">
+					<label for="recoveryKey">Recovery key</label>
+					<input
+						id="recoveryKey"
+						name="recoveryKey"
+						type="text"
+						autocomplete="off"
+						placeholder="XXXX-XXXX-XXXX-XXXX"
+						bind:value={recoveryKey}
+						required
+					/>
+				</div>
+				<PasswordField
+					id="password"
+					name="password"
+					label="New password"
+					autocomplete="new-password"
+					minlength={8}
 					required
+					bind:value={password}
 				/>
-			</div>
-			<PasswordField
-				id="password"
-				name="password"
-				label="New password"
-				autocomplete="new-password"
-				minlength={8}
-				required
-				bind:value={password}
-			/>
-			<PasswordField
-				id="confirmPassword"
-				name="confirmPassword"
-				label="Confirm new password"
-				autocomplete="new-password"
-				required
-				bind:value={confirmPassword}
-			/>
-			<button
-				class="auth-submit"
-				type="submit"
-				disabled={!recoveryKey || !password || !confirmPassword}
-			>
-				Reset password
-			</button>
-		</form>
-		<p class="settings-hint">
-			<a href={resolve('/login')}>Back to sign in</a>
-		</p>
+				<PasswordField
+					id="confirmPassword"
+					name="confirmPassword"
+					label="Confirm new password"
+					autocomplete="new-password"
+					required
+					bind:value={confirmPassword}
+				/>
+				<button
+					class="auth-submit"
+					type="submit"
+					disabled={!recoveryKey || !password || !confirmPassword}
+				>
+					Reset password
+				</button>
+			</form>
+			<p class="settings-hint">
+				<a href={resolve('/login')}>Back to sign in</a>
+			</p>
+		{/if}
 	</div>
 </div>

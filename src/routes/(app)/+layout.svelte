@@ -98,6 +98,18 @@
 		</div>
 	</header>
 
+	{#if !data.hasRecoveryKey}
+		<div class="recovery-key-reminder">
+			<p>
+				You don't have a recovery key set up — if you ever forget your password, there's no way
+				back in without one.
+			</p>
+			<button type="button" class="settings-trigger" onclick={() => openSettingsTo('data')}>
+				Set one up now
+			</button>
+		</div>
+	{/if}
+
 	<main class="app-main">
 		{@render children()}
 	</main>

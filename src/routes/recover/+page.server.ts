@@ -1,6 +1,6 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { resetPasswordWithRecoveryKey } from '$lib/server/auth';
+import { generateRecoveryKey, resetPasswordWithRecoveryKey } from '$lib/server/auth';
 import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
 
 export const actions: Actions = {
@@ -28,13 +28,19 @@ export const actions: Actions = {
 			return fail(400, { error: 'Passwords do not match.' });
 		}
 
-		const ok = await resetPasswordWithRecoveryKey(recoveryKey, password);
-		if (!ok) {
+		const userId = await resetPasswordWithRecoveryKey(recoveryKey, password);
+		if (!userId) {
 			recordFailedAttempt(ip);
 			return fail(400, { error: 'That recovery key is incorrect or has already been used.' });
 		}
 
 		clearAttempts(ip);
-		throw redirect(303, '/login');
+
+		// Issue the next key right here instead of sending them off to Settings
+		// to remember to do it later — the old key is already spent, so this is
+		// the one moment we know for certain they need a new one, and they're
+		// already looking right at this screen for it.
+		const newRecoveryKey = await generateRecoveryKey(userId);
+		return { success: true, newRecoveryKey };
 	}
 };

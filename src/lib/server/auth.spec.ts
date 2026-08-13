@@ -48,9 +48,9 @@ describe('recovery key', () => {
 		const user = await seedUser();
 		const key = await generateRecoveryKey(user.id);
 
-		const ok = await resetPasswordWithRecoveryKey(key, 'brand-new-password');
+		const result = await resetPasswordWithRecoveryKey(key, 'brand-new-password');
 
-		expect(ok).toBe(true);
+		expect(result).toBe(user.id);
 		const [updated] = await db.select().from(users);
 		expect(verifyPassword('brand-new-password', updated.passwordHash)).toBe(true);
 		expect(verifyPassword('original-password', updated.passwordHash)).toBe(false);
@@ -60,18 +60,18 @@ describe('recovery key', () => {
 		const user = await seedUser();
 		const key = await generateRecoveryKey(user.id);
 
-		const ok = await resetPasswordWithRecoveryKey(key.toLowerCase(), 'brand-new-password');
+		const result = await resetPasswordWithRecoveryKey(key.toLowerCase(), 'brand-new-password');
 
-		expect(ok).toBe(true);
+		expect(result).toBe(user.id);
 	});
 
 	it('rejects an incorrect key and leaves the password unchanged', async () => {
 		const user = await seedUser();
 		await generateRecoveryKey(user.id);
 
-		const ok = await resetPasswordWithRecoveryKey('WRONG-KEYX-ABCD-9999', 'brand-new-password');
+		const result = await resetPasswordWithRecoveryKey('WRONG-KEYX-ABCD-9999', 'brand-new-password');
 
-		expect(ok).toBe(false);
+		expect(result).toBeNull();
 		const [unchanged] = await db.select().from(users);
 		expect(verifyPassword('original-password', unchanged.passwordHash)).toBe(true);
 	});
@@ -83,15 +83,15 @@ describe('recovery key', () => {
 		const first = await resetPasswordWithRecoveryKey(key, 'first-new-password');
 		const second = await resetPasswordWithRecoveryKey(key, 'second-new-password');
 
-		expect(first).toBe(true);
-		expect(second).toBe(false);
+		expect(first).toBe(user.id);
+		expect(second).toBeNull();
 		expect(await hasRecoveryKey(user.id)).toBe(false);
 	});
 
 	it('rejects any key when none has ever been generated', async () => {
 		await seedUser();
-		const ok = await resetPasswordWithRecoveryKey('ABCD-EFGH-JKMN-PQRS', 'brand-new-password');
-		expect(ok).toBe(false);
+		const result = await resetPasswordWithRecoveryKey('ABCD-EFGH-JKMN-PQRS', 'brand-new-password');
+		expect(result).toBeNull();
 	});
 
 	it('generating a new key invalidates the previous one', async () => {
@@ -99,7 +99,7 @@ describe('recovery key', () => {
 		const firstKey = await generateRecoveryKey(user.id);
 		await generateRecoveryKey(user.id);
 
-		const ok = await resetPasswordWithRecoveryKey(firstKey, 'brand-new-password');
-		expect(ok).toBe(false);
+		const result = await resetPasswordWithRecoveryKey(firstKey, 'brand-new-password');
+		expect(result).toBeNull();
 	});
 });

@@ -134,19 +134,25 @@ export async function hasRecoveryKey(userId: string): Promise<boolean> {
  * key the same way it was generated (uppercase, dash-grouped) so a user
  * retyping it isn't tripped up by case.
  */
+/**
+ * Returns the user's id on success (so the caller can immediately issue a
+ * fresh recovery key — see /recover's action) or null on failure. Not a
+ * plain boolean specifically so a successful reset can chain straight into
+ * generateRecoveryKey without a second lookup.
+ */
 export async function resetPasswordWithRecoveryKey(
 	key: string,
 	newPassword: string
-): Promise<boolean> {
+): Promise<string | null> {
 	const [user] = await db.select().from(users);
-	if (!user?.recoveryKeyHash) return false;
+	if (!user?.recoveryKeyHash) return null;
 
 	const normalized = key.trim().toUpperCase();
-	if (!verifyPassword(normalized, user.recoveryKeyHash)) return false;
+	if (!verifyPassword(normalized, user.recoveryKeyHash)) return null;
 
 	await db
 		.update(users)
 		.set({ passwordHash: hashPassword(newPassword), recoveryKeyHash: null })
 		.where(eq(users.id, user.id));
-	return true;
+	return user.id;
 }

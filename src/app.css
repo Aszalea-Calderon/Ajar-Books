@@ -436,16 +436,17 @@ button {
 	font-weight: 600;
 }
 
+/* Sits between the nav and the page content, full-width — deliberately not
+   a rounded card, so it reads as app chrome that follows you everywhere
+   rather than something scoped to one page. */
 .recovery-key-reminder {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--space-4);
 	background: var(--color-surface-raised);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
-	padding: var(--space-3) var(--space-4);
-	margin: 0 0 var(--space-6);
+	border-bottom: 1px solid var(--color-border);
+	padding: var(--space-3) var(--space-8);
 }
 
 .recovery-key-reminder p {
