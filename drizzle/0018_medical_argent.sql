@@ -1,0 +1,1 @@
+ALTER TABLE `custom_themes` ADD `card_shadow` text DEFAULT 'flat' NOT NULL;

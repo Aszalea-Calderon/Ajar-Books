@@ -14,6 +14,7 @@
 		setControlRadiusScale
 	} from '$lib/client/cardStyle.svelte';
 	import { glassyState, setGlassy } from '$lib/client/glassy.svelte';
+	import { cardShadowState, setCardShadow, type CardShadow } from '$lib/client/cardShadow.svelte';
 	import { densityState, setDensity, type Density } from '$lib/client/density.svelte';
 	import CustomThemesSection from './display/CustomThemesSection.svelte';
 	import type { CustomTheme } from '$lib/server/customThemes';
@@ -35,6 +36,12 @@
 		{ id: 'compact', label: 'Compact' },
 		{ id: 'comfortable', label: 'Comfortable' },
 		{ id: 'spacious', label: 'Spacious' }
+	];
+
+	const cardShadows: { id: CardShadow; label: string }[] = [
+		{ id: 'flat', label: 'Flat' },
+		{ id: 'subtle', label: 'Subtle' },
+		{ id: 'pronounced', label: 'Pronounced' }
 	];
 
 	const fonts: { id: Font; label: string }[] = [
@@ -174,6 +181,20 @@
 	>
 		Glassy
 	</button>
+</div>
+
+<p class="settings-hint">Shadow — how much cards lift off the page.</p>
+<div class="theme-options">
+	{#each cardShadows as s (s.id)}
+		<button
+			type="button"
+			class="theme-option"
+			class:theme-option--selected={cardShadowState.current === s.id}
+			onclick={() => setCardShadow(s.id)}
+		>
+			{s.label}
+		</button>
+	{/each}
 </div>
 
 <h3>Action Buttons</h3>

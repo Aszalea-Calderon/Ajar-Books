@@ -15,6 +15,7 @@ function themeInput(overrides: Partial<Parameters<typeof saveCustomTheme>[0]> = 
 		controlRadiusScale: 0.5,
 		glassy: true,
 		density: 'spacious' as const,
+		cardShadow: 'pronounced' as const,
 		...overrides
 	};
 }

@@ -233,7 +233,8 @@ export const actions: Actions = {
 			density: String(data.get('density') ?? 'comfortable') as
 				| 'compact'
 				| 'comfortable'
-				| 'spacious'
+				| 'spacious',
+			cardShadow: String(data.get('cardShadow') ?? 'flat') as 'flat' | 'subtle' | 'pronounced'
 		});
 
 		if (!saved) {

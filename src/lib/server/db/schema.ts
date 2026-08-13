@@ -220,6 +220,9 @@ export const customThemes = sqliteTable(
 		density: text('density', { enum: ['compact', 'comfortable', 'spacious'] })
 			.notNull()
 			.default('comfortable'),
+		cardShadow: text('card_shadow', { enum: ['flat', 'subtle', 'pronounced'] })
+			.notNull()
+			.default('flat'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())

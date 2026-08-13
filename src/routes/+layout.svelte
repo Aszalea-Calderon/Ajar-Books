@@ -11,6 +11,7 @@
 	import { initCardStyle } from '$lib/client/cardStyle.svelte';
 	import { initGlassy } from '$lib/client/glassy.svelte';
 	import { initDensity } from '$lib/client/density.svelte';
+	import { initCardShadow } from '$lib/client/cardShadow.svelte';
 
 	let { children } = $props();
 
@@ -24,6 +25,7 @@
 		initCardStyle();
 		initGlassy();
 		initDensity();
+		initCardShadow();
 	});
 </script>
 
