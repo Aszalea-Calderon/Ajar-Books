@@ -6,6 +6,16 @@ import { env } from '$env/dynamic/private';
 
 if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
+// Vitest's own config sets DATABASE_URL=:memory: for test runs, but that's
+// a second, independent place declaring the same intent — and it silently
+// stopped taking effect at least twice in one real session (2026-08-12/13),
+// each time leaving a test fixture's username sitting in the real dev
+// local.db in place of the real account. Root cause unconfirmed. Rather
+// than trust the config alone a second time, this is a hard, structural
+// backstop: Vitest always sets process.env.VITEST, so a test run can never
+// end up pointed at a real file no matter what DATABASE_URL resolves to.
+const databaseUrl = process.env.VITEST ? ':memory:' : env.DATABASE_URL;
+
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
 // Vite's dev-mode SSR module invalidation can re-execute this module's
@@ -18,7 +28,7 @@ type Db = ReturnType<typeof drizzle<typeof schema>>;
 const globalForDb = globalThis as typeof globalThis & { __ajarDb?: Db };
 
 function createDb(): Db {
-	const client = new Database(env.DATABASE_URL);
+	const client = new Database(databaseUrl);
 	// Deliberately NOT WAL mode. WAL requires every connection touching this
 	// file to correctly coordinate through a shared -shm index, and that
 	// coordination is what actually caused five separate real data-loss/

@@ -14,17 +14,16 @@
 		type BackgroundTexture
 	} from '$lib/client/backgroundTexture.svelte';
 	import { searchViewMode, profileViewMode, type ViewMode } from '$lib/client/viewMode.svelte';
+	import { settingsModalState } from '$lib/client/settingsModal.svelte';
 	import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 	import type { TagType, TagWithUsage } from '$lib/server/books/tags';
 
 	let {
-		open = $bindable(false),
 		googleBooksApiKey,
 		languagePriority,
 		manageableTags,
 		hasRecoveryKey
 	}: {
-		open?: boolean;
 		googleBooksApiKey: string | null;
 		languagePriority: string;
 		manageableTags: Record<TagType, TagWithUsage[]>;
@@ -32,7 +31,6 @@
 	} = $props();
 
 	let dialogEl: HTMLDialogElement;
-	let section = $state<'themes' | 'fonts' | 'search' | 'integrations' | 'tags' | 'data'>('themes');
 	let justSaved = $state(false);
 	let backfillRunning = $state(false);
 	let backfillResult = $state<number | null>(null);
@@ -80,9 +78,9 @@
 
 	$effect(() => {
 		if (!dialogEl) return;
-		if (open && !dialogEl.open) {
+		if (settingsModalState.open && !dialogEl.open) {
 			dialogEl.showModal();
-		} else if (!open && dialogEl.open) {
+		} else if (!settingsModalState.open && dialogEl.open) {
 			dialogEl.close();
 		}
 	});
@@ -120,14 +118,14 @@
 	let defaultAccent = $derived(themeState.current === 'light' ? '#1d5fa8' : '#4c8edb');
 
 	function closeOnBackdropClick(event: MouseEvent) {
-		if (event.target === dialogEl) open = false;
+		if (event.target === dialogEl) settingsModalState.open = false;
 	}
 </script>
 
 <dialog
 	bind:this={dialogEl}
 	class="settings-modal"
-	onclose={() => (open = false)}
+	onclose={() => (settingsModalState.open = false)}
 	onclick={closeOnBackdropClick}
 	use:trapFocus
 >
@@ -137,7 +135,7 @@
 			type="button"
 			class="settings-modal__close"
 			aria-label="Close settings"
-			onclick={() => (open = false)}
+			onclick={() => (settingsModalState.open = false)}
 		>
 			×
 		</button>
@@ -147,54 +145,54 @@
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'themes'}
-				onclick={() => (section = 'themes')}
+				class:settings-modal__nav-item--active={settingsModalState.section === 'themes'}
+				onclick={() => (settingsModalState.section = 'themes')}
 			>
 				Display
 			</button>
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'fonts'}
-				onclick={() => (section = 'fonts')}
+				class:settings-modal__nav-item--active={settingsModalState.section === 'fonts'}
+				onclick={() => (settingsModalState.section = 'fonts')}
 			>
 				Fonts
 			</button>
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'search'}
-				onclick={() => (section = 'search')}
+				class:settings-modal__nav-item--active={settingsModalState.section === 'search'}
+				onclick={() => (settingsModalState.section = 'search')}
 			>
 				Search
 			</button>
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'integrations'}
-				onclick={() => (section = 'integrations')}
+				class:settings-modal__nav-item--active={settingsModalState.section === 'integrations'}
+				onclick={() => (settingsModalState.section = 'integrations')}
 			>
 				Integrations
 			</button>
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'tags'}
-				onclick={() => (section = 'tags')}
+				class:settings-modal__nav-item--active={settingsModalState.section === 'tags'}
+				onclick={() => (settingsModalState.section = 'tags')}
 			>
 				Tags
 			</button>
 			<button
 				type="button"
 				class="settings-modal__nav-item"
-				class:settings-modal__nav-item--active={section === 'data'}
-				onclick={() => (section = 'data')}
+				class:settings-modal__nav-item--active={settingsModalState.section === 'data'}
+				onclick={() => (settingsModalState.section = 'data')}
 			>
 				Data
 			</button>
 		</nav>
 		<div class="settings-modal__content">
-			{#if section === 'themes'}
+			{#if settingsModalState.section === 'themes'}
 				<h3>Theme</h3>
 				<div class="theme-options">
 					{#each themes as t (t.id)}
@@ -277,7 +275,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else if section === 'fonts'}
+			{:else if settingsModalState.section === 'fonts'}
 				<h3>Font</h3>
 				<div class="theme-options">
 					{#each fonts as f (f.id)}
@@ -292,7 +290,7 @@
 						</button>
 					{/each}
 				</div>
-			{:else if section === 'search'}
+			{:else if settingsModalState.section === 'search'}
 				<h3>Language Priority</h3>
 				<p class="settings-hint">
 					When a book has editions in multiple languages, search results prefer this language — it
@@ -324,7 +322,7 @@
 						<p class="settings-hint settings-hint--success">Saved.</p>
 					{/if}
 				</form>
-			{:else if section === 'integrations'}
+			{:else if settingsModalState.section === 'integrations'}
 				<h3>Google Books API Key</h3>
 				<p class="settings-hint">
 					Optional — widens search results and improves cover art. Get a free key from the <a
@@ -360,7 +358,7 @@
 						<p class="settings-hint settings-hint--success">Saved.</p>
 					{/if}
 				</form>
-			{:else if section === 'tags'}
+			{:else if settingsModalState.section === 'tags'}
 				<h3>Manage Tags</h3>
 				<p class="settings-hint">
 					Rename or delete genre, mood, and setting tags across your whole library. Renaming a tag

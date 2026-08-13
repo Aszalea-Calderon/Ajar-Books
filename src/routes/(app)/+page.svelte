@@ -9,6 +9,7 @@
 	import GoalModal from '$lib/components/GoalModal.svelte';
 	import StreakCard from '$lib/components/StreakCard.svelte';
 	import MonthPicker from '$lib/components/MonthPicker.svelte';
+	import { openSettingsTo } from '$lib/client/settingsModal.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -115,6 +116,18 @@
 </svelte:head>
 
 <p class="dashboard__greeting">{greeting}</p>
+
+{#if !data.hasRecoveryKey}
+	<div class="recovery-key-reminder">
+		<p>
+			You don't have a recovery key set up — if you ever forget your password, there's no way
+			back in without one.
+		</p>
+		<button type="button" class="settings-trigger" onclick={() => openSettingsTo('data')}>
+			Set one up now
+		</button>
+	</div>
+{/if}
 
 <div class="dashboard">
 	<section class="dashboard__panel dashboard__panel--hero">

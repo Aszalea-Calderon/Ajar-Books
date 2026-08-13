@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { clickOutside } from '$lib/clickOutside';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import { settingsModalState, openSettingsTo } from '$lib/client/settingsModal.svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
@@ -10,7 +11,6 @@
 	let initial = $derived(data.user?.username.charAt(0).toUpperCase() ?? '?');
 	let accountMenuOpen = $state(false);
 	let accountButton = $state<HTMLButtonElement>();
-	let settingsOpen = $state(false);
 
 	const navLinks = [
 		{ label: 'Home', path: '/', href: resolve('/') },
@@ -78,7 +78,7 @@
 						class="app-nav__account-option"
 						role="menuitem"
 						onclick={() => {
-							settingsOpen = true;
+							openSettingsTo('themes');
 							accountMenuOpen = false;
 						}}
 					>
@@ -104,7 +104,6 @@
 </div>
 
 <SettingsModal
-	bind:open={settingsOpen}
 	googleBooksApiKey={data.googleBooksApiKey}
 	languagePriority={data.languagePriority}
 	manageableTags={data.manageableTags}
