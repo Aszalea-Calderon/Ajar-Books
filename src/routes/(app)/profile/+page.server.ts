@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { updateSettings } from '$lib/server/settings';
 import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
-import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
+import { deleteTagGlobally, deleteTagsGlobally, renameTag } from '$lib/server/books/tags';
 import { backfillMissingMetadata } from '$lib/server/books/backfill';
 import {
 	generateRecoveryKey,
@@ -123,6 +123,13 @@ export const actions: Actions = {
 		const tagId = String(data.get('tagId') ?? '');
 		if (!tagId) return;
 		await deleteTagGlobally(tagId);
+	},
+
+	deleteTags: async ({ request }) => {
+		const data = await request.formData();
+		const tagIds = data.getAll('tagIds').map(String).filter(Boolean);
+		if (tagIds.length === 0) return;
+		await deleteTagsGlobally(tagIds);
 	},
 
 	// One-time catch-up for books added before addBookToLibrary's ISBN-lookup

@@ -1,4 +1,4 @@
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { tags, userBookTags } from '$lib/server/db/schema';
 import { CANONICAL_GENRES } from './genreMapping';
@@ -142,4 +142,10 @@ export async function renameTag(tagId: string, newName: string) {
  */
 export async function deleteTagGlobally(tagId: string) {
 	await db.delete(tags).where(eq(tags.id, tagId));
+}
+
+/** Bulk form of deleteTagGlobally — Manage Tags' multi-select delete. */
+export async function deleteTagsGlobally(tagIds: string[]) {
+	if (tagIds.length === 0) return;
+	await db.delete(tags).where(inArray(tags.id, tagIds));
 }

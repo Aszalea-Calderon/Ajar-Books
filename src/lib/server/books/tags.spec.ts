@@ -5,6 +5,7 @@ import { books, tags, userBookTags, userBooks } from '$lib/server/db/schema';
 import {
 	addTag,
 	deleteTagGlobally,
+	deleteTagsGlobally,
 	getAllTagsWithUsage,
 	getSuggestedTagNames,
 	getTagsForUserBook,
@@ -289,5 +290,37 @@ describe('deleteTagGlobally', () => {
 		expect(await getTagsForUserBook(bookA, 'genre')).toEqual([]);
 		expect(await getTagsForUserBook(bookB, 'genre')).toEqual([]);
 		expect(await db.select().from(tags)).toEqual([]);
+	});
+});
+
+describe('deleteTagsGlobally', () => {
+	beforeEach(async () => {
+		await db.delete(userBookTags);
+		await db.delete(userBooks);
+		await db.delete(books);
+		await db.delete(tags);
+	});
+
+	it('removes every listed tag, leaving others untouched', async () => {
+		const bookA = await seedUserBook();
+		await addTag(bookA, 'genre', 'Fantasy');
+		await addTag(bookA, 'genre', 'Horror');
+		await addTag(bookA, 'genre', 'Mystery');
+		const seeded = await getTagsForUserBook(bookA, 'genre');
+		const toDelete = seeded.filter((t) => t.name !== 'Mystery').map((t) => t.id);
+
+		await deleteTagsGlobally(toDelete);
+
+		const remaining = await getTagsForUserBook(bookA, 'genre');
+		expect(remaining.map((t) => t.name)).toEqual(['Mystery']);
+	});
+
+	it('is a no-op for an empty list', async () => {
+		const bookA = await seedUserBook();
+		await addTag(bookA, 'genre', 'Fantasy');
+
+		await deleteTagsGlobally([]);
+
+		expect(await getTagsForUserBook(bookA, 'genre')).toHaveLength(1);
 	});
 });
