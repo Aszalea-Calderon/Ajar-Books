@@ -5,7 +5,12 @@ import { LANGUAGE_PRIORITY_OPTIONS } from '$lib/languages';
 import { getLibraryBooks, getUsedTagNames } from '$lib/server/books/library';
 import { deleteTagGlobally, renameTag } from '$lib/server/books/tags';
 import { backfillMissingMetadata } from '$lib/server/books/backfill';
-import { generateRecoveryKey, updatePassword, updateUsername } from '$lib/server/auth';
+import {
+	generateRecoveryKey,
+	updateAvatarEmoji,
+	updatePassword,
+	updateUsername
+} from '$lib/server/auth';
 import { createNotification } from '$lib/server/notifications';
 import { deleteAllLibraryData } from '$lib/server/deleteAllData';
 import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
@@ -156,6 +161,13 @@ export const actions: Actions = {
 	// Rate-limited the same as /login — a still-valid session cookie left
 	// signed in on a shared/borrowed device shouldn't be enough to brute-force
 	// the real password out from behind the "current password" gate.
+	updateAvatarEmoji: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		const emoji = String((await request.formData()).get('avatarEmoji') ?? '');
+		await updateAvatarEmoji(locals.user.id, emoji || null);
+		return { avatarEmojiUpdated: true };
+	},
+
 	updatePassword: async ({ request, locals, getClientAddress }) => {
 		if (!locals.user) return fail(401);
 		const ip = getClientAddress();

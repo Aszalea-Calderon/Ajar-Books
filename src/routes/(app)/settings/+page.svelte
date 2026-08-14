@@ -101,6 +101,7 @@
 				<DataSettings
 					hasRecoveryKey={data.hasRecoveryKey}
 					username={data.user?.username ?? ''}
+					avatarEmoji={data.user?.avatarEmoji ?? null}
 					onRequestConfirm={requestConfirm}
 				/>
 			{/if}

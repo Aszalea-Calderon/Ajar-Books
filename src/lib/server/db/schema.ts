@@ -6,6 +6,10 @@ export const users = sqliteTable('users', {
 		.$defaultFn(() => crypto.randomUUID()),
 	username: text('username').notNull().unique(),
 	passwordHash: text('password_hash').notNull(),
+	// A single emoji from a curated picker (Settings > Data), shown in the nav
+	// avatar instead of the username's first letter. Null falls back to the
+	// initial — no upload/storage needed since it's always one of a fixed set.
+	avatarEmoji: text('avatar_emoji'),
 	// A randomly-generated recovery key, hashed the same way as the password
 	// (never stored in plaintext) — null until one's generated in Settings.
 	// Single-use: cleared the moment it's used to reset a password, so a

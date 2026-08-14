@@ -169,6 +169,13 @@
       "when": 1786639091284,
       "tag": "0023_gigantic_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1786713240779,
+      "tag": "0024_flashy_wind_dancer",
+      "breakpoints": true
     }
   ]
 }

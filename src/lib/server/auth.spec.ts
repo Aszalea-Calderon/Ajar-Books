@@ -7,6 +7,7 @@ import {
 	hashPassword,
 	hasRecoveryKey,
 	resetPasswordWithRecoveryKey,
+	updateAvatarEmoji,
 	updatePassword,
 	updateUsername,
 	verifyPassword
@@ -147,6 +148,29 @@ describe('updateUsername', () => {
 		expect(ok).toBe(false);
 		const [unchanged] = await db.select().from(users).where(eq(users.id, user.id));
 		expect(unchanged.username).toBe('testuser');
+	});
+});
+
+describe('updateAvatarEmoji', () => {
+	beforeEach(async () => {
+		await db.delete(users);
+	});
+
+	it('sets the emoji', async () => {
+		const user = await seedUser();
+		await updateAvatarEmoji(user.id, '📚');
+
+		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(updated.avatarEmoji).toBe('📚');
+	});
+
+	it('clears it back to null', async () => {
+		const user = await seedUser();
+		await updateAvatarEmoji(user.id, '📚');
+		await updateAvatarEmoji(user.id, null);
+
+		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(updated.avatarEmoji).toBeNull();
 	});
 });
 

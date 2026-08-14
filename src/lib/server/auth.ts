@@ -100,6 +100,14 @@ export async function updateUsername(userId: string, username: string): Promise<
 	}
 }
 
+// Null clears it back to the initial-letter fallback — the picker's own
+// "Aa" option submits an empty string for exactly that. No validation
+// against the curated emoji list: an unrecognized value just renders as
+// literal text in the avatar circle, which is harmless.
+export async function updateAvatarEmoji(userId: string, emoji: string | null): Promise<void> {
+	await db.update(users).set({ avatarEmoji: emoji }).where(eq(users.id, userId));
+}
+
 export type UpdatePasswordResult = 'ok' | 'wrong-current' | 'too-short';
 
 // Same 8-char minimum as /setup and /recover's PasswordField — gated behind

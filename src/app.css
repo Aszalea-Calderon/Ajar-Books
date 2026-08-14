@@ -1430,6 +1430,11 @@ button.dashboard__cta {
 	color: var(--color-text);
 }
 
+.profile-icon-option {
+	min-width: 3rem;
+	font-size: 1.5rem;
+}
+
 .theme-swatch {
 	width: 4rem;
 	height: 2.5rem;

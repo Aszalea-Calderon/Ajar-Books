@@ -7,7 +7,9 @@
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
 
-	let initial = $derived(data.user?.username.charAt(0).toUpperCase() ?? '?');
+	let avatarContent = $derived(
+		data.user?.avatarEmoji || data.user?.username.charAt(0).toUpperCase() || '?'
+	);
 	let accountMenuOpen = $state(false);
 	let accountButton = $state<HTMLButtonElement>();
 
@@ -180,7 +182,7 @@
 					accountMenuOpen = false;
 				}}
 			>
-				{initial}
+				{avatarContent}
 			</button>
 			{#if accountMenuOpen}
 				<div
