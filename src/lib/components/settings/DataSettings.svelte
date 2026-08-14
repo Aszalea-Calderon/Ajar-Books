@@ -11,18 +11,20 @@
 		hasRecoveryKey,
 		username,
 		avatarEmoji,
+		avatarImage,
 		onRequestConfirm
 	}: {
 		hasRecoveryKey: boolean;
 		username: string;
 		avatarEmoji: string | null;
+		avatarImage: string | null;
 		onRequestConfirm: (event: MouseEvent, message: string, label?: string, confirmText?: string) => void;
 	} = $props();
 </script>
 
 <ImportExportSection />
 <BackfillSection />
-<ProfileIconSection {avatarEmoji} />
+<ProfileIconSection {avatarEmoji} {avatarImage} />
 <UsernameSection {username} />
 <PasswordSection />
 <RecoveryKeySection {hasRecoveryKey} />

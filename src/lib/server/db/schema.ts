@@ -9,7 +9,14 @@ export const users = sqliteTable('users', {
 	// A single emoji from a curated picker (Settings > Data), shown in the nav
 	// avatar instead of the username's first letter. Null falls back to the
 	// initial — no upload/storage needed since it's always one of a fixed set.
+	// Mutually exclusive with avatarImage below — setting either one clears
+	// the other (see updateAvatarEmoji/updateAvatarImage in auth.ts).
 	avatarEmoji: text('avatar_emoji'),
+	// A user-uploaded avatar photo, stored as a data URI (small enough that a
+	// second file-storage path/serving route isn't worth it — see
+	// updateAvatarImage's doc comment for the size guarantee). Takes priority
+	// over avatarEmoji when both would otherwise apply.
+	avatarImage: text('avatar_image'),
 	// A randomly-generated recovery key, hashed the same way as the password
 	// (never stored in plaintext) — null until one's generated in Settings.
 	// Single-use: cleared the moment it's used to reset a password, so a

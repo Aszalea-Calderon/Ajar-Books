@@ -11,6 +11,7 @@ import {
 	updatePassword,
 	updateUsername
 } from '$lib/server/auth';
+import { MAX_AVATAR_UPLOAD_BYTES, updateAvatarImage } from '$lib/server/avatar';
 import { createNotification } from '$lib/server/notifications';
 import { deleteAllLibraryData } from '$lib/server/deleteAllData';
 import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
@@ -173,6 +174,30 @@ export const actions: Actions = {
 		const emoji = String((await request.formData()).get('avatarEmoji') ?? '');
 		await updateAvatarEmoji(locals.user.id, emoji || null);
 		return { avatarEmojiUpdated: true };
+	},
+
+	uploadAvatarImage: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		const data = await request.formData();
+		const file = data.get('avatarImage');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { avatarImageError: 'Choose a photo to upload.' });
+		}
+		if (file.size > MAX_AVATAR_UPLOAD_BYTES) {
+			return fail(400, { avatarImageError: 'That photo is too large — please pick one under 8MB.' });
+		}
+
+		const buffer = Buffer.from(await file.arrayBuffer());
+		const result = await updateAvatarImage(locals.user.id, buffer);
+		if (result !== 'ok') {
+			return fail(400, {
+				avatarImageError:
+					result === 'too-large'
+						? 'That photo is too large — please pick one under 8MB.'
+						: "That doesn't look like a valid image file."
+			});
+		}
+		return { avatarImageUpdated: true };
 	},
 
 	updatePassword: async ({ request, locals, getClientAddress }) => {

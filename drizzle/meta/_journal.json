@@ -176,6 +176,13 @@
       "when": 1786713240779,
       "tag": "0024_flashy_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1786715481669,
+      "tag": "0025_faithful_the_fury",
+      "breakpoints": true
     }
   ]
 }

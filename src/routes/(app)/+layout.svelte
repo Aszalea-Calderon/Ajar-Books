@@ -182,7 +182,11 @@
 					accountMenuOpen = false;
 				}}
 			>
-				{avatarContent}
+				{#if data.user?.avatarImage}
+					<img class="app-nav__avatar-image" src={data.user.avatarImage} alt="" />
+				{:else}
+					{avatarContent}
+				{/if}
 			</button>
 			{#if accountMenuOpen}
 				<div

@@ -15,7 +15,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const token = getSessionCookie(event.cookies);
 	const { user } = token ? await validateSessionToken(token) : { user: null };
 	event.locals.user = user
-		? { id: user.id, username: user.username, avatarEmoji: user.avatarEmoji }
+		? {
+				id: user.id,
+				username: user.username,
+				avatarEmoji: user.avatarEmoji,
+				avatarImage: user.avatarImage
+			}
 		: null;
 
 	const path = event.url.pathname;

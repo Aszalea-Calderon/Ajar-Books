@@ -102,6 +102,7 @@
 					hasRecoveryKey={data.hasRecoveryKey}
 					username={data.user?.username ?? ''}
 					avatarEmoji={data.user?.avatarEmoji ?? null}
+					avatarImage={data.user?.avatarImage ?? null}
 					onRequestConfirm={requestConfirm}
 				/>
 			{/if}

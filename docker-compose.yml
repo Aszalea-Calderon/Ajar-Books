@@ -13,6 +13,10 @@ services:
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
       OLLAMA_URL: ${OLLAMA_URL:-}
       SECURE_COOKIES: ${SECURE_COOKIES:-}
+      # adapter-node's default (512K) is too small for a real phone photo
+      # upload (Settings > Data > Profile Icon) — must stay >= the upload
+      # cap in src/lib/server/avatar.ts (MAX_AVATAR_UPLOAD_BYTES).
+      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-8M}
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

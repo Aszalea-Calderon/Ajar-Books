@@ -172,6 +172,20 @@ describe('updateAvatarEmoji', () => {
 		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
 		expect(updated.avatarEmoji).toBeNull();
 	});
+
+	it('clears any existing avatarImage — the two are mutually exclusive', async () => {
+		const user = await seedUser();
+		await db
+			.update(users)
+			.set({ avatarImage: 'data:image/png;base64,xyz' })
+			.where(eq(users.id, user.id));
+
+		await updateAvatarEmoji(user.id, '📚');
+
+		const [updated] = await db.select().from(users).where(eq(users.id, user.id));
+		expect(updated.avatarImage).toBeNull();
+		expect(updated.avatarEmoji).toBe('📚');
+	});
 });
 
 describe('updatePassword', () => {
