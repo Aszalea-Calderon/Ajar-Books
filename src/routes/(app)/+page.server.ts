@@ -72,6 +72,21 @@ export const load: PageServerLoad = async ({ url }) => {
 	const isCurrentOrFutureMonth =
 		year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth());
 
+	// Bounds the "prev" arrow the same way hasNextMonth bounds "next" —
+	// without this, stepping back is literally unlimited (every earlier
+	// month renders, just empty), which is more confusing than useful once
+	// you're well past any real history. streakActiveDates is already
+	// fetched above for the streak metrics, so the earliest entry in it is
+	// free — no extra query. No activity at all yet (a brand-new account)
+	// is treated the same as "earliest = current month," since there's
+	// nothing to see further back either way.
+	const earliestActiveDate = [...streakActiveDates].sort()[0];
+	const [earliestYear, earliestMonth] = earliestActiveDate
+		? earliestActiveDate.split('-').map(Number)
+		: [now.getFullYear(), now.getMonth() + 1];
+	const isAtOrBeforeEarliestMonth =
+		year < earliestYear || (year === earliestYear && month <= earliestMonth - 1);
+
 	return {
 		currentlyReading,
 		streak: currentStreak,
@@ -82,7 +97,8 @@ export const load: PageServerLoad = async ({ url }) => {
 			month,
 			today: toLocalDateInputValue(now),
 			activity: monthActivity,
-			hasNextMonth: !isCurrentOrFutureMonth
+			hasNextMonth: !isCurrentOrFutureMonth,
+			hasPrevMonth: !isAtOrBeforeEarliestMonth
 		},
 		goals: await getGoalsWithProgress(now)
 	};

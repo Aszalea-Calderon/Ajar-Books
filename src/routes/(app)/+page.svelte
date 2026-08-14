@@ -246,6 +246,7 @@
 				months={monthPills}
 				prevHref={prevMonthHref}
 				nextHref={nextMonthHref}
+				hasPrev={data.calendarMonth.hasPrevMonth}
 				hasNext={data.calendarMonth.hasNextMonth}
 			/>
 			<CalendarGrid
