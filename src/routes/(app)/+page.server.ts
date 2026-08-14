@@ -3,11 +3,11 @@ import { desc, eq, inArray } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
-import { getProgressTotals } from '$lib/server/books/progress';
+import { getProgressTotals, logProgress } from '$lib/server/books/progress';
 import { getMonthActivity, getStreakActiveDates } from '$lib/server/books/calendar';
 import { createGoal, deleteGoal, getGoalsWithProgress } from '$lib/server/goals';
 import { computeCurrentStreak, computeWeeklyStreak, computeLongestStreakEver, isStreakRecord } from '$lib/streak';
-import { toLocalDateInputValue } from '$lib/date';
+import { parseLocalDateInput, toLocalDateInputValue } from '$lib/date';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const rows = await db
@@ -130,5 +130,47 @@ export const actions: Actions = {
 		if (typeof id !== 'string' || !id) return fail(400, { error: 'Missing goal id' });
 
 		await deleteGoal(id);
+	},
+
+	// Backs the calendar's "+ Log for this day" (RetroactiveLogModal) — a
+	// plain amount for a specific past date, not the book detail page's
+	// "what page are you on now" delta-from-current-total math, since a
+	// backfilled day has no "current position" to speak of.
+	logForDate: async ({ request }) => {
+		const data = await request.formData();
+		const userBookId = String(data.get('userBookId') ?? '');
+		const dateRaw = String(data.get('date') ?? '');
+		const pagesRaw = data.get('pages');
+		const hoursRaw = data.get('hours');
+		const minutesRaw = data.get('minutes');
+		const note = String(data.get('note') ?? '').trim();
+
+		if (!userBookId) return fail(400, { error: 'Missing book' });
+
+		const loggedAt = parseLocalDateInput(dateRaw);
+		if (!loggedAt) return fail(400, { error: 'Invalid date' });
+
+		const endOfToday = new Date();
+		endOfToday.setHours(23, 59, 59, 999);
+		if (loggedAt.getTime() > endOfToday.getTime()) {
+			return fail(400, { error: "Can't log a future date" });
+		}
+
+		let pagesRead: number | undefined;
+		let minutesRead: number | undefined;
+		if (pagesRaw) {
+			pagesRead = Number(pagesRaw);
+		} else if (hoursRaw != null && minutesRaw != null) {
+			minutesRead = Number(hoursRaw) * 60 + Number(minutesRaw);
+		}
+
+		if (!pagesRead && !minutesRead) {
+			return fail(400, { error: 'Enter an amount read' });
+		}
+		if ((pagesRead != null && pagesRead <= 0) || (minutesRead != null && minutesRead <= 0)) {
+			return fail(400, { error: 'Enter a positive amount' });
+		}
+
+		await logProgress({ userBookId, pagesRead, minutesRead, note: note || undefined, loggedAt });
 	}
 };

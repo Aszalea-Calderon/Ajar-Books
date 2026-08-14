@@ -5,17 +5,21 @@
 		open,
 		onClose,
 		date,
-		entries
+		today,
+		entries,
+		onLogClick
 	}: {
 		open: boolean;
 		onClose: () => void;
 		date: string | null;
+		today: string;
 		entries: {
 			bookTitle: string;
 			pagesRead: number | null;
 			minutesRead: number | null;
 			note: string | null;
 		}[];
+		onLogClick: () => void;
 	} = $props();
 
 	let dialogEl: HTMLDialogElement;
@@ -40,6 +44,10 @@
 	}
 
 	let heading = $derived(date ? formatHeading(date) : '');
+	// Same YYYY-MM-DD zero-padded shape as `today`, so lexicographic
+	// comparison is chronological — no logging for a day that hasn't
+	// happened yet.
+	let canLog = $derived(date !== null && date <= today);
 </script>
 
 <dialog
@@ -75,6 +83,13 @@
 					</li>
 				{/each}
 			</ul>
+		{/if}
+		{#if canLog}
+			<div class="day-detail-modal__footer">
+				<button type="button" class="settings-trigger" onclick={onLogClick}>
+					+ Log for this day
+				</button>
+			</div>
 		{/if}
 	</div>
 </dialog>

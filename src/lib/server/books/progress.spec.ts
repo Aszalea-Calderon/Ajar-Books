@@ -68,6 +68,36 @@ describe('logProgress', () => {
 		expect(log.note).toBe('Great opening');
 	});
 
+	it('backdates the log entry when loggedAt is passed (retroactive logging)', async () => {
+		const userBook = await seedUserBook({ format: 'physical', totalPages: 500 });
+		const pastDate = new Date(2020, 0, 15);
+
+		await logProgress({ userBookId: userBook.id, pagesRead: 10, loggedAt: pastDate });
+
+		const { readingLogs } = await import('$lib/server/db/schema');
+		const [log] = await db
+			.select()
+			.from(readingLogs)
+			.where(eq(readingLogs.userBookId, userBook.id));
+		expect(log.loggedAt).toEqual(pastDate);
+	});
+
+	it('defaults loggedAt to now when omitted', async () => {
+		const userBook = await seedUserBook({ format: 'physical', totalPages: 500 });
+		// SQLite integer timestamps round to the second, so allow for that
+		// rather than asserting exact millisecond precision.
+		const before = Date.now() - 1000;
+
+		await logProgress({ userBookId: userBook.id, pagesRead: 10 });
+
+		const { readingLogs } = await import('$lib/server/db/schema');
+		const [log] = await db
+			.select()
+			.from(readingLogs)
+			.where(eq(readingLogs.userBookId, userBook.id));
+		expect(log.loggedAt.getTime()).toBeGreaterThanOrEqual(before);
+	});
+
 	it('promotes want_to_read to reading on the first logged session', async () => {
 		const userBook = await seedUserBook({ format: 'physical', totalPages: 500 });
 		expect(userBook.status).toBe('want_to_read');

@@ -53,13 +53,16 @@ async function recomputeStatus(userBookId: string) {
 /**
  * Records a reading session and applies the status side effects: a log
  * against a want-to-read book starts it, and crossing the book's declared
- * total (pages or minutes) finishes it.
+ * total (pages or minutes) finishes it. `loggedAt` defaults to now (the
+ * schema's own default) — pass it explicitly for a retroactive/backfilled
+ * entry (e.g. logging from a past day on the calendar).
  */
 export async function logProgress(params: {
 	userBookId: string;
 	pagesRead?: number;
 	minutesRead?: number;
 	note?: string;
+	loggedAt?: Date;
 }) {
 	const [userBook] = await db.select().from(userBooks).where(eq(userBooks.id, params.userBookId));
 	if (!userBook) throw new Error('UserBook not found');
@@ -68,7 +71,8 @@ export async function logProgress(params: {
 		userBookId: params.userBookId,
 		pagesRead: params.pagesRead,
 		minutesRead: params.minutesRead,
-		note: params.note || null
+		note: params.note || null,
+		...(params.loggedAt ? { loggedAt: params.loggedAt } : {})
 	});
 
 	if (userBook.status === 'want_to_read' || userBook.status === 'added') {

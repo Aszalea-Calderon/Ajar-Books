@@ -9,6 +9,8 @@
 	import GoalModal from '$lib/components/GoalModal.svelte';
 	import StreakCard from '$lib/components/StreakCard.svelte';
 	import MonthPicker from '$lib/components/MonthPicker.svelte';
+	import BookPickerModal from '$lib/components/BookPickerModal.svelte';
+	import RetroactiveLogModal from '$lib/components/RetroactiveLogModal.svelte';
 	import { coverSrc } from '$lib/coverPlaceholder';
 	import type { PageData } from './$types';
 
@@ -29,6 +31,45 @@
 	let selectedEntries = $derived(
 		selectedDate ? (data.calendarMonth.activity.get(selectedDate) ?? []) : []
 	);
+
+	// Streak card's "+ Log today's reading" — picking a book from
+	// data.currentlyReading just reuses the same LogProgressModal the
+	// currently-reading chips already drive (via selectedUserBookId), rather
+	// than needing a separate flow.
+	let streakPickerOpen = $state(false);
+
+	function pickBookForStreak(entry: (typeof data.currentlyReading)[number]) {
+		streakPickerOpen = false;
+		selectedUserBookId = entry.userBook.id;
+		logModalOpen = true;
+	}
+
+	// Calendar's "+ Log for this day" — a specific past date has no "current
+	// position" to ask for (that's what LogProgressModal assumes), so this
+	// goes to a separate plain-amount RetroactiveLogModal instead.
+	let dayPickerOpen = $state(false);
+	let retroactiveTarget = $state<{
+		entry: (typeof data.currentlyReading)[number];
+		date: string;
+	} | null>(null);
+
+	function openDayPicker() {
+		dayModalOpen = false;
+		dayPickerOpen = true;
+	}
+
+	function pickBookForDay(entry: (typeof data.currentlyReading)[number]) {
+		dayPickerOpen = false;
+		if (selectedDate) retroactiveTarget = { entry, date: selectedDate };
+	}
+
+	function formatPickerDate(value: string) {
+		const [year, month, day] = value.split('-').map(Number);
+		return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+			month: 'long',
+			day: 'numeric'
+		});
+	}
 
 	function monthParam(year: number, month: number) {
 		const d = new Date(year, month, 1);
@@ -201,6 +242,7 @@
 			currentStreak={data.streak}
 			weeklyStreak={data.weeklyStreak}
 			isNewRecord={data.isNewRecord}
+			onLogClick={() => (streakPickerOpen = true)}
 		/>
 	</section>
 
@@ -264,7 +306,9 @@
 	open={dayModalOpen}
 	onClose={() => (dayModalOpen = false)}
 	date={selectedDate}
+	today={data.calendarMonth.today}
 	entries={selectedEntries}
+	onLogClick={openDayPicker}
 />
 
 <GoalModal open={goalModalOpen} onClose={() => (goalModalOpen = false)} action="?/createGoal" />
@@ -279,5 +323,31 @@
 		totalMinutes={hero.userBook.totalMinutes}
 		currentPages={hero.totals.pages}
 		currentMinutes={hero.totals.minutes}
+	/>
+{/if}
+
+<BookPickerModal
+	open={streakPickerOpen}
+	onClose={() => (streakPickerOpen = false)}
+	books={data.currentlyReading}
+	onPick={pickBookForStreak}
+/>
+
+<BookPickerModal
+	open={dayPickerOpen}
+	onClose={() => (dayPickerOpen = false)}
+	books={data.currentlyReading}
+	onPick={pickBookForDay}
+	heading={selectedDate ? `Log reading for ${formatPickerDate(selectedDate)}` : 'Log reading'}
+/>
+
+{#if retroactiveTarget}
+	<RetroactiveLogModal
+		open={true}
+		onClose={() => (retroactiveTarget = null)}
+		userBookId={retroactiveTarget.entry.userBook.id}
+		bookTitle={retroactiveTarget.entry.book.title}
+		date={retroactiveTarget.date}
+		format={retroactiveTarget.entry.userBook.format}
 	/>
 {/if}

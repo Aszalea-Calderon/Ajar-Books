@@ -2,27 +2,36 @@
 	let {
 		currentStreak,
 		weeklyStreak,
-		isNewRecord
+		isNewRecord,
+		onLogClick
 	}: {
 		currentStreak: number;
 		weeklyStreak: number;
 		isNewRecord: boolean;
+		onLogClick: () => void;
 	} = $props();
 
 	let hasStreak = $derived(currentStreak > 0 || weeklyStreak > 0);
 </script>
 
 <div class="streak-card">
-	{#if isNewRecord}
-		<p class="streak-card__badge">🔥 New record!</p>
-		<h2 class="streak-card__heading">You beat your record reading streak!</h2>
-		<p class="streak-card__subheading">You're at your all-time best — keep it going.</p>
-	{:else if hasStreak}
-		<h2 class="streak-card__heading">Reading Streak</h2>
-	{:else}
-		<h2 class="streak-card__heading">Reading Streak</h2>
-		<p class="dashboard__empty">Log some reading today to start a streak.</p>
-	{/if}
+	<div class="streak-card__top">
+		<div>
+			{#if isNewRecord}
+				<p class="streak-card__badge">🔥 New record!</p>
+				<h2 class="streak-card__heading">You beat your record reading streak!</h2>
+				<p class="streak-card__subheading">You're at your all-time best — keep it going.</p>
+			{:else if hasStreak}
+				<h2 class="streak-card__heading">Reading Streak</h2>
+			{:else}
+				<h2 class="streak-card__heading">Reading Streak</h2>
+				<p class="dashboard__empty">Log some reading today to start a streak.</p>
+			{/if}
+		</div>
+		<button type="button" class="streak-card__log-button" onclick={onLogClick}>
+			+ Log today's reading
+		</button>
+	</div>
 
 	{#if hasStreak}
 		<div class="streak-card__tiles">
