@@ -232,7 +232,9 @@
 				title: entry.book.title,
 				author: entry.book.author,
 				coverUrl: entry.book.coverUrl,
-				isbn: entry.book.isbn
+				isbn: entry.book.isbn,
+				status: entry.userBook.status,
+				rating: entry.userBook.rating
 			}))}
 		/>
 	{:else if data.sections.length === 0}

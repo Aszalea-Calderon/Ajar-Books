@@ -72,7 +72,142 @@ function finishTexture(canvas: HTMLCanvasElement): THREE.Texture {
 	return texture;
 }
 
-export type ShelfBook = { id: string; title: string; author: string | null };
+// Mirrors $lib/server/books/progress.ts's BookStatus — redeclared rather than
+// imported so this client-side module never reaches across the server
+// boundary for a single literal union.
+export type BookStatus = 'added' | 'want_to_read' | 'reading' | 'finished' | 'dnf';
+
+export type ShelfBook = {
+	id: string;
+	title: string;
+	author: string | null;
+	status: BookStatus;
+	rating: number | null;
+};
+
+// A shelf-talker sticker, not a design system color — self-contained rather
+// than reused from anywhere in app.css, since nothing else in the app
+// color-codes status today. 'added' (the transient pre-status marker) gets
+// no badge, same as it's never surfaced as a real status elsewhere.
+const STATUS_BADGE: Partial<Record<BookStatus, { label: string; color: string }>> = {
+	want_to_read: { label: 'Want to Read', color: '#8fb3d6' },
+	reading: { label: 'Reading', color: '#d9b464' },
+	finished: { label: 'Finished', color: '#8fb08a' },
+	dnf: { label: 'DNF', color: '#a8657a' }
+};
+
+/** Whether this book has anything for drawCoverBadge/drawSpineBadge to draw. */
+export function hasShelfBadge(book: ShelfBook): boolean {
+	return !!STATUS_BADGE[book.status] || book.rating != null;
+}
+
+// Shrinks (then, as a last resort, truncates with an ellipsis) text to fit
+// maxWidth — "Want to Read" in caps is wide enough to run past the cover's
+// edge at a fixed size, and there's no fixed font size that's simultaneously
+// readable and guaranteed to fit every status label.
+function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, font: string) {
+	let fontSize = 22;
+	const minFontSize = 15;
+	for (; fontSize > minFontSize; fontSize -= 2) {
+		ctx.font = `700 ${fontSize}px ${font}`;
+		if (ctx.measureText(text).width <= maxWidth) return { text, fontSize };
+	}
+	ctx.font = `700 ${fontSize}px ${font}`;
+	let truncated = text;
+	while (truncated.length > 1 && ctx.measureText(truncated + '…').width > maxWidth) {
+		truncated = truncated.slice(0, -1);
+	}
+	return { text: truncated.length < text.length ? truncated + '…' : truncated, fontSize };
+}
+
+function drawPill(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	height: number,
+	paddingX: number,
+	label: string,
+	fontSize: number,
+	font: string,
+	textColor: string,
+	accentColor?: string
+): number {
+	ctx.font = `700 ${fontSize}px ${font}`;
+	const width = ctx.measureText(label).width + paddingX * 2;
+
+	ctx.fillStyle = 'rgba(0,0,0,0.55)';
+	ctx.beginPath();
+	ctx.roundRect(x, y, width, height, 6);
+	ctx.fill();
+	if (accentColor) {
+		ctx.fillStyle = accentColor;
+		ctx.fillRect(x, y, 4, height);
+	}
+
+	ctx.fillStyle = textColor;
+	ctx.textAlign = 'left';
+	ctx.textBaseline = 'middle';
+	ctx.fillText(label, x + paddingX, y + height / 2 + 1);
+
+	return width;
+}
+
+/**
+ * Corner stickers on the cover face: a status pill and, below it (or alone,
+ * at the top, if there's no status pill), a star rating pill — both
+ * top-left and stacked rather than side-by-side, since a long label like
+ * "WANT TO READ" plus a rating wouldn't both fit on one row. Drawn over
+ * whatever art is already on the canvas — the procedural gradient, or (via
+ * compositeCoverBadge below) a real loaded cover photo.
+ */
+function drawCoverBadge(ctx: CanvasRenderingContext2D, canvasWidth: number, book: ShelfBook) {
+	const font = bodyFont();
+	const pillHeight = 34;
+	const paddingX = 14;
+	const margin = 24;
+	const maxWidth = canvasWidth - margin * 2;
+	let nextY = margin;
+
+	const statusInfo = STATUS_BADGE[book.status];
+	if (statusInfo) {
+		const { text, fontSize } = fitText(ctx, statusInfo.label.toUpperCase(), maxWidth, font);
+		drawPill(ctx, margin, nextY, pillHeight, paddingX, text, fontSize, font, '#f4f2ec', statusInfo.color);
+		nextY += pillHeight + 8;
+	}
+
+	if (book.rating != null) {
+		const { text, fontSize } = fitText(ctx, `★ ${book.rating}`, maxWidth, font);
+		drawPill(ctx, margin, nextY, pillHeight, paddingX, text, fontSize, font, '#f2c14e');
+	}
+}
+
+/**
+ * The spine equivalent — far less room (128px wide, and the title text
+ * already claims most of the rotated column), so this is deliberately just
+ * a small color dot near the top (status) and a compact star rating near
+ * the bottom, rather than trying to fit a labeled pill.
+ */
+function drawSpineBadge(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, book: ShelfBook) {
+	const statusInfo = STATUS_BADGE[book.status];
+	if (statusInfo) {
+		ctx.fillStyle = statusInfo.color;
+		ctx.beginPath();
+		ctx.arc(canvas.width / 2, 40, 10, 0, Math.PI * 2);
+		ctx.fill();
+	}
+
+	if (book.rating != null) {
+		ctx.save();
+		ctx.translate(canvas.width / 2, canvas.height - 40);
+		ctx.rotate(-Math.PI / 2);
+		ctx.font = `700 20px ${bodyFont()}`;
+		ctx.fillStyle = '#f2c14e';
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		ctx.fillText(`★ ${book.rating}`, 0, 0);
+		ctx.restore();
+	}
+}
 
 /** 512×768 generated front-cover texture: base color, title, author. */
 export function makeProceduralCover(book: ShelfBook): THREE.Texture {
@@ -112,6 +247,8 @@ export function makeProceduralCover(book: ShelfBook): THREE.Texture {
 		ctx.fillText(book.author, canvas.width / 2, canvas.height - 80);
 	}
 
+	drawCoverBadge(ctx, canvas.width, book);
+
 	return finishTexture(canvas);
 }
 
@@ -139,6 +276,8 @@ export function makeProceduralSpine(book: ShelfBook): THREE.Texture {
 	const label = book.title.length > 40 ? book.title.slice(0, 39) + '…' : book.title;
 	ctx.fillText(label, 0, 0, canvas.height - 80);
 	ctx.restore();
+
+	drawSpineBadge(ctx, canvas, book);
 
 	return finishTexture(canvas);
 }
@@ -193,4 +332,29 @@ export function loadCoverTexture(coverUrl: string): Promise<THREE.Texture> {
 	});
 	remoteCache.set(coverUrl, promise);
 	return promise;
+}
+
+/**
+ * A real loaded cover photo replaces coverMaterial.map outright (see
+ * Book3D.svelte) — badges baked into the *procedural* cover would vanish
+ * the moment a real one loads, since it's a different texture entirely.
+ * This redraws the loaded photo onto a fresh canvas with the same badges
+ * painted on top, so the sticker survives the swap. Only called when
+ * there's actually a badge to draw (see hasShelfBadge) — otherwise the real
+ * texture is used as-is, same as before this feature existed.
+ */
+export function compositeCoverBadge(image: HTMLImageElement, book: ShelfBook): THREE.Texture {
+	const canvas = document.createElement('canvas');
+	canvas.width = image.naturalWidth || image.width || 512;
+	canvas.height = image.naturalHeight || image.height || 768;
+	const ctx = canvas.getContext('2d')!;
+	ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+	drawCoverBadge(ctx, canvas.width, book);
+
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.colorSpace = THREE.SRGBColorSpace;
+	texture.generateMipmaps = true;
+	texture.minFilter = THREE.LinearMipmapLinearFilter;
+	texture.needsUpdate = true;
+	return texture;
 }

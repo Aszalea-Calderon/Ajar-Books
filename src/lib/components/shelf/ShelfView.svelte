@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { columnsFor, rowCountFor, type ShelfOrientation } from '$lib/client/shelf/layout';
+	import type { BookStatus } from '$lib/client/shelf/bookTextures';
 
 	type LibraryBook = {
 		id: string;
@@ -10,6 +11,8 @@
 		author: string | null;
 		coverUrl: string | null;
 		isbn: string | null;
+		status: BookStatus;
+		rating: number | null;
 	};
 
 	let { books }: { books: LibraryBook[] } = $props();
