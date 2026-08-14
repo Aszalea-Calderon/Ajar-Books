@@ -28,6 +28,14 @@
 
 	--color-primary: #4c8edb;
 	--color-primary-text: #12141a;
+	/* A contrast-safe variant of --color-primary for text drawn directly on
+	   the page background (links, underlined text-buttons) rather than on
+	   the accent color itself. The default accent is already legible as-is
+	   here, so this just mirrors it — accent.svelte.ts overrides it with a
+	   computed value once a custom accent color is picked, since a raw user
+	   pick isn't guaranteed to read against the theme's own background the
+	   way --color-primary-text already guarantees for text-on-accent. */
+	--color-link: var(--color-primary);
 	--color-accent-purple: #a99bd6;
 	--color-accent-blue: #8fb3d6;
 	--color-accent-gold: #d9b464;
@@ -218,7 +226,7 @@ button {
 }
 
 a {
-	color: var(--color-primary);
+	color: var(--color-link);
 }
 
 button {
@@ -762,7 +770,7 @@ button.dashboard__cta {
 .streak-card__badge {
 	display: inline-block;
 	margin: 0 0 var(--space-2);
-	color: var(--color-primary);
+	color: var(--color-link);
 	font-size: var(--font-size-sm);
 	font-weight: 700;
 }
@@ -1839,7 +1847,7 @@ button.dashboard__cta {
 	margin: 0 0 var(--space-2);
 	font-size: var(--font-size-sm);
 	font-weight: 600;
-	color: var(--color-primary);
+	color: var(--color-link);
 	text-decoration: underline;
 	cursor: pointer;
 }
@@ -1999,7 +2007,7 @@ button.dashboard__cta {
 }
 
 .profile-library__section-heading--toggle:hover {
-	color: var(--color-primary);
+	color: var(--color-link);
 }
 
 .profile-library__section-chevron {
