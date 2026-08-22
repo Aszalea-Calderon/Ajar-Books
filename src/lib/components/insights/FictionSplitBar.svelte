@@ -1,7 +1,13 @@
 <script lang="ts">
 	import type { FictionSplit } from '$lib/server/insights/stats';
+	import type { FictionCategory } from '$lib/server/insights/genreClassification';
 
-	let { split }: { split: FictionSplit } = $props();
+	let {
+		split,
+		selected = null,
+		onSelect
+	}: { split: FictionSplit; selected?: FictionCategory | null; onSelect: (category: FictionCategory) => void } =
+		$props();
 
 	const SEGMENTS = [
 		{ key: 'fiction' as const, label: 'Fiction', cssVar: '--color-viz-gold' },
@@ -26,17 +32,18 @@
 				{@const count = split[segment.key]}
 				{@const pct = percent(count)}
 				{#if count > 0}
-					<div
+					<button
+						type="button"
 						class="fiction-split__segment"
 						class:fiction-split__segment--unclassified={!segment.cssVar}
+						class:fiction-split__segment--selected={selected === segment.key}
 						style={segment.cssVar ? `width: ${pct}%; background: var(${segment.cssVar})` : `width: ${pct}%`}
-						role="button"
-						aria-label="{segment.label}: {count} book{count === 1 ? '' : 's'} ({pct}%)"
+						aria-label="{segment.label}: {count} book{count === 1 ? '' : 's'} ({pct}%) — see these books"
+						onclick={() => onSelect(segment.key)}
 						onmouseenter={() => (hovered = segment.key)}
 						onmouseleave={() => (hovered = null)}
 						onfocus={() => (hovered = segment.key)}
 						onblur={() => (hovered = null)}
-						tabindex="0"
 					>
 						{#if pct >= 12}
 							<span class="fiction-split__inline-label">{pct}%</span>
@@ -46,7 +53,7 @@
 								<strong>{count}</strong> book{count === 1 ? '' : 's'} — {segment.label} ({pct}%)
 							</div>
 						{/if}
-					</div>
+					</button>
 				{/if}
 			{/each}
 		</div>

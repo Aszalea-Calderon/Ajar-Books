@@ -7,35 +7,53 @@
 	import MostReadAuthorsList from '$lib/components/insights/MostReadAuthorsList.svelte';
 	import PaceStatsPanel from '$lib/components/insights/PaceStatsPanel.svelte';
 	import InsightsBooksPanel from '$lib/components/insights/InsightsBooksPanel.svelte';
+	import type { FictionCategory } from '$lib/server/insights/genreClassification';
 
 	let { data } = $props();
 
-	// Clicking a genre/author bar shows its books in the sticky panel to the
-	// right instead of navigating away to Profile — there's room for both
-	// side by side on a wide screen, and it keeps the charts in view while
-	// you look through what makes up a given number.
-	let selectedFilter = $state<{ type: 'genre' | 'author'; value: string } | null>(null);
+	type DrillDownFilter =
+		| { type: 'genre'; value: string }
+		| { type: 'author'; value: string }
+		| { type: 'year'; value: number }
+		| { type: 'month'; value: string }
+		| { type: 'publicationBucket'; value: string }
+		| { type: 'fiction'; value: FictionCategory };
 
-	function selectGenre(genre: string) {
-		selectedFilter =
-			selectedFilter?.type === 'genre' && selectedFilter.value === genre
-				? null
-				: { type: 'genre', value: genre };
-	}
+	// Clicking any chart bar shows its books in the sticky panel to the right
+	// instead of navigating away to Profile — there's room for both side by
+	// side on a wide screen, and it keeps the charts in view while you look
+	// through what makes up a given number. Defaults to the current year
+	// (not empty) so the panel has something to show the moment the page
+	// loads, rather than an inert placeholder.
+	let selectedFilter = $state<DrillDownFilter | null>({
+		type: 'year',
+		value: new Date().getFullYear()
+	});
 
-	function selectAuthor(author: string) {
-		selectedFilter =
-			selectedFilter?.type === 'author' && selectedFilter.value === author
-				? null
-				: { type: 'author', value: author };
+	function toggle(next: DrillDownFilter) {
+		const same =
+			selectedFilter?.type === next.type &&
+			(selectedFilter as { value: unknown }).value === next.value;
+		selectedFilter = same ? null : next;
 	}
 
 	let filteredBooks = $derived.by(() => {
-		if (!selectedFilter) return [];
-		if (selectedFilter.type === 'genre') {
-			return data.drillDownBooks.filter((book) => book.genres.includes(selectedFilter!.value));
+		const filter = selectedFilter;
+		if (!filter) return [];
+		switch (filter.type) {
+			case 'genre':
+				return data.drillDownBooks.filter((book) => book.genres.includes(filter.value));
+			case 'author':
+				return data.drillDownBooks.filter((book) => book.author === filter.value);
+			case 'year':
+				return data.drillDownBooks.filter((book) => book.finishedYear === filter.value);
+			case 'month':
+				return data.drillDownBooks.filter((book) => book.finishedMonth === filter.value);
+			case 'publicationBucket':
+				return data.drillDownBooks.filter((book) => book.publicationBucket === filter.value);
+			case 'fiction':
+				return data.drillDownBooks.filter((book) => book.fictionCategory === filter.value);
 		}
-		return data.drillDownBooks.filter((book) => book.author === selectedFilter!.value);
 	});
 </script>
 
@@ -58,7 +76,11 @@
 
 		<section class="dashboard__panel">
 			<h2>Books finished per year</h2>
-			<YearlyFinishedChart data={data.booksFinishedByYear} />
+			<YearlyFinishedChart
+				data={data.booksFinishedByYear}
+				selected={selectedFilter?.type === 'year' ? selectedFilter.value : null}
+				onSelect={(year) => toggle({ type: 'year', value: year })}
+			/>
 		</section>
 
 		<section class="dashboard__panel">
@@ -66,7 +88,7 @@
 			<GenreBreakdownChart
 				data={data.genreBreakdown}
 				selected={selectedFilter?.type === 'genre' ? selectedFilter.value : null}
-				onSelect={selectGenre}
+				onSelect={(genre) => toggle({ type: 'genre', value: genre })}
 			/>
 		</section>
 
@@ -75,23 +97,35 @@
 			<MostReadAuthorsList
 				data={data.mostReadAuthors}
 				selected={selectedFilter?.type === 'author' ? selectedFilter.value : null}
-				onSelect={selectAuthor}
+				onSelect={(author) => toggle({ type: 'author', value: author })}
 			/>
 		</section>
 
 		<section class="dashboard__panel">
 			<h2>Fiction vs. nonfiction</h2>
-			<FictionSplitBar split={data.fictionSplit} />
+			<FictionSplitBar
+				split={data.fictionSplit}
+				selected={selectedFilter?.type === 'fiction' ? selectedFilter.value : null}
+				onSelect={(category) => toggle({ type: 'fiction', value: category })}
+			/>
 		</section>
 
 		<section class="dashboard__panel">
 			<h2>Publication years</h2>
-			<PublicationYearChart data={data.publicationYearSpread} />
+			<PublicationYearChart
+				data={data.publicationYearSpread}
+				selected={selectedFilter?.type === 'publicationBucket' ? selectedFilter.value : null}
+				onSelect={(bucket) => toggle({ type: 'publicationBucket', value: bucket })}
+			/>
 		</section>
 
 		<section class="dashboard__panel">
 			<h2>Last 6 months</h2>
-			<MonthlyMetricsPanel data={data.monthlyMetrics} />
+			<MonthlyMetricsPanel
+				data={data.monthlyMetrics}
+				selected={selectedFilter?.type === 'month' ? selectedFilter.value : null}
+				onSelect={(month) => toggle({ type: 'month', value: month })}
+			/>
 		</section>
 	</div>
 

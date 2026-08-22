@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { YearCount } from '$lib/server/insights/stats';
 
-	let { data }: { data: YearCount[] } = $props();
+	let {
+		data,
+		selected = null,
+		onSelect
+	}: { data: YearCount[]; selected?: number | null; onSelect: (year: number) => void } = $props();
 
 	let max = $derived(Math.max(1, ...data.map((d) => d.count)));
 	let hoveredYear = $state<number | null>(null);
@@ -18,17 +22,18 @@
 						{#if row.count === max}
 							<span class="yearly-chart__value">{row.count}</span>
 						{/if}
-						<div
+						<button
+							type="button"
 							class="yearly-chart__bar"
+							class:yearly-chart__bar--selected={selected === row.year}
 							style="height: {(row.count / max) * 100}%"
-							role="button"
-							aria-label="{row.year}: {row.count} book{row.count === 1 ? '' : 's'} finished"
+							aria-label="{row.year}: {row.count} book{row.count === 1 ? '' : 's'} finished — see these books"
+							onclick={() => onSelect(row.year)}
 							onmouseenter={() => (hoveredYear = row.year)}
 							onmouseleave={() => (hoveredYear = null)}
 							onfocus={() => (hoveredYear = row.year)}
 							onblur={() => (hoveredYear = null)}
-							tabindex="0"
-						></div>
+						></button>
 						{#if hoveredYear === row.year}
 							<div class="chart-tooltip chart-tooltip--above" role="tooltip">
 								<strong>{row.count}</strong> book{row.count === 1 ? '' : 's'} in {row.year}

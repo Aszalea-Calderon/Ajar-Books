@@ -3668,16 +3668,18 @@ button.dashboard__cta {
 /* Sticky, like Settings' preview panel — safe here because DrillDownShelf's
    3D rendering is entirely local-scroll-driven (its own scrollY state, not
    window.scrollY), unlike Profile's ShelfView. Without this, clicking a
-   genre/author bar further down a tall Insights page leaves the panel (and
-   its canvas) scrolled above the viewport entirely.
-   align-self: stretch (overriding .insights' own align-items: start, which
-   the left column still wants) makes this match the full height of the
-   left column's chart stack, instead of shrinking to its own short content
-   and leaving a lopsided gap of empty space below it. */
+   chart bar further down a tall Insights page leaves the panel (and its
+   canvas) scrolled above the viewport entirely.
+   Capped to the *viewport* height (100dvh minus the sticky offset on both
+   ends), not stretched to match the left column — with real reading
+   history the chart stack can run to many thousands of pixels tall, and
+   matching that would make the panel absurdly, uselessly tall. Its own
+   content scrolls internally past this cap instead. */
 .insights-books-panel {
 	position: sticky;
 	top: var(--space-6);
-	align-self: stretch;
+	height: calc(100dvh - 2 * var(--space-6));
+	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
@@ -3685,7 +3687,6 @@ button.dashboard__cta {
 	background: var(--color-surface-raised);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-md);
-	min-height: 16rem;
 }
 
 .insights-books-panel__header {
@@ -3709,6 +3710,8 @@ button.dashboard__cta {
 
 	.insights-books-panel {
 		position: static;
+		height: auto;
+		overflow-y: visible;
 	}
 }
 
@@ -3833,10 +3836,19 @@ button.dashboard__cta {
 	align-items: center;
 	justify-content: center;
 	min-width: 4px;
+	height: 100%;
+	border: none;
+	padding: 0;
+	cursor: pointer;
 }
 
 .fiction-split__segment--unclassified {
 	background: var(--color-border);
+}
+
+.fiction-split__segment--selected {
+	outline: 2px solid var(--color-text);
+	outline-offset: -2px;
 }
 
 .fiction-split__inline-label {
@@ -3906,8 +3918,15 @@ button.dashboard__cta {
 	width: 100%;
 	max-width: 24px;
 	background: var(--color-primary);
+	border: none;
 	border-radius: 4px 4px 0 0;
 	min-height: 4px;
+	padding: 0;
+	cursor: pointer;
+}
+
+.yearly-chart__bar--selected {
+	background: var(--color-accent-gold);
 }
 
 .yearly-chart__value {
@@ -3966,11 +3985,20 @@ button.dashboard__cta {
 }
 
 .monthly-panel__bar {
+	display: block;
 	width: 100%;
 	max-width: 20px;
 	margin: 0 auto;
+	border: none;
 	border-radius: 4px 4px 0 0;
 	min-height: 2px;
+	padding: 0;
+	cursor: pointer;
+}
+
+.monthly-panel__bar--selected {
+	outline: 2px solid var(--color-text);
+	outline-offset: 1px;
 }
 
 .monthly-panel__axis-label {

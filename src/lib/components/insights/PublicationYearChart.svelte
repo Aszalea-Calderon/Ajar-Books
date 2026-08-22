@@ -1,7 +1,12 @@
 <script lang="ts">
 	import type { PublicationYearBucket } from '$lib/server/insights/stats';
 
-	let { data }: { data: PublicationYearBucket[] } = $props();
+	let {
+		data,
+		selected = null,
+		onSelect
+	}: { data: PublicationYearBucket[]; selected?: string | null; onSelect: (label: string) => void } =
+		$props();
 
 	let max = $derived(Math.max(1, ...data.map((d) => d.count)));
 	let hoveredLabel = $state<string | null>(null);
@@ -15,15 +20,16 @@
 	{:else}
 		<div class="genre-chart__rows">
 			{#each data as row (row.label)}
-				<div
+				<button
+					type="button"
 					class="genre-chart__row"
-					role="button"
-					aria-label="{row.label}: {row.count} book{row.count === 1 ? '' : 's'}"
+					class:genre-chart__row--selected={selected === row.label}
+					aria-label="{row.label}: {row.count} book{row.count === 1 ? '' : 's'} — see these books"
+					onclick={() => onSelect(row.label)}
 					onmouseenter={() => (hoveredLabel = row.label)}
 					onmouseleave={() => (hoveredLabel = null)}
 					onfocus={() => (hoveredLabel = row.label)}
 					onblur={() => (hoveredLabel = null)}
-					tabindex="0"
 				>
 					<span class="genre-chart__label">{row.label}</span>
 					<div class="genre-chart__track">
@@ -33,10 +39,10 @@
 					{#if hoveredLabel === row.label}
 						<div class="chart-tooltip" role="tooltip">
 							<strong>{row.count}</strong> book{row.count === 1 ? '' : 's'} published in
-							<strong>{row.label}</strong>
+							<strong>{row.label}</strong> — click to see them
 						</div>
 					{/if}
-				</div>
+				</button>
 			{/each}
 		</div>
 	{/if}

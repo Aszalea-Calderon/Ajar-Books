@@ -125,11 +125,27 @@ export async function getMonthlyMetrics(monthsBack = 6): Promise<MonthlyMetrics[
 	return months.map((month) => byMonth.get(month)!);
 }
 
-function monthKey(date: Date): string {
+export function monthKey(date: Date): string {
 	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
 export type PublicationYearBucket = { label: string; count: number };
+
+// Exported so the Insights page can label each individual book with the
+// exact same bucket its chart bar represents — the drill-down panel needs
+// to match books by that label on click, not re-derive the decade-vs-year
+// decision independently (which depends on the *whole* library's spread,
+// not any one book).
+export function decideUseDecades(years: number[]): boolean {
+	if (years.length === 0) return false;
+	const min = Math.min(...years);
+	const max = Math.max(...years);
+	return max - min > 50;
+}
+
+export function publicationYearBucketLabel(year: number, useDecades: boolean): string {
+	return useDecades ? `${Math.floor(year / 10) * 10}s` : String(year);
+}
 
 /**
  * Buckets by decade once the library's publication-year spread exceeds 50
@@ -149,9 +165,7 @@ export async function getPublicationYearSpread(): Promise<PublicationYearBucket[
 	const years = rows.map((r) => r.publicationYear!);
 	if (years.length === 0) return [];
 
-	const min = Math.min(...years);
-	const max = Math.max(...years);
-	const useDecades = max - min > 50;
+	const useDecades = decideUseDecades(years);
 
 	const counts = new Map<number, number>();
 	for (const year of years) {
@@ -161,7 +175,10 @@ export async function getPublicationYearSpread(): Promise<PublicationYearBucket[
 
 	return [...counts.entries()]
 		.sort((a, b) => a[0] - b[0])
-		.map(([key, count]) => ({ label: useDecades ? `${key}s` : String(key), count }));
+		.map(([key, count]) => ({
+			label: useDecades ? `${key}s` : String(key),
+			count
+		}));
 }
 
 export type PaceStats = {

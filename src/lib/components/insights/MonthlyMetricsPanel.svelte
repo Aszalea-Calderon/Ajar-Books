@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { MonthlyMetrics } from '$lib/server/insights/stats';
 
-	let { data }: { data: MonthlyMetrics[] } = $props();
+	let {
+		data,
+		selected = null,
+		onSelect
+	}: { data: MonthlyMetrics[]; selected?: string | null; onSelect: (month: string) => void } = $props();
 
 	const PANELS = [
 		{ key: 'booksFinished' as const, title: 'Books finished', cssVar: '--color-viz-purple', unit: '' },
@@ -28,17 +32,18 @@
 					{@const cellKey = `${panel.key}-${row.month}`}
 					<div class="monthly-panel__col">
 						<div class="monthly-panel__bar-wrap">
-							<div
+							<button
+								type="button"
 								class="monthly-panel__bar"
+								class:monthly-panel__bar--selected={selected === row.month}
 								style="height: {(value / max) * 100}%; background: var({panel.cssVar})"
-								role="button"
-								aria-label="{monthLabel(row.month)}: {value}{panel.unit} {panel.title.toLowerCase()}"
+								aria-label="{monthLabel(row.month)}: {value}{panel.unit} {panel.title.toLowerCase()} — see these books"
+								onclick={() => onSelect(row.month)}
 								onmouseenter={() => (hovered = cellKey)}
 								onmouseleave={() => (hovered = null)}
 								onfocus={() => (hovered = cellKey)}
 								onblur={() => (hovered = null)}
-								tabindex="0"
-							></div>
+							></button>
 							{#if hovered === cellKey}
 								<div class="chart-tooltip chart-tooltip--above">
 									<strong>{value}{panel.unit}</strong> {panel.title.toLowerCase()}
