@@ -3645,16 +3645,58 @@ button.dashboard__cta {
 }
 
 .insights {
+	display: grid;
+	grid-template-columns: minmax(0, 56rem) minmax(24rem, 38rem);
+	gap: var(--space-6);
+	max-width: 96rem;
+	margin: 0 auto;
+	padding: var(--space-6) var(--space-4);
+	align-items: start;
+}
+
+.insights__main {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-6);
-	max-width: 56rem;
-	margin: 0 auto;
-	padding: var(--space-6) var(--space-4);
+	min-width: 0;
 }
 
 .insights h1 {
 	margin: 0;
+}
+
+/* Sticky, like Settings' preview panel — safe here because DrillDownShelf's
+   3D rendering is entirely local-scroll-driven (its own scrollY state, not
+   window.scrollY), unlike Profile's ShelfView. Without this, clicking a
+   genre/author bar further down a tall Insights page leaves the panel (and
+   its canvas) scrolled above the viewport entirely. */
+.insights-books-panel {
+	position: sticky;
+	top: var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	min-height: 16rem;
+}
+
+.insights-books-panel__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+@media (max-width: 64rem) {
+	.insights {
+		grid-template-columns: 1fr;
+	}
+
+	.insights-books-panel {
+		position: static;
+	}
 }
 
 /* ---------------------------------------------------------------------
@@ -3713,8 +3755,20 @@ button.dashboard__cta {
 	grid-template-columns: 9rem 1fr 2.5rem;
 	align-items: center;
 	gap: var(--space-3);
+	width: 100%;
 	color: inherit;
 	text-decoration: none;
+	background: none;
+	border: none;
+	padding: 0;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.genre-chart__row--selected .genre-chart__label {
+	color: var(--color-primary);
+	font-weight: 600;
 }
 
 .genre-chart__label {
@@ -3993,4 +4047,27 @@ button.dashboard__cta {
 .reader-type-summary {
 	font-size: var(--font-size-lg);
 	line-height: 1.5;
+}
+
+.drill-down-shelf {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.drill-down-shelf__hint {
+	margin: 0;
+	text-align: center;
+}
+
+.drill-down-shelf__orientation {
+	display: flex;
+	justify-content: center;
+	gap: var(--space-1);
+}
+
+.drill-down-shelf__canvas {
+	position: relative;
+	width: 100%;
+	height: 20rem;
 }

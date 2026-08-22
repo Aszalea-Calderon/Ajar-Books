@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import type { AuthorCount } from '$lib/server/insights/stats';
 
-	let { data }: { data: AuthorCount[] } = $props();
+	let {
+		data,
+		selected = null,
+		onSelect
+	}: { data: AuthorCount[]; selected?: string | null; onSelect: (author: string) => void } = $props();
 
 	let max = $derived(Math.max(1, ...data.map((d) => d.count)));
 </script>
@@ -13,17 +16,19 @@
 	{:else}
 		<div class="genre-chart__rows">
 			{#each data as row, i (row.author)}
-				<a
+				<button
+					type="button"
 					class="genre-chart__row"
-					href={resolve(`/profile?q=${encodeURIComponent(row.author)}`)}
+					class:genre-chart__row--selected={selected === row.author}
 					aria-label="#{i + 1}: {row.author}, {row.count} book{row.count === 1 ? '' : 's'} — see these books"
+					onclick={() => onSelect(row.author)}
 				>
 					<span class="genre-chart__label">{i + 1}. {row.author}</span>
 					<div class="genre-chart__track">
 						<div class="genre-chart__bar" style="width: {(row.count / max) * 100}%"></div>
 					</div>
 					<span class="genre-chart__value">{row.count}</span>
-				</a>
+				</button>
 			{/each}
 		</div>
 	{/if}

@@ -31,6 +31,23 @@ export const load: PageServerLoad = async () => {
 		computeReaderTypeFacts(genreBreakdown, fictionSplit, paceStats)
 	);
 
+	// Trimmed down from the full LibraryBook shape to just what the drill-down
+	// panel needs to filter and render — sent to the client once so clicking
+	// a genre/author bar can show its books inline (the real 3D shelf,
+	// reused as-is) instead of navigating away to Profile. status/rating/isbn
+	// are exactly what ShelfView/Book3D need (shelf-talker badges, real
+	// cover-photo fallback), same shape Profile's own shelf view passes.
+	const drillDownBooks = libraryBooks.map(({ book, userBook, tags }) => ({
+		id: book.id,
+		title: book.title,
+		author: book.author,
+		coverUrl: book.coverUrl,
+		isbn: book.isbn,
+		status: userBook.status,
+		rating: userBook.rating,
+		genres: tags.genre
+	}));
+
 	return {
 		genreBreakdown,
 		fictionSplit,
@@ -39,6 +56,7 @@ export const load: PageServerLoad = async () => {
 		publicationYearSpread,
 		mostReadAuthors,
 		paceStats,
-		readerTypeSummary
+		readerTypeSummary,
+		drillDownBooks
 	};
 };

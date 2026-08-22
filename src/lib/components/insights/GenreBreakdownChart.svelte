@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import type { GenreCount } from '$lib/server/insights/stats';
 
-	let { data }: { data: GenreCount[] } = $props();
+	let {
+		data,
+		selected = null,
+		onSelect
+	}: { data: GenreCount[]; selected?: string | null; onSelect: (genre: string) => void } = $props();
 
 	let max = $derived(Math.max(1, ...data.map((d) => d.count)));
 	let hoveredGenre = $state<string | null>(null);
@@ -14,10 +17,12 @@
 	{:else}
 		<div class="genre-chart__rows">
 			{#each data as row (row.genre)}
-				<a
+				<button
+					type="button"
 					class="genre-chart__row"
-					href={resolve(`/profile?genre=${encodeURIComponent(row.genre)}`)}
+					class:genre-chart__row--selected={selected === row.genre}
 					aria-label="{row.genre}: {row.count} book{row.count === 1 ? '' : 's'} — see these books"
+					onclick={() => onSelect(row.genre)}
 					onmouseenter={() => (hoveredGenre = row.genre)}
 					onmouseleave={() => (hoveredGenre = null)}
 					onfocus={() => (hoveredGenre = row.genre)}
@@ -34,7 +39,7 @@
 							<strong>{row.genre}</strong> — click to see them
 						</div>
 					{/if}
-				</a>
+				</button>
 			{/each}
 		</div>
 	{/if}
