@@ -76,9 +76,6 @@
 	{:else if !webglOk}
 		<p class="dashboard__empty">Your browser doesn't support 3D — try Profile's other views instead.</p>
 	{:else if Scene}
-		{#if rowCount > 1}
-			<p class="settings-hint drill-down-shelf__hint">Scroll to see more</p>
-		{/if}
 		<div class="drill-down-shelf__canvas" bind:this={canvasWrapEl}>
 			<Scene {books} {scrollY} {orientation} columnsOverride={columns} showStatusBadge={false} onOpen={handleOpen} />
 		</div>

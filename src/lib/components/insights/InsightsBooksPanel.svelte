@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DrillDownShelf from './DrillDownShelf.svelte';
 	import ViewButton from '$lib/components/ViewButton.svelte';
+	import Dropdown from '$lib/components/Dropdown.svelte';
 	import { insightsViewMode } from '$lib/client/viewMode.svelte';
 	import { coverSrc } from '$lib/coverPlaceholder';
 	import type { BookStatus } from '$lib/bookStatus';
@@ -56,6 +57,45 @@
 	// this panel is a narrow sidebar, not the full-page Profile shelf.
 	let shelfOrientation = $state<ShelfOrientation>('cover');
 	let shelfDensity = $state<'compact' | 'expanded'>('compact');
+
+	// Search/sort within the currently selected set of books — same
+	// search-bar look as Profile/Search, plus a sort control (this panel has
+	// no table headers to click for Cards/List/Shelf the way Profile does).
+	let searchQuery = $state('');
+
+	type SortValue = 'title-asc' | 'title-desc' | 'author-asc' | 'rating-desc' | 'rating-asc';
+	const SORT_OPTIONS: { value: SortValue; label: string }[] = [
+		{ value: 'title-asc', label: 'Title (A–Z)' },
+		{ value: 'title-desc', label: 'Title (Z–A)' },
+		{ value: 'author-asc', label: 'Author (A–Z)' },
+		{ value: 'rating-desc', label: 'Rating (High–Low)' },
+		{ value: 'rating-asc', label: 'Rating (Low–High)' }
+	];
+	let sortValue = $state<SortValue>('title-asc');
+
+	let visibleBooks = $derived.by(() => {
+		const query = searchQuery.trim().toLowerCase();
+		const matched = query
+			? books.filter(
+					(book) =>
+						book.title.toLowerCase().includes(query) || (book.author?.toLowerCase().includes(query) ?? false)
+				)
+			: books;
+
+		const [key, dir] = sortValue.split('-') as ['title' | 'author' | 'rating', 'asc' | 'desc'];
+		const sorted = [...matched].sort((a, b) => {
+			let cmp: number;
+			if (key === 'rating') {
+				cmp = (a.rating ?? -1) - (b.rating ?? -1);
+			} else {
+				const av = key === 'author' ? (a.author ?? '') : a.title;
+				const bv = key === 'author' ? (b.author ?? '') : b.title;
+				cmp = av.toLowerCase().localeCompare(bv.toLowerCase());
+			}
+			return dir === 'asc' ? cmp : -cmp;
+		});
+		return sorted;
+	});
 
 	let heading = $derived.by(() => {
 		if (!filter) return null;
@@ -131,57 +171,91 @@
 		</div>
 	{:else if books.length === 0}
 		<p class="settings-hint">No books found.</p>
-	{:else if insightsViewMode.state.current === 'shelf'}
-		<DrillDownShelf {books} orientation={shelfOrientation} density={shelfDensity} />
-	{:else if insightsViewMode.state.current === 'table'}
-		<div class="data-table-wrap">
-			<table class="data-table">
-				<thead>
-					<tr>
-						<th></th>
-						<th>Title</th>
-						<th>Author</th>
-						<th>Rating</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each books as book (book.id)}
-						<tr>
-							<td class="data-table__cover-cell">
-								<img class="data-table__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
-							</td>
-							<td><a href={resolve('/(app)/books/[id]', { id: book.id })}>{book.title}</a></td>
-							<td>{book.author ?? '—'}</td>
-							<td>{book.rating ?? '—'}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
 	{:else}
-		<div
-			class="search-results"
-			class:search-results--cards={insightsViewMode.state.current === 'cards'}
-		>
-			{#each books as book (book.id)}
-				<a class="search-result" href={resolve('/(app)/books/[id]', { id: book.id })}>
-					<div class="search-result__cover-wrap">
-						<img class="search-result__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
-						{#if book.rating != null && insightsViewMode.state.current !== 'list'}
-							<span class="search-result__rating-badge">★ {book.rating}</span>
-						{/if}
-					</div>
-					<div class="search-result__info">
-						<p class="search-result__title">{book.title}</p>
-						{#if book.author}
-							<p class="search-result__author">{book.author}</p>
-						{/if}
-					</div>
-					{#if book.rating != null && insightsViewMode.state.current === 'list'}
-						<span class="search-result__label">★ {book.rating}</span>
-					{/if}
-				</a>
-			{/each}
+		<div class="search-bar insights-books-panel__search-bar">
+			<div class="search-bar__input-wrap">
+				<svg
+					class="search-bar__icon"
+					viewBox="0 0 24 24"
+					width="16"
+					height="16"
+					aria-hidden="true"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+				>
+					<circle cx="11" cy="11" r="7" />
+					<line x1="21" y1="21" x2="16.65" y2="16.65" />
+				</svg>
+				<input
+					class="search-bar__input"
+					type="search"
+					placeholder="Search these books…"
+					bind:value={searchQuery}
+				/>
+			</div>
+			<Dropdown
+				value={sortValue}
+				options={SORT_OPTIONS}
+				ariaLabel="Sort books"
+				onChange={(v) => (sortValue = v as SortValue)}
+			/>
 		</div>
+		{#if visibleBooks.length === 0}
+			<p class="settings-hint">No books match "{searchQuery}".</p>
+		{:else if insightsViewMode.state.current === 'shelf'}
+			<DrillDownShelf books={visibleBooks} orientation={shelfOrientation} density={shelfDensity} />
+		{:else if insightsViewMode.state.current === 'table'}
+			<div class="data-table-wrap">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th></th>
+							<th>Title</th>
+							<th>Author</th>
+							<th>Rating</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each visibleBooks as book (book.id)}
+							<tr>
+								<td class="data-table__cover-cell">
+									<img class="data-table__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
+								</td>
+								<td><a href={resolve('/(app)/books/[id]', { id: book.id })}>{book.title}</a></td>
+								<td>{book.author ?? '—'}</td>
+								<td>{book.rating ?? '—'}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{:else}
+			<div
+				class="search-results"
+				class:search-results--cards={insightsViewMode.state.current === 'cards'}
+			>
+				{#each visibleBooks as book (book.id)}
+					<a class="search-result" href={resolve('/(app)/books/[id]', { id: book.id })}>
+						<div class="search-result__cover-wrap">
+							<img class="search-result__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
+							{#if book.rating != null && insightsViewMode.state.current !== 'list'}
+								<span class="search-result__rating-badge">★ {book.rating}</span>
+							{/if}
+						</div>
+						<div class="search-result__info">
+							<p class="search-result__title">{book.title}</p>
+							{#if book.author}
+								<p class="search-result__author">{book.author}</p>
+							{/if}
+						</div>
+						{#if book.rating != null && insightsViewMode.state.current === 'list'}
+							<span class="search-result__label">★ {book.rating}</span>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </aside>
