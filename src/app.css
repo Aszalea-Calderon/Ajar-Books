@@ -3713,6 +3713,8 @@ button.dashboard__cta {
 	grid-template-columns: 9rem 1fr 2.5rem;
 	align-items: center;
 	gap: var(--space-3);
+	color: inherit;
+	text-decoration: none;
 }
 
 .genre-chart__label {
@@ -3982,4 +3984,13 @@ button.dashboard__cta {
 
 .day-detail-modal__footer {
 	margin-top: var(--space-4);
+}
+
+.pace-stats__tiles {
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.reader-type-summary {
+	font-size: var(--font-size-lg);
+	line-height: 1.5;
 }
