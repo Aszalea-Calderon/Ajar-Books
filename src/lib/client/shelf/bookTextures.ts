@@ -340,9 +340,21 @@ export function loadCoverTexture(coverUrl: string): Promise<THREE.Texture> {
  * texture is used as-is, same as before this feature existed.
  */
 export function compositeCoverBadge(image: HTMLImageElement, book: ShelfBook): THREE.Texture {
+	const naturalWidth = image.naturalWidth || image.width || 512;
+	const naturalHeight = image.naturalHeight || image.height || 768;
+	// drawCoverBadge's margins/pill sizes are absolute pixels, sized for a
+	// cover in the ~512px-wide range. Some import sources (Goodreads/
+	// StoryGraph CSV exports) store tiny thumbnail URLs — as narrow as
+	// ~50-100px — and compositing straight onto a canvas that small leaves
+	// almost no room for the badge, forcing fitText's truncation fallback
+	// down to a single character. Upscaling the canvas to a consistent
+	// minimum width keeps badge text legible regardless of the source
+	// image's real resolution.
+	const MIN_WIDTH = 512;
+	const scale = naturalWidth < MIN_WIDTH ? MIN_WIDTH / naturalWidth : 1;
 	const canvas = document.createElement('canvas');
-	canvas.width = image.naturalWidth || image.width || 512;
-	canvas.height = image.naturalHeight || image.height || 768;
+	canvas.width = Math.round(naturalWidth * scale);
+	canvas.height = Math.round(naturalHeight * scale);
 	const ctx = canvas.getContext('2d')!;
 	ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 	drawCoverBadge(ctx, canvas.width, book);

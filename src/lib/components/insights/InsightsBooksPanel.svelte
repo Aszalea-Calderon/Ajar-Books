@@ -1,6 +1,10 @@
 <script lang="ts">
 	import DrillDownShelf from './DrillDownShelf.svelte';
+	import ViewButton from '$lib/components/ViewButton.svelte';
+	import { insightsViewMode } from '$lib/client/viewMode.svelte';
+	import { coverSrc } from '$lib/coverPlaceholder';
 	import type { BookStatus } from '$lib/bookStatus';
+	import { resolve } from '$app/paths';
 	import type { FictionCategory } from '$lib/server/insights/genreClassification';
 
 	type DrillDownBook = {
@@ -28,12 +32,10 @@
 
 	let {
 		filter,
-		books,
-		onClear
+		books
 	}: {
 		filter: DrillDownFilter | null;
 		books: DrillDownBook[];
-		onClear: () => void;
 	} = $props();
 
 	const FICTION_LABELS: Record<FictionCategory, string> = {
@@ -67,18 +69,67 @@
 </script>
 
 <aside class="insights-books-panel">
+	<div class="insights-books-panel__header">
+		<p class="display-preview__heading">{heading ?? 'Books'}</p>
+		<ViewButton mode={insightsViewMode.state.current} onSelect={insightsViewMode.set} showTable showShelf />
+	</div>
 	{#if !filter}
-		<p class="display-preview__heading">Books</p>
 		<div class="insights-books-panel__placeholder">
 			<p class="settings-hint">Click any chart bar to see the books behind it, right here.</p>
 		</div>
-	{:else}
-		<div class="insights-books-panel__header">
-			<p class="display-preview__heading">{heading}</p>
-			<button type="button" class="settings-modal__close" aria-label="Clear selection" onclick={onClear}>
-				×
-			</button>
-		</div>
+	{:else if books.length === 0}
+		<p class="settings-hint">No books found.</p>
+	{:else if insightsViewMode.state.current === 'shelf'}
 		<DrillDownShelf {books} />
+	{:else if insightsViewMode.state.current === 'table'}
+		<div class="data-table-wrap">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th></th>
+						<th>Title</th>
+						<th>Author</th>
+						<th>Rating</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each books as book (book.id)}
+						<tr>
+							<td class="data-table__cover-cell">
+								<img class="data-table__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
+							</td>
+							<td><a href={resolve('/(app)/books/[id]', { id: book.id })}>{book.title}</a></td>
+							<td>{book.author ?? '—'}</td>
+							<td>{book.rating ?? '—'}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{:else}
+		<div
+			class="search-results"
+			class:search-results--cards={insightsViewMode.state.current === 'cards'}
+		>
+			{#each books as book (book.id)}
+				<a class="search-result" href={resolve('/(app)/books/[id]', { id: book.id })}>
+					<div class="search-result__cover-wrap">
+						<img class="search-result__cover" src={coverSrc(book.coverUrl, book.id, book.title)} alt="" />
+						{#if book.rating != null && insightsViewMode.state.current !== 'list'}
+							<span class="search-result__rating-badge">★ {book.rating}</span>
+						{/if}
+					</div>
+					<div class="search-result__info">
+						<p class="search-result__title">{book.title}</p>
+						{#if book.author}
+							<p class="search-result__author">{book.author}</p>
+						{/if}
+					</div>
+					{#if book.rating != null && insightsViewMode.state.current === 'list'}
+						<span class="search-result__label">★ {book.rating}</span>
+					{/if}
+				</a>
+			{/each}
+		</div>
 	{/if}
 </aside>

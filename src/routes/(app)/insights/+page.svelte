@@ -129,9 +129,5 @@
 		</section>
 	</div>
 
-	<InsightsBooksPanel
-		filter={selectedFilter}
-		books={filteredBooks}
-		onClear={() => (selectedFilter = null)}
-	/>
+	<InsightsBooksPanel filter={selectedFilter} books={filteredBooks} />
 </div>

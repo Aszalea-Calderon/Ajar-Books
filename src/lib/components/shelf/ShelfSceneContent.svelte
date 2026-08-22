@@ -23,12 +23,18 @@
 		books,
 		scrollY,
 		orientation,
-		onOpen
+		onOpen,
+		columnsOverride
 	}: {
 		books: Book[];
 		scrollY: number;
 		orientation: ShelfOrientation;
 		onOpen: (book: Book) => void;
+		// Lets a caller (the Insights drill-down panel) offer a compact/expanded
+		// density toggle without this component's default width-based column
+		// count, which is tuned for the full-page Profile shelf. Undefined
+		// preserves the original width-derived behavior exactly.
+		columnsOverride?: number;
 	} = $props();
 
 	interactivity();
@@ -39,7 +45,7 @@
 	const CAMERA_MARGIN = 1.15;
 
 	let columnPitch = $derived(orientation === 'spine' ? SPINE_COLUMN_PITCH : COVER_COLUMN_PITCH);
-	let columns = $derived(columnsFor(size.current.width, orientation));
+	let columns = $derived(columnsOverride ?? columnsFor(size.current.width, orientation));
 	let totalRows = $derived(rowCountFor(books.length, columns));
 	let targetRowOffset = $derived(scrollY / ROW_PX);
 

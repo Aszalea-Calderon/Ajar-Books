@@ -16,7 +16,7 @@
 	import { initTheme } from '$lib/client/theme.svelte';
 	import { initFont } from '$lib/client/font.svelte';
 	import { initAccent } from '$lib/client/accent.svelte';
-	import { searchViewMode, profileViewMode } from '$lib/client/viewMode.svelte';
+	import { searchViewMode, profileViewMode, insightsViewMode } from '$lib/client/viewMode.svelte';
 	import { initBackgroundTexture } from '$lib/client/backgroundTexture.svelte';
 	import { initCardStyle } from '$lib/client/cardStyle.svelte';
 	import { initGlassy } from '$lib/client/glassy.svelte';
@@ -34,6 +34,7 @@
 		initAccent();
 		searchViewMode.init();
 		profileViewMode.init();
+		insightsViewMode.init();
 		initBackgroundTexture();
 		initCardStyle();
 		initGlassy();
