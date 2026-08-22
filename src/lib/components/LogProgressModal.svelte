@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { trapFocus } from '$lib/trapFocus';
+	import { dialogModal } from '$lib/dialogModal';
 
 	let {
 		open,
@@ -22,25 +23,9 @@
 		currentMinutes: number;
 	} = $props();
 
-	let dialogEl: HTMLDialogElement;
-
 	// Resets to 'amount' each time the modal opens rather than persisting,
 	// so a past choice doesn't surprise a later visit.
 	let logProgressUnit = $state<'amount' | 'percent'>('amount');
-
-	$effect(() => {
-		if (!dialogEl) return;
-		if (open && !dialogEl.open) {
-			logProgressUnit = 'amount';
-			dialogEl.showModal();
-		} else if (!open && dialogEl.open) {
-			dialogEl.close();
-		}
-	});
-
-	function closeOnBackdrop(event: MouseEvent) {
-		if (event.target === dialogEl) onClose();
-	}
 
 	let isAudiobook = $derived(format === 'audiobook');
 	let heading = $derived(isAudiobook ? 'Log listening' : 'Log progress');
@@ -52,10 +37,9 @@
 </script>
 
 <dialog
-	bind:this={dialogEl}
 	class="settings-modal"
 	onclose={onClose}
-	onclick={closeOnBackdrop}
+	use:dialogModal={{ open, onClose, onOpen: () => (logProgressUnit = 'amount') }}
 	use:trapFocus
 >
 	<div class="settings-modal__header">

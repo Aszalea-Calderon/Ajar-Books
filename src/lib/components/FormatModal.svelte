@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { todayLocalDateString } from '$lib/date';
 	import { trapFocus } from '$lib/trapFocus';
+	import { dialogModal } from '$lib/dialogModal';
 
 	let {
 		open,
@@ -37,21 +38,10 @@
 
 	let selectedFormat = $state<Format>('physical');
 	let startDate = $state('');
-	let dialogEl: HTMLDialogElement;
 
-	$effect(() => {
-		if (!dialogEl) return;
-		if (open && !dialogEl.open) {
-			selectedFormat = currentFormat ?? 'physical';
-			startDate = todayLocalDateString();
-			dialogEl.showModal();
-		} else if (!open && dialogEl.open) {
-			dialogEl.close();
-		}
-	});
-
-	function closeOnBackdrop(event: MouseEvent) {
-		if (event.target === dialogEl) onClose();
+	function resetOnOpen() {
+		selectedFormat = currentFormat ?? 'physical';
+		startDate = todayLocalDateString();
 	}
 
 	// Suggest the pulled-in page count only for a fresh (not previously saved)
@@ -81,10 +71,9 @@
 </script>
 
 <dialog
-	bind:this={dialogEl}
 	class="settings-modal"
 	onclose={onClose}
-	onclick={closeOnBackdrop}
+	use:dialogModal={{ open, onClose, onOpen: resetOnOpen }}
 	use:trapFocus
 >
 	<div class="settings-modal__header">

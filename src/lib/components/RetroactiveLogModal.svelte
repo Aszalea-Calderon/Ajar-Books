@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { trapFocus } from '$lib/trapFocus';
+	import { dialogModal } from '$lib/dialogModal';
 
 	let {
 		open,
@@ -18,18 +19,6 @@
 		format: 'physical' | 'ebook' | 'audiobook' | null;
 	} = $props();
 
-	let dialogEl: HTMLDialogElement;
-
-	$effect(() => {
-		if (!dialogEl) return;
-		if (open && !dialogEl.open) dialogEl.showModal();
-		else if (!open && dialogEl.open) dialogEl.close();
-	});
-
-	function closeOnBackdrop(event: MouseEvent) {
-		if (event.target === dialogEl) onClose();
-	}
-
 	let isAudiobook = $derived(format === 'audiobook');
 
 	// A plain amount ("how much did you read"), not the book detail page's
@@ -45,13 +34,7 @@
 	});
 </script>
 
-<dialog
-	bind:this={dialogEl}
-	class="settings-modal"
-	onclose={onClose}
-	onclick={closeOnBackdrop}
-	use:trapFocus
->
+<dialog class="settings-modal" onclose={onClose} use:dialogModal={{ open, onClose }} use:trapFocus>
 	<div class="settings-modal__header">
 		<h2>{isAudiobook ? 'Log listening' : 'Log reading'}</h2>
 		<button type="button" class="settings-modal__close" aria-label="Close" onclick={onClose}>

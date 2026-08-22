@@ -5,6 +5,7 @@ import { books, readingLogs, userBooks } from '$lib/server/db/schema';
 import {
 	editProgress,
 	getProgressTotals,
+	getProgressTotalsForBooks,
 	logProgress,
 	resetUserBook,
 	setStatus,
@@ -24,6 +25,35 @@ describe('getProgressTotals', () => {
 	it('returns zero for a book with no logged progress', async () => {
 		const userBook = await seedUserBook();
 		expect(await getProgressTotals(userBook.id)).toEqual({ pages: 0, minutes: 0 });
+	});
+});
+
+describe('getProgressTotalsForBooks', () => {
+	beforeEach(async () => {
+		await db.delete(userBooks);
+		await db.delete(books);
+	});
+
+	it('returns an empty map for an empty list, with no query', async () => {
+		expect(await getProgressTotalsForBooks([])).toEqual(new Map());
+	});
+
+	it('batches totals for several books in one call, matching getProgressTotals per book', async () => {
+		const bookA = await seedUserBook({ format: 'physical', totalPages: 500 });
+		const bookB = await seedUserBook({ format: 'audiobook', totalMinutes: 600 });
+		await logProgress({ userBookId: bookA.id, pagesRead: 120 });
+		await logProgress({ userBookId: bookB.id, minutesRead: 45 });
+
+		const totals = await getProgressTotalsForBooks([bookA.id, bookB.id]);
+
+		expect(totals.get(bookA.id)).toEqual({ pages: 120, minutes: 0 });
+		expect(totals.get(bookB.id)).toEqual({ pages: 0, minutes: 45 });
+	});
+
+	it('omits an id with no logged progress from the map rather than returning a zero entry', async () => {
+		const userBook = await seedUserBook();
+		const totals = await getProgressTotalsForBooks([userBook.id]);
+		expect(totals.has(userBook.id)).toBe(false);
 	});
 });
 

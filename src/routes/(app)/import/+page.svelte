@@ -13,6 +13,7 @@
 	import type { ImportRow, ImportSource, ImportStatus } from '$lib/import/types';
 	import type { ImportRowResult } from '$lib/server/import/applyImportRow';
 	import type { ImportJob } from '$lib/server/import/job';
+	import { STATUS_LABELS } from '$lib/bookStatus';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -36,10 +37,10 @@
 	};
 
 	const STATUS_OPTIONS: { value: ImportStatus; label: string }[] = [
-		{ value: 'want_to_read', label: 'Want to Read' },
-		{ value: 'reading', label: 'Currently Reading' },
-		{ value: 'finished', label: 'Finished' },
-		{ value: 'dnf', label: 'Did Not Finish' }
+		{ value: 'want_to_read', label: STATUS_LABELS.want_to_read },
+		{ value: 'reading', label: STATUS_LABELS.reading },
+		{ value: 'finished', label: STATUS_LABELS.finished },
+		{ value: 'dnf', label: STATUS_LABELS.dnf }
 	];
 
 	// Recomputed whenever the source or (for generic) the column mapping

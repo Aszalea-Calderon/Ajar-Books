@@ -12,9 +12,9 @@
 	import DataSettings from '$lib/components/settings/DataSettings.svelte';
 	import type { PageData } from './$types';
 
-	// Same data every (app) page already gets from the shared layout load
-	// (googleBooksApiKey, languagePriority, manageableTags, hasRecoveryKey,
-	// user) — this page needs no load of its own.
+	// hasRecoveryKey/user come from the shared (app) layout load;
+	// googleBooksApiKey/languagePriority/manageableTags/customThemes come
+	// from this page's own +page.server.ts (SvelteKit merges both into data).
 	let { data }: { data: PageData } = $props();
 
 	type SettingsSection = 'themes' | 'search' | 'integrations' | 'tags' | 'data';

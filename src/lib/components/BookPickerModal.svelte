@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 	import { trapFocus } from '$lib/trapFocus';
 	import { coverSrc } from '$lib/coverPlaceholder';
+	import { dialogModal } from '$lib/dialogModal';
 
 	let {
 		open,
@@ -20,26 +21,9 @@
 		heading?: string;
 	} = $props();
 
-	let dialogEl: HTMLDialogElement;
-
-	$effect(() => {
-		if (!dialogEl) return;
-		if (open && !dialogEl.open) dialogEl.showModal();
-		else if (!open && dialogEl.open) dialogEl.close();
-	});
-
-	function closeOnBackdrop(event: MouseEvent) {
-		if (event.target === dialogEl) onClose();
-	}
 </script>
 
-<dialog
-	bind:this={dialogEl}
-	class="settings-modal"
-	onclose={onClose}
-	onclick={closeOnBackdrop}
-	use:trapFocus
->
+<dialog class="settings-modal" onclose={onClose} use:dialogModal={{ open, onClose }} use:trapFocus>
 	<div class="settings-modal__header">
 		<h2>{heading}</h2>
 		<button type="button" class="settings-modal__close" aria-label="Close" onclick={onClose}>

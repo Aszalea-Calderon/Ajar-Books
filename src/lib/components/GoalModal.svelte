@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { trapFocus } from '$lib/trapFocus';
+	import { dialogModal } from '$lib/dialogModal';
 
 	let {
 		open,
@@ -11,25 +12,12 @@
 		onClose: () => void;
 		action: string;
 	} = $props();
-
-	let dialogEl: HTMLDialogElement;
-
-	$effect(() => {
-		if (!dialogEl) return;
-		if (open && !dialogEl.open) dialogEl.showModal();
-		else if (!open && dialogEl.open) dialogEl.close();
-	});
-
-	function closeOnBackdrop(event: MouseEvent) {
-		if (event.target === dialogEl) onClose();
-	}
 </script>
 
 <dialog
-	bind:this={dialogEl}
 	class="settings-modal"
 	onclose={onClose}
-	onclick={closeOnBackdrop}
+	use:dialogModal={{ open, onClose }}
 	use:trapFocus
 >
 	<div class="settings-modal__header">

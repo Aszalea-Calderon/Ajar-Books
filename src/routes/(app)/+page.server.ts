@@ -3,7 +3,7 @@ import { desc, eq, inArray } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { books, readingLogs, userBooks } from '$lib/server/db/schema';
-import { getProgressTotals, logProgress } from '$lib/server/books/progress';
+import { getProgressTotalsForBooks, logProgress } from '$lib/server/books/progress';
 import { getMonthActivity, getStreakActiveDates } from '$lib/server/books/calendar';
 import { createGoal, deleteGoal, getGoalsWithProgress } from '$lib/server/goals';
 import { computeCurrentStreak, computeWeeklyStreak, computeLongestStreakEver, isStreakRecord } from '$lib/streak';
@@ -37,9 +37,13 @@ export const load: PageServerLoad = async ({ url }) => {
 		}
 	}
 
-	const currentlyReading = await Promise.all(
-		rows.map(async (row) => ({ ...row, totals: await getProgressTotals(row.userBook.id) }))
-	);
+	// One grouped query for every currently-reading book's totals, instead of
+	// one SUM() per book — see getProgressTotalsForBooks's own doc comment.
+	const totalsByUserBook = await getProgressTotalsForBooks(userBookIds);
+	const currentlyReading = rows.map((row) => ({
+		...row,
+		totals: totalsByUserBook.get(row.userBook.id) ?? { pages: 0, minutes: 0 }
+	}));
 
 	currentlyReading.sort((a, b) => {
 		const aTime = lastActivityByUserBook.get(a.userBook.id) ?? a.userBook.startedAt ?? new Date(0);

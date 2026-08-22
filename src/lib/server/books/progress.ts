@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { userBooks, readingLogs } from '$lib/server/db/schema';
-import { and, eq, isNull, sql, sum } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql, sum } from 'drizzle-orm';
 
 export async function getProgressTotals(userBookId: string) {
 	const [row] = await db
@@ -15,6 +15,34 @@ export async function getProgressTotals(userBookId: string) {
 		pages: Number(row?.pages ?? 0),
 		minutes: Number(row?.minutes ?? 0)
 	};
+}
+
+/**
+ * Batched form of getProgressTotals — one grouped query instead of one
+ * per book, for a caller (the dashboard's currently-reading list) that
+ * needs totals for several books at once. Missing ids just come back
+ * as zero, same as getProgressTotals does for a book with no logs yet.
+ */
+export async function getProgressTotalsForBooks(
+	userBookIds: string[]
+): Promise<Map<string, { pages: number; minutes: number }>> {
+	const totals = new Map<string, { pages: number; minutes: number }>();
+	if (userBookIds.length === 0) return totals;
+
+	const rows = await db
+		.select({
+			userBookId: readingLogs.userBookId,
+			pages: sum(readingLogs.pagesRead),
+			minutes: sum(readingLogs.minutesRead)
+		})
+		.from(readingLogs)
+		.where(inArray(readingLogs.userBookId, userBookIds))
+		.groupBy(readingLogs.userBookId);
+
+	for (const row of rows) {
+		totals.set(row.userBookId, { pages: Number(row.pages ?? 0), minutes: Number(row.minutes ?? 0) });
+	}
+	return totals;
 }
 
 /**

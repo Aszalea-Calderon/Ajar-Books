@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { BookStatus } from '$lib/bookStatus';
 
 // Curated palette, not raw-random hue — a random HSL roll produces neon
 // garbage that looks nothing like a book. Deep, book-cover-plausible tones.
@@ -71,11 +72,6 @@ function finishTexture(canvas: HTMLCanvasElement): THREE.Texture {
 	texture.needsUpdate = true;
 	return texture;
 }
-
-// Mirrors $lib/server/books/progress.ts's BookStatus — redeclared rather than
-// imported so this client-side module never reaches across the server
-// boundary for a single literal union.
-export type BookStatus = 'added' | 'want_to_read' | 'reading' | 'finished' | 'dnf';
 
 export type ShelfBook = {
 	id: string;

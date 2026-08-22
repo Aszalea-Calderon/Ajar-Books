@@ -16,14 +16,12 @@ import { createNotification } from '$lib/server/notifications';
 import { deleteAllLibraryData } from '$lib/server/deleteAllData';
 import { checkRateLimit, clearAttempts, recordFailedAttempt } from '$lib/server/rateLimit';
 import { deleteCustomTheme, saveCustomTheme } from '$lib/server/customThemes';
+import { STATUS_LABELS } from '$lib/bookStatus';
 
+// Display order for the profile page's status-grouped sections — a
+// presentation concern specific to this page, independent of STATUS_LABELS'
+// text (which is shared so it can't drift from other pages' wording).
 const STATUS_ORDER = ['reading', 'want_to_read', 'finished', 'dnf'] as const;
-const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
-	reading: 'Currently Reading',
-	want_to_read: 'Want to Read',
-	finished: 'Finished',
-	dnf: 'Did Not Finish'
-};
 
 export const load: PageServerLoad = async ({ url }) => {
 	const statusFilter = url.searchParams.get('status') ?? '';

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { trapFocus } from '$lib/trapFocus';
+	import { dialogModal } from '$lib/dialogModal';
 
 	let {
 		open,
@@ -22,30 +23,14 @@
 		onCancel: () => void;
 	} = $props();
 
-	let dialogEl: HTMLDialogElement;
 	let typedText = $state('');
 	let canConfirm = $derived(!confirmText || typedText === confirmText);
-
-	$effect(() => {
-		if (!dialogEl) return;
-		if (open && !dialogEl.open) {
-			typedText = '';
-			dialogEl.showModal();
-		} else if (!open && dialogEl.open) {
-			dialogEl.close();
-		}
-	});
-
-	function closeOnBackdrop(event: MouseEvent) {
-		if (event.target === dialogEl) onCancel();
-	}
 </script>
 
 <dialog
-	bind:this={dialogEl}
 	class="confirm-modal"
 	onclose={onCancel}
-	onclick={closeOnBackdrop}
+	use:dialogModal={{ open, onClose: onCancel, onOpen: () => (typedText = '') }}
 	use:trapFocus
 >
 	<p class="confirm-modal__message">{message}</p>

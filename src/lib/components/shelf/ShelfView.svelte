@@ -3,17 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { columnsFor, rowCountFor, type ShelfOrientation } from '$lib/client/shelf/layout';
-	import type { BookStatus } from '$lib/client/shelf/bookTextures';
+	import type { ShelfBook } from '$lib/client/shelf/bookTextures';
 
-	type LibraryBook = {
-		id: string;
-		title: string;
-		author: string | null;
-		coverUrl: string | null;
-		isbn: string | null;
-		status: BookStatus;
-		rating: number | null;
-	};
+	// Same shape ShelfSceneContent/ShelfScene/Book3D already use internally —
+	// kept as one intersection rather than a hand-duplicated object type so
+	// the two can't quietly drift apart.
+	type LibraryBook = ShelfBook & { coverUrl: string | null; isbn: string | null };
 
 	let { books }: { books: LibraryBook[] } = $props();
 

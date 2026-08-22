@@ -9,6 +9,7 @@
 	import FilterButton from '$lib/components/FilterButton.svelte';
 	import ViewButton from '$lib/components/ViewButton.svelte';
 	import { coverSrc } from '$lib/coverPlaceholder';
+	import { STATUS_LABELS } from '$lib/bookStatus';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -235,10 +236,10 @@
 					value={statusFilter}
 					options={[
 						{ value: '', label: 'All statuses' },
-						{ value: 'reading', label: 'Currently Reading' },
-						{ value: 'want_to_read', label: 'Want to Read' },
-						{ value: 'finished', label: 'Finished' },
-						{ value: 'dnf', label: 'Did Not Finish' }
+						{ value: 'reading', label: STATUS_LABELS.reading },
+						{ value: 'want_to_read', label: STATUS_LABELS.want_to_read },
+						{ value: 'finished', label: STATUS_LABELS.finished },
+						{ value: 'dnf', label: STATUS_LABELS.dnf }
 					]}
 					ariaLabel="Filter by status"
 					onChange={(v) => (statusFilter = v)}

@@ -9,16 +9,17 @@
 	import ViewButton from '$lib/components/ViewButton.svelte';
 	import ShelfView from '$lib/components/shelf/ShelfView.svelte';
 	import { coverSrc } from '$lib/coverPlaceholder';
+	import { STATUS_LABELS } from '$lib/bookStatus';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	const STATUS_OPTIONS = [
 		{ value: '', label: 'All statuses' },
-		{ value: 'reading', label: 'Currently Reading' },
-		{ value: 'want_to_read', label: 'Want to Read' },
-		{ value: 'finished', label: 'Finished' },
-		{ value: 'dnf', label: 'Did Not Finish' }
+		{ value: 'reading', label: STATUS_LABELS.reading },
+		{ value: 'want_to_read', label: STATUS_LABELS.want_to_read },
+		{ value: 'finished', label: STATUS_LABELS.finished },
+		{ value: 'dnf', label: STATUS_LABELS.dnf }
 	];
 
 	let activeFilterCount = $derived(
@@ -67,13 +68,6 @@
 		searchDebounce = setTimeout(() => updateFilter('q', value), 300);
 	}
 
-	const STATUS_TABLE_LABELS: Record<string, string> = {
-		reading: 'Currently Reading',
-		want_to_read: 'Want to Read',
-		finished: 'Finished',
-		dnf: 'Did Not Finish'
-	};
-
 	type SortKey = 'title' | 'author' | 'status' | 'rating' | 'format';
 	let sortKey = $state<SortKey>('title');
 	let sortDir = $state<'asc' | 'desc'>('asc');
@@ -94,7 +88,7 @@
 			case 'author':
 				return entry.book.author?.toLowerCase() ?? '';
 			case 'status':
-				return STATUS_TABLE_LABELS[entry.userBook.status] ?? entry.userBook.status;
+				return STATUS_LABELS[entry.userBook.status as keyof typeof STATUS_LABELS] ?? entry.userBook.status;
 			case 'rating':
 				return entry.userBook.rating ?? -1;
 			case 'format':
@@ -297,7 +291,7 @@
 									>{/if}
 							</td>
 							<td>{entry.book.author ?? '—'}</td>
-							<td>{STATUS_TABLE_LABELS[entry.userBook.status] ?? entry.userBook.status}</td>
+							<td>{STATUS_LABELS[entry.userBook.status as keyof typeof STATUS_LABELS] ?? entry.userBook.status}</td>
 							<td>{entry.tags.genre.join(', ') || '—'}</td>
 							<td>{entry.tags.mood.join(', ') || '—'}</td>
 							<td>{entry.userBook.format ?? '—'}</td>
