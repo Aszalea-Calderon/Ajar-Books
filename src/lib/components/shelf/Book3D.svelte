@@ -21,6 +21,7 @@
 		z,
 		tilt,
 		spineOut = false,
+		showStatusBadge = true,
 		onOpen
 	}: {
 		book: Book;
@@ -29,18 +30,23 @@
 		z: number;
 		tilt: number;
 		spineOut?: boolean;
+		// False for the Insights drill-down shelf, where every book shown is
+		// already known to be finished — the status label would be redundant.
+		showStatusBadge?: boolean;
 		onOpen: (book: Book) => void;
 	} = $props();
 
 	// Each instance is remounted fresh whenever its book identity changes
 	// (the parent `{#each}` is keyed by book.id), so it's intentional that
-	// everything below reads `book` once at init rather than reactively.
+	// everything below reads `book`/`showStatusBadge` once at init rather
+	// than reactively.
 	const initialBook = untrack(() => book);
+	const initialShowStatusBadge = untrack(() => showStatusBadge);
 
 	// Procedural cover/spine render synchronously so a book never shows a
 	// blank box, even mid-scroll before a real cover has had a chance to
 	// load — the real photo (if any) swaps in once loadCoverTexture resolves.
-	const { cover, spine } = proceduralTexturesFor(initialBook);
+	const { cover, spine } = proceduralTexturesFor(initialBook, initialShowStatusBadge);
 
 	const coverMaterial = new THREE.MeshStandardMaterial({ map: cover, roughness: 0.8 });
 	const spineMaterial = new THREE.MeshStandardMaterial({ map: spine, roughness: 0.8 });
@@ -68,8 +74,8 @@
 				// the photo with the same badges instead. Skipped entirely when
 				// there's nothing to draw, so the common case stays exactly as
 				// cheap as before this feature existed.
-				coverMaterial.map = hasShelfBadge(initialBook)
-					? compositeCoverBadge(texture.image as HTMLImageElement, initialBook)
+				coverMaterial.map = hasShelfBadge(initialBook, initialShowStatusBadge)
+					? compositeCoverBadge(texture.image as HTMLImageElement, initialBook, initialShowStatusBadge)
 					: texture;
 				coverMaterial.needsUpdate = true;
 				// The canvas renders on-demand (see ShelfScene.svelte) — without

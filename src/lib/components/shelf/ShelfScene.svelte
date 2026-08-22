@@ -12,13 +12,15 @@
 		scrollY,
 		orientation,
 		onOpen,
-		columnsOverride
+		columnsOverride,
+		showStatusBadge = true
 	}: {
 		books: Book[];
 		scrollY: number;
 		orientation: ShelfOrientation;
 		onOpen: (book: Book) => void;
 		columnsOverride?: number;
+		showStatusBadge?: boolean;
 	} = $props();
 </script>
 
@@ -27,5 +29,5 @@
 	renderMode="on-demand"
 	createRenderer={(canvas) => new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })}
 >
-	<ShelfSceneContent {books} {scrollY} {orientation} {onOpen} {columnsOverride} />
+	<ShelfSceneContent {books} {scrollY} {orientation} {onOpen} {columnsOverride} {showStatusBadge} />
 </Canvas>

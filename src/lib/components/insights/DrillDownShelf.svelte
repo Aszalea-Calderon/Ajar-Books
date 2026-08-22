@@ -6,8 +6,13 @@
 	import type { ShelfBook } from '$lib/client/shelf/bookTextures';
 
 	type Book = ShelfBook & { coverUrl: string | null; isbn: string | null };
+	type Density = 'compact' | 'expanded';
 
-	let { books }: { books: Book[] } = $props();
+	// Orientation and density are owned by the parent panel now — both are
+	// offered from the same "eye" view-mode dropdown (via ViewButton's
+	// `extra` snippet) rather than a separate control row above the shelf.
+	let { books, orientation, density }: { books: Book[]; orientation: ShelfOrientation; density: Density } =
+		$props();
 
 	// Matches ShelfSceneContent's own (component-local, not exported) row-
 	// pixel convention — this feeds its scrollY prop directly, so a wheel
@@ -20,15 +25,7 @@
 	let containerWidth = $state(0);
 	let webglOk = $state(true);
 	let Scene = $state<typeof import('$lib/components/shelf/ShelfScene.svelte').default | null>(null);
-	let orientation = $state<ShelfOrientation>('cover');
 	let scrollY = $state(0);
-	// Compact = more, smaller books per row; expanded = fewer, bigger ones.
-	// Defaults to expanded — a small sidebar panel showing the shelf's
-	// default (width-derived) column count made book covers cramped enough
-	// that badge text got crushed (see compositeCoverBadge's canvas-scaling
-	// fix), so bigger-by-default reads better here than on the full-page
-	// Profile shelf this component borrows from.
-	let density = $state<'compact' | 'expanded'>('expanded');
 
 	onMount(async () => {
 		const probe = document.createElement('canvas');
@@ -82,48 +79,8 @@
 		{#if rowCount > 1}
 			<p class="settings-hint drill-down-shelf__hint">Scroll to see more</p>
 		{/if}
-		<div class="drill-down-shelf__orientation" role="radiogroup" aria-label="Shelf orientation">
-			<button
-				type="button"
-				class="shelf-view__orientation-btn"
-				class:shelf-view__orientation-btn--active={orientation === 'cover'}
-				aria-pressed={orientation === 'cover'}
-				onclick={() => (orientation = 'cover')}
-			>
-				Covers
-			</button>
-			<button
-				type="button"
-				class="shelf-view__orientation-btn"
-				class:shelf-view__orientation-btn--active={orientation === 'spine'}
-				aria-pressed={orientation === 'spine'}
-				onclick={() => (orientation = 'spine')}
-			>
-				Spines
-			</button>
-		</div>
-		<div class="drill-down-shelf__orientation" role="radiogroup" aria-label="Book size">
-			<button
-				type="button"
-				class="shelf-view__orientation-btn"
-				class:shelf-view__orientation-btn--active={density === 'compact'}
-				aria-pressed={density === 'compact'}
-				onclick={() => (density = 'compact')}
-			>
-				Compact
-			</button>
-			<button
-				type="button"
-				class="shelf-view__orientation-btn"
-				class:shelf-view__orientation-btn--active={density === 'expanded'}
-				aria-pressed={density === 'expanded'}
-				onclick={() => (density = 'expanded')}
-			>
-				Expanded
-			</button>
-		</div>
 		<div class="drill-down-shelf__canvas" bind:this={canvasWrapEl}>
-			<Scene {books} {scrollY} {orientation} columnsOverride={columns} onOpen={handleOpen} />
+			<Scene {books} {scrollY} {orientation} columnsOverride={columns} showStatusBadge={false} onOpen={handleOpen} />
 		</div>
 	{:else}
 		<p class="dashboard__empty">Building your shelf…</p>

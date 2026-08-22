@@ -1970,6 +1970,21 @@ button.dashboard__cta {
 	color: var(--color-primary-text);
 }
 
+.view-button__divider {
+	margin: var(--space-1) 0;
+	border: none;
+	border-top: 1px solid var(--color-border);
+}
+
+.view-button__section-label {
+	margin: var(--space-1) var(--space-3) 0;
+	color: var(--color-text-muted);
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
 .dropdown {
 	position: relative;
 	display: inline-block;

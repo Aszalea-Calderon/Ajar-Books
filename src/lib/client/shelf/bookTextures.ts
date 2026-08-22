@@ -92,10 +92,21 @@ const STATUS_BADGE: Partial<Record<BookStatus, { label: string; color: string }>
 	dnf: { label: 'DNF', color: '#a8657a' }
 };
 
-/** Whether this book has anything for drawCoverBadge/drawSpineBadge to draw. */
-export function hasShelfBadge(book: ShelfBook): boolean {
-	return !!STATUS_BADGE[book.status] || book.rating != null;
+/**
+ * Whether this book has anything for drawCoverBadge/drawSpineBadge to draw.
+ * `showStatus: false` (the Insights drill-down shelf, where every book is
+ * already known to be finished — the label would be redundant there) means
+ * only a rating counts.
+ */
+export function hasShelfBadge(book: ShelfBook, showStatus = true): boolean {
+	return (showStatus && !!STATUS_BADGE[book.status]) || book.rating != null;
 }
+
+// A fixed size, not run through fitText's shrink-to-fit — "★ 4.5" is always
+// short enough to fit at full size, so there's no need to risk it looking
+// smaller on some books than others the way the status label (which
+// genuinely can overflow, e.g. "WANT TO READ") does.
+const RATING_FONT_SIZE = 22;
 
 // Shrinks (then, as a last resort, truncates with an ellipsis) text to fit
 // maxWidth — "Want to Read" in caps is wide enough to run past the cover's
@@ -156,7 +167,7 @@ function drawPill(
  * whatever art is already on the canvas — the procedural gradient, or (via
  * compositeCoverBadge below) a real loaded cover photo.
  */
-function drawCoverBadge(ctx: CanvasRenderingContext2D, canvasWidth: number, book: ShelfBook) {
+function drawCoverBadge(ctx: CanvasRenderingContext2D, canvasWidth: number, book: ShelfBook, showStatus = true) {
 	const font = bodyFont();
 	const pillHeight = 34;
 	const paddingX = 14;
@@ -164,7 +175,7 @@ function drawCoverBadge(ctx: CanvasRenderingContext2D, canvasWidth: number, book
 	const maxWidth = canvasWidth - margin * 2;
 	let nextY = margin;
 
-	const statusInfo = STATUS_BADGE[book.status];
+	const statusInfo = showStatus ? STATUS_BADGE[book.status] : undefined;
 	if (statusInfo) {
 		const { text, fontSize } = fitText(ctx, statusInfo.label.toUpperCase(), maxWidth, font);
 		drawPill(ctx, margin, nextY, pillHeight, paddingX, text, fontSize, font, '#f4f2ec', statusInfo.color);
@@ -172,8 +183,7 @@ function drawCoverBadge(ctx: CanvasRenderingContext2D, canvasWidth: number, book
 	}
 
 	if (book.rating != null) {
-		const { text, fontSize } = fitText(ctx, `★ ${book.rating}`, maxWidth, font);
-		drawPill(ctx, margin, nextY, pillHeight, paddingX, text, fontSize, font, '#f2c14e');
+		drawPill(ctx, margin, nextY, pillHeight, paddingX, `★ ${book.rating}`, RATING_FONT_SIZE, font, '#f2c14e');
 	}
 }
 
@@ -183,8 +193,8 @@ function drawCoverBadge(ctx: CanvasRenderingContext2D, canvasWidth: number, book
  * a small color dot near the top (status) and a compact star rating near
  * the bottom, rather than trying to fit a labeled pill.
  */
-function drawSpineBadge(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, book: ShelfBook) {
-	const statusInfo = STATUS_BADGE[book.status];
+function drawSpineBadge(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, book: ShelfBook, showStatus = true) {
+	const statusInfo = showStatus ? STATUS_BADGE[book.status] : undefined;
 	if (statusInfo) {
 		ctx.fillStyle = statusInfo.color;
 		ctx.beginPath();
@@ -206,7 +216,7 @@ function drawSpineBadge(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement
 }
 
 /** 512×768 generated front-cover texture: base color, title, author. */
-export function makeProceduralCover(book: ShelfBook): THREE.Texture {
+export function makeProceduralCover(book: ShelfBook, showStatus = true): THREE.Texture {
 	const canvas = document.createElement('canvas');
 	canvas.width = 512;
 	canvas.height = 768;
@@ -243,13 +253,13 @@ export function makeProceduralCover(book: ShelfBook): THREE.Texture {
 		ctx.fillText(book.author, canvas.width / 2, canvas.height - 80);
 	}
 
-	drawCoverBadge(ctx, canvas.width, book);
+	drawCoverBadge(ctx, canvas.width, book, showStatus);
 
 	return finishTexture(canvas);
 }
 
 /** 128×768 generated spine texture, applied to every book's side faces (no data source has real spine art). */
-export function makeProceduralSpine(book: ShelfBook): THREE.Texture {
+export function makeProceduralSpine(book: ShelfBook, showStatus = true): THREE.Texture {
 	const canvas = document.createElement('canvas');
 	canvas.width = 128;
 	canvas.height = 768;
@@ -273,18 +283,23 @@ export function makeProceduralSpine(book: ShelfBook): THREE.Texture {
 	ctx.fillText(label, 0, 0, canvas.height - 80);
 	ctx.restore();
 
-	drawSpineBadge(ctx, canvas, book);
+	drawSpineBadge(ctx, canvas, book, showStatus);
 
 	return finishTexture(canvas);
 }
 
 const proceduralCache = new Map<string, { cover: THREE.Texture; spine: THREE.Texture }>();
 
-export function proceduralTexturesFor(book: ShelfBook) {
-	const cached = proceduralCache.get(book.id);
+// Keyed on showStatus too — the same book can appear both on Profile's
+// shelf (status badge shown) and the Insights drill-down shelf (status
+// badge suppressed, see hasShelfBadge's doc comment); without this a
+// texture generated for one context would wrongly get reused in the other.
+export function proceduralTexturesFor(book: ShelfBook, showStatus = true) {
+	const cacheKey = `${book.id}:${showStatus ? 's' : 'ns'}`;
+	const cached = proceduralCache.get(cacheKey);
 	if (cached) return cached;
-	const entry = { cover: makeProceduralCover(book), spine: makeProceduralSpine(book) };
-	proceduralCache.set(book.id, entry);
+	const entry = { cover: makeProceduralCover(book, showStatus), spine: makeProceduralSpine(book, showStatus) };
+	proceduralCache.set(cacheKey, entry);
 	return entry;
 }
 
@@ -339,7 +354,7 @@ export function loadCoverTexture(coverUrl: string): Promise<THREE.Texture> {
  * there's actually a badge to draw (see hasShelfBadge) — otherwise the real
  * texture is used as-is, same as before this feature existed.
  */
-export function compositeCoverBadge(image: HTMLImageElement, book: ShelfBook): THREE.Texture {
+export function compositeCoverBadge(image: HTMLImageElement, book: ShelfBook, showStatus = true): THREE.Texture {
 	const naturalWidth = image.naturalWidth || image.width || 512;
 	const naturalHeight = image.naturalHeight || image.height || 768;
 	// drawCoverBadge's margins/pill sizes are absolute pixels, sized for a
@@ -357,7 +372,7 @@ export function compositeCoverBadge(image: HTMLImageElement, book: ShelfBook): T
 	canvas.height = Math.round(naturalHeight * scale);
 	const ctx = canvas.getContext('2d')!;
 	ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-	drawCoverBadge(ctx, canvas.width, book);
+	drawCoverBadge(ctx, canvas.width, book, showStatus);
 
 	const texture = new THREE.CanvasTexture(canvas);
 	texture.colorSpace = THREE.SRGBColorSpace;

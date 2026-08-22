@@ -6,6 +6,7 @@
 	import type { BookStatus } from '$lib/bookStatus';
 	import { resolve } from '$app/paths';
 	import type { FictionCategory } from '$lib/server/insights/genreClassification';
+	import type { ShelfOrientation } from '$lib/client/shelf/layout';
 
 	type DrillDownBook = {
 		id: string;
@@ -49,6 +50,13 @@
 		return new Date(year, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 	}
 
+	// Shelf-only display controls, folded into the same "eye" dropdown as the
+	// Cards/List/Table/Shelf switcher (see the `extra` snippet below) rather
+	// than a separate row of buttons above the shelf. Compact by default —
+	// this panel is a narrow sidebar, not the full-page Profile shelf.
+	let shelfOrientation = $state<ShelfOrientation>('cover');
+	let shelfDensity = $state<'compact' | 'expanded'>('compact');
+
 	let heading = $derived.by(() => {
 		if (!filter) return null;
 		switch (filter.type) {
@@ -68,10 +76,54 @@
 	});
 </script>
 
+{#snippet shelfControls()}
+	<hr class="view-button__divider" />
+	<p class="view-button__section-label">Orientation</p>
+	<button
+		type="button"
+		class="view-button__option"
+		class:view-button__option--active={shelfOrientation === 'cover'}
+		onclick={() => (shelfOrientation = 'cover')}
+	>
+		Covers
+	</button>
+	<button
+		type="button"
+		class="view-button__option"
+		class:view-button__option--active={shelfOrientation === 'spine'}
+		onclick={() => (shelfOrientation = 'spine')}
+	>
+		Spines
+	</button>
+	<p class="view-button__section-label">Size</p>
+	<button
+		type="button"
+		class="view-button__option"
+		class:view-button__option--active={shelfDensity === 'compact'}
+		onclick={() => (shelfDensity = 'compact')}
+	>
+		Compact
+	</button>
+	<button
+		type="button"
+		class="view-button__option"
+		class:view-button__option--active={shelfDensity === 'expanded'}
+		onclick={() => (shelfDensity = 'expanded')}
+	>
+		Expanded
+	</button>
+{/snippet}
+
 <aside class="insights-books-panel">
 	<div class="insights-books-panel__header">
 		<p class="display-preview__heading">{heading ?? 'Books'}</p>
-		<ViewButton mode={insightsViewMode.state.current} onSelect={insightsViewMode.set} showTable showShelf />
+		<ViewButton
+			mode={insightsViewMode.state.current}
+			onSelect={insightsViewMode.set}
+			showTable
+			showShelf
+			extra={insightsViewMode.state.current === 'shelf' ? shelfControls : undefined}
+		/>
 	</div>
 	{#if !filter}
 		<div class="insights-books-panel__placeholder">
@@ -80,7 +132,7 @@
 	{:else if books.length === 0}
 		<p class="settings-hint">No books found.</p>
 	{:else if insightsViewMode.state.current === 'shelf'}
-		<DrillDownShelf {books} />
+		<DrillDownShelf {books} orientation={shelfOrientation} density={shelfDensity} />
 	{:else if insightsViewMode.state.current === 'table'}
 		<div class="data-table-wrap">
 			<table class="data-table">

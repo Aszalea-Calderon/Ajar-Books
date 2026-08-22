@@ -24,7 +24,8 @@
 		scrollY,
 		orientation,
 		onOpen,
-		columnsOverride
+		columnsOverride,
+		showStatusBadge = true
 	}: {
 		books: Book[];
 		scrollY: number;
@@ -35,6 +36,7 @@
 		// count, which is tuned for the full-page Profile shelf. Undefined
 		// preserves the original width-derived behavior exactly.
 		columnsOverride?: number;
+		showStatusBadge?: boolean;
 	} = $props();
 
 	interactivity();
@@ -111,6 +113,7 @@
 			z={pos.z}
 			tilt={pos.tilt}
 			spineOut={orientation === 'spine'}
+			{showStatusBadge}
 			{onOpen}
 		/>
 	{/each}

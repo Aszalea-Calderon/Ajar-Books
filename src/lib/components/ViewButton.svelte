@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { ViewMode } from '$lib/client/viewMode.svelte';
 	import { clickOutside } from '$lib/clickOutside';
 
@@ -13,12 +14,17 @@
 		mode,
 		onSelect,
 		showTable = false,
-		showShelf = false
+		showShelf = false,
+		extra
 	}: {
 		mode: ViewMode;
 		onSelect: (mode: ViewMode) => void;
 		showTable?: boolean;
 		showShelf?: boolean;
+		// Extra content appended to the dropdown after the standard mode
+		// options — e.g. Insights' drill-down panel folds its shelf
+		// orientation/size controls in here instead of a separate control row.
+		extra?: Snippet;
 	} = $props();
 
 	let open = $state(false);
@@ -151,6 +157,9 @@
 					</svg>
 					Shelf
 				</button>
+			{/if}
+			{#if extra}
+				{@render extra()}
 			{/if}
 		</div>
 	{/if}
