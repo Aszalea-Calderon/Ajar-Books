@@ -31,7 +31,9 @@
 <aside class="insights-books-panel">
 	{#if !filter}
 		<p class="display-preview__heading">Books</p>
-		<p class="settings-hint">Click a genre or author bar to see the books behind it, right here.</p>
+		<div class="insights-books-panel__placeholder">
+			<p class="settings-hint">Click a genre or author bar to see the books behind it, right here.</p>
+		</div>
 	{:else}
 		<div class="insights-books-panel__header">
 			<p class="display-preview__heading">{heading}</p>

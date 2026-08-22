@@ -17,7 +17,12 @@ import {
 // getLibraryBooks() excludes status 'added' (the untouched, never-decided
 // default) — everything here needs a real status to be counted at all.
 async function seedBook(
-	overrides: { title?: string; author?: string | null; publicationYear?: number | null } = {}
+	overrides: {
+		title?: string;
+		author?: string | null;
+		publicationYear?: number | null;
+		status?: (typeof userBooks.$inferInsert)['status'];
+	} = {}
 ) {
 	const [book] = await db
 		.insert(books)
@@ -29,7 +34,7 @@ async function seedBook(
 		.returning();
 	const [userBook] = await db
 		.insert(userBooks)
-		.values({ bookId: book.id, status: 'want_to_read' })
+		.values({ bookId: book.id, status: overrides.status ?? 'want_to_read' })
 		.returning();
 	return userBook;
 }
@@ -171,9 +176,9 @@ describe('insights stats', () => {
 
 	describe('getPublicationYearSpread', () => {
 		it('buckets by individual year when the spread is under 50 years', async () => {
-			await seedBook({ publicationYear: 2010 });
-			await seedBook({ publicationYear: 2010 });
-			await seedBook({ publicationYear: 2015 });
+			await seedBook({ publicationYear: 2010, status: 'finished' });
+			await seedBook({ publicationYear: 2010, status: 'finished' });
+			await seedBook({ publicationYear: 2015, status: 'finished' });
 
 			expect(await getPublicationYearSpread()).toEqual([
 				{ label: '2010', count: 2 },
@@ -182,9 +187,9 @@ describe('insights stats', () => {
 		});
 
 		it('buckets by decade when the spread exceeds 50 years', async () => {
-			await seedBook({ publicationYear: 1932 });
-			await seedBook({ publicationYear: 1945 });
-			await seedBook({ publicationYear: 2020 });
+			await seedBook({ publicationYear: 1932, status: 'finished' });
+			await seedBook({ publicationYear: 1945, status: 'finished' });
+			await seedBook({ publicationYear: 2020, status: 'finished' });
 
 			expect(await getPublicationYearSpread()).toEqual([
 				{ label: '1930s', count: 1 },
@@ -194,7 +199,15 @@ describe('insights stats', () => {
 		});
 
 		it('excludes books with no publication year', async () => {
-			await seedBook({ publicationYear: null });
+			await seedBook({ publicationYear: null, status: 'finished' });
+			expect(await getPublicationYearSpread()).toEqual([]);
+		});
+
+		it('excludes books that are not finished, even with a publication year on file', async () => {
+			await seedBook({ publicationYear: 2010, status: 'want_to_read' });
+			await seedBook({ publicationYear: 2015, status: 'reading' });
+			await seedBook({ publicationYear: 2020, status: 'dnf' });
+
 			expect(await getPublicationYearSpread()).toEqual([]);
 		});
 	});

@@ -23,9 +23,16 @@ export const load: PageServerLoad = async () => {
 			getPaceStats()
 		]);
 
-	const genreBreakdown = getGenreBreakdown(libraryBooks);
-	const fictionSplit = getFictionSplit(libraryBooks);
-	const mostReadAuthors = getMostReadAuthors(libraryBooks);
+	// Insights is specifically about books you've actually read — a Want to
+	// Read or DNF book shouldn't inflate a genre count or an author's rank
+	// just because it's sitting in your library with a tag on it. Scoped to
+	// 'finished' only (not 'reading' too) per explicit confirmation
+	// 2026-08-22: the strictest reading of "books you have read".
+	const readBooks = libraryBooks.filter((entry) => entry.userBook.status === 'finished');
+
+	const genreBreakdown = getGenreBreakdown(readBooks);
+	const fictionSplit = getFictionSplit(readBooks);
+	const mostReadAuthors = getMostReadAuthors(readBooks);
 
 	const readerTypeSummary = pickReaderTypeSummary(
 		computeReaderTypeFacts(genreBreakdown, fictionSplit, paceStats)
@@ -37,7 +44,10 @@ export const load: PageServerLoad = async () => {
 	// reused as-is) instead of navigating away to Profile. status/rating/isbn
 	// are exactly what ShelfView/Book3D need (shelf-talker badges, real
 	// cover-photo fallback), same shape Profile's own shelf view passes.
-	const drillDownBooks = libraryBooks.map(({ book, userBook, tags }) => ({
+	// Built from readBooks, not the full library, for the same reason as the
+	// stats above — clicking "Romance" should only ever show books you've
+	// actually finished and tagged Romance.
+	const drillDownBooks = readBooks.map(({ book, userBook, tags }) => ({
 		id: book.id,
 		title: book.title,
 		author: book.author,

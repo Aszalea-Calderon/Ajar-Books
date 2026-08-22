@@ -135,14 +135,16 @@ export type PublicationYearBucket = { label: string; count: number };
  * Buckets by decade once the library's publication-year spread exceeds 50
  * years (StoryGraph-style charts do the same) — otherwise individual years
  * would mostly be empty. Books with no publicationYear are excluded rather
- * than lumped into a misleading "unknown" bar.
+ * than lumped into a misleading "unknown" bar. Scoped to finished books only
+ * — same reasoning as getGenreBreakdown/getFictionSplit/getMostReadAuthors,
+ * a Want to Read book shouldn't count toward "books you've read" spread.
  */
 export async function getPublicationYearSpread(): Promise<PublicationYearBucket[]> {
 	const rows = await db
 		.select({ publicationYear: books.publicationYear })
 		.from(books)
 		.innerJoin(userBooks, eq(userBooks.bookId, books.id))
-		.where(isNotNull(books.publicationYear));
+		.where(and(isNotNull(books.publicationYear), eq(userBooks.status, 'finished')));
 
 	const years = rows.map((r) => r.publicationYear!);
 	if (years.length === 0) return [];

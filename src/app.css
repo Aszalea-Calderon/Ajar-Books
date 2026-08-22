@@ -3669,10 +3669,15 @@ button.dashboard__cta {
    3D rendering is entirely local-scroll-driven (its own scrollY state, not
    window.scrollY), unlike Profile's ShelfView. Without this, clicking a
    genre/author bar further down a tall Insights page leaves the panel (and
-   its canvas) scrolled above the viewport entirely. */
+   its canvas) scrolled above the viewport entirely.
+   align-self: stretch (overriding .insights' own align-items: start, which
+   the left column still wants) makes this match the full height of the
+   left column's chart stack, instead of shrinking to its own short content
+   and leaving a lopsided gap of empty space below it. */
 .insights-books-panel {
 	position: sticky;
 	top: var(--space-6);
+	align-self: stretch;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
@@ -3687,6 +3692,14 @@ button.dashboard__cta {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+}
+
+.insights-books-panel__placeholder {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
 }
 
 @media (max-width: 64rem) {
@@ -4049,10 +4062,18 @@ button.dashboard__cta {
 	line-height: 1.5;
 }
 
+/* justify-content: center (not flex: 1 on the canvas) is deliberate — the
+   3D camera framing is sized to fit the actual row(s) of books, not the
+   container, so stretching the canvas to fill a tall panel would just
+   reveal empty 3D void below a single short row rather than making the
+   books themselves bigger. Centering the whole content block vertically
+   uses the panel's extra stretched height gracefully instead. */
 .drill-down-shelf {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	gap: var(--space-2);
+	height: 100%;
 }
 
 .drill-down-shelf__hint {
@@ -4069,5 +4090,6 @@ button.dashboard__cta {
 .drill-down-shelf__canvas {
 	position: relative;
 	width: 100%;
-	height: 20rem;
+	flex-shrink: 0;
+	height: 24rem;
 }
